@@ -39,7 +39,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">E-mail de Acesso</label>
-                    <input type="email" id="loginEmail" placeholder="professora@escola.com" required autocomplete="off"
+                    <input type="email" id="loginEmail" placeholder="professora@escola.com" required autocomplete="nope"
                         class="w-full border rounded-lg p-2.5 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div>
@@ -303,9 +303,12 @@
             } else {
                 document.getElementById('telaLogin').classList.remove('hidden');
                 document.getElementById('appPrincipal').classList.add('hidden');
-                document.getElementById('loginEmail').value = '';
-                document.getElementById('loginSenha').value = '';
-                if(document.getElementById('cadastroNome')) document.getElementById('cadastroNome').value = '';
+                // Força a limpeza absoluta dos campos de texto na tela de login
+                setTimeout(() => {
+                    document.getElementById('loginEmail').value = '';
+                    document.getElementById('loginSenha').value = '';
+                    if(document.getElementById('cadastroNome')) document.getElementById('cadastroNome').value = '';
+                }, 50);
             }
         }
 
@@ -736,7 +739,7 @@
             document.getElementById('avisoTitulo').innerText = titulo;
             document.getElementById('avisoTexto').innerText = texto;
             document.getElementById('avisoIcone').innerText = icone;
-            document.getElementById('modalAviso').classList.add('hidden');
+            document.getElementById('modalAviso').classList.remove('hidden');
         }
 
         function fecharModalAviso() {
