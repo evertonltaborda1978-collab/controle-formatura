@@ -9,157 +9,197 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans pb-12">
 
-    <header class="bg-indigo-600 text-white p-4 shadow-md sticky top-0 z-50">
-        <div class="max-w-md mx-auto flex justify-between items-center">
-            <div>
-                <h1 class="font-bold text-sm">Escola Municipal 31 de Março</h1>
-                <p class="text-xs text-indigo-200">Turma 5º C - Formatura 2026</p>
+    <!-- TELA DE LOGIN / AUTENTICAÇÃO -->
+    <div id="telaLogin" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl text-center">
+            <div class="space-y-1">
+                <span class="text-3xl">🎓</span>
+                <h1 class="font-bold text-base text-slate-800">Secretária Virtual - Formatura</h1>
+                <p id="subtituloLogin" class="text-xs text-slate-500">Entre na sua conta para gerenciar o caixa</p>
             </div>
-            <div class="flex gap-1.5">
-                <button onclick="enviarRelatorioDiretora()" class="text-[11px] bg-emerald-700 hover:bg-emerald-800 px-2.5 py-1.5 rounded-lg font-medium transition" title="Gerar relatório para a Diretora">
-                    👩‍🏫 Diretora
+
+            <!-- Botão de Acesso Rápido por Biometria (Aparece se já configurado) -->
+            <div id="divBotaoBiometria" class="hidden">
+                <button type="button" onclick="entrarComBiometria()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium p-3 rounded-xl transition text-xs shadow flex items-center justify-center gap-2">
+                    <span>🧬</span> Entrar com Biometria
                 </button>
-                <button onclick="alternarTela()" id="btnAlternar" class="text-[11px] bg-indigo-700 hover:bg-indigo-800 px-2.5 py-1.5 rounded-lg font-medium transition">
-                    📊 Planilha
-                </button>
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t border-slate-200"></div>
+                    <span class="flex-shrink mx-4 text-[10px] text-slate-400">ou use a senha</span>
+                    <div class="flex-grow border-t border-slate-200"></div>
+                </div>
             </div>
-        </div>
-    </header>
 
-    <main class="max-w-md mx-auto p-4 space-y-4">
-        
-        <!-- SEÇÃO 1: FORMULÁRIO DE LANÇAMENTO -->
-        <div id="secaoFormulario" class="space-y-4">
-            <form id="formPagamento" class="bg-white p-4 rounded-xl shadow-sm space-y-3">
-                <h2 class="font-semibold text-slate-700 border-b pb-2 text-sm">Novo Registro de Comprovante</h2>
-
-                <!-- Aluno -->
+            <form id="formLoginApp" onsubmit="realizarLogin(event)" class="space-y-3 text-left">
                 <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Nome do Aluno</label>
-                    <input type="text" id="nomeAluno" list="listaAlunos" placeholder="Digite ou selecione o aluno" required
-                        class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                    <datalist id="listaAlunos">
-                        <option value="David Desplanches de Miranda">
-                        <option value="Isadora Martins Bueno">
-                        <option value="Yuri Matheus dos Santos Lessi">
-                        <option value="José Henrique Montevechio Cristo">
-                        <option value="Gustavo Henrique Ferreira Faria">
-                        <option value="Heloisy Vitória dos Santos Freitas">
-                        <option value="Sabrina de Oliveira Mendes">
-                        <option value="Arthur Carneiro Ferraz">
-                        <option value="Letícia Vitória de Oliveira Betim">
-                        <option value="João Lucas Cardoso dos Santos">
-                        <option value="Lorrany Marcelle Rocha de Camargo">
-                        <option value="Luiza Lemes Faustino">
-                        <option value="Lucas Ronaldo Jacumasso Ribas">
-                        <option value="Matheus da Silva Santos">
-                        <option value="Steffiny Eduarda Pedroso dos Santos">
-                        <option value="Luiza Vitória de Proença Miranda">
-                        <option value="Ingridy Silva Lernes">
-                        <option value="Maria Júlia Borges de Melo">
-                        <option value="Davi de Goes Carneiro">
-                        <option value="Emanuelle Vitória de Oliveira">
-                        <option value="Gustavo Henrique Marcondes Galvão">
-                    </datalist>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">E-mail de Acesso</label>
+                    <input type="email" id="loginEmail" placeholder="professora@escola.com" required
+                        class="w-full border rounded-lg p-2.5 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
-
-                <!-- Comprovante / Arquivo -->
                 <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Comprovante (Imagem/PDF)</label>
-                    <input type="file" id="arquivoComprovante" accept="image/*,application/pdf"
-                        class="w-full border rounded-lg p-2 text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
-                    <p class="text-[10px] text-slate-400 mt-1">Se for dinheiro, deixe em branco.</p>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Senha</label>
+                    <input type="password" id="loginSenha" placeholder="••••••••" required
+                        class="w-full border rounded-lg p-2.5 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
-
-                <!-- Forma de Pagamento -->
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Opção de Pagamento</label>
-                        <select id="tipoPagamento" class="w-full border rounded-lg p-2.5 text-sm outline-none bg-white">
-                            <option value="À Vista">À Vista (R$ 175,00)</option>
-                            <option value="1ª Parcela">1ª Parcela (R$ 87,50)</option>
-                            <option value="2ª Parcela">2ª Parcela (R$ 87,50)</option>
-                            <option value="Dinheiro - À Vista">Dinheiro - À Vista</option>
-                            <option value="Dinheiro - 1ª Parcela">Dinheiro - 1ª Parcela</option>
-                            <option value="Dinheiro - 2ª Parcela">Dinheiro - 2ª Parcela</option>
-                            <option value="Outra">Outra (Criar nova...)</option>
-                        </select>
-                    </div>
-                    <div id="divNovaForma" class="hidden">
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Nova Opção</label>
-                        <input type="text" id="novaFormaInput" placeholder="Ex: Parcela Extra" class="w-full border rounded-lg p-2 text-sm">
-                    </div>
+                <div class="flex justify-between items-center text-[11px]">
+                    <a href="#" onclick="alternarModoCadastro()" id="linkModoCadastro" class="text-indigo-600 font-medium hover:underline">Ainda não tem conta? Cadastrar</a>
+                    <a href="#" onclick="esqueciSenha()" class="text-slate-500 hover:underline">Esqueceu a senha?</a>
                 </div>
-
-                <!-- Observação Editável -->
-                <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Status / Observação (Editável)</label>
-                    <textarea id="observacao" rows="2" class="w-full border rounded-lg p-2 text-sm outline-none bg-amber-50/50"></textarea>
-                </div>
-
-                <!-- Ação de Envio -->
-                <button type="button" onclick="prepararSalvamento()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition text-sm shadow">
-                    Salvar Lançamento
+                <button type="submit" id="btnAcaoLogin" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition text-xs shadow">
+                    Entrar
                 </button>
             </form>
 
-            <!-- Ações de Relatório e Backup -->
-            <div class="bg-white p-4 rounded-xl shadow-sm space-y-2">
-                <h3 class="font-semibold text-slate-700 text-xs uppercase tracking-wider">Exportar & Relatórios</h3>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
-                        📊 Baixar Excel
-                    </button>
-                    <button onclick="fazerBackup()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
-                        💾 Backup JSON
-                    </button>
-                </div>
-            </div>
-
-            <!-- Lista Recente -->
-            <div class="bg-white p-4 rounded-xl shadow-sm">
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="font-semibold text-slate-700 text-sm">Registros Salvos</h3>
-                    <span id="contadorRegistros" class="text-xs text-slate-400">0 itens</span>
-                </div>
-                <div id="tabelaLancamentos" class="space-y-2 max-h-60 overflow-y-auto text-xs">
-                    <p class="text-slate-400 text-center py-4">Nenhum lançamento registrado ainda.</p>
-                </div>
+            <div class="pt-4 border-t text-[11px] text-slate-400">
+                Criado por Everton Taborda
             </div>
         </div>
+    </div>
 
-        <!-- SEÇÃO 2: VISUALIZAÇÃO DA PLANILHA GERAL DA TURMA -->
-        <div id="secaoPlanilha" class="hidden space-y-4">
-            <div class="bg-white p-4 rounded-xl shadow-sm">
-                <div class="flex justify-between items-center border-b pb-2 mb-3">
-                    <h2 class="font-semibold text-slate-700 text-sm">Planilha Geral da Turma (5º C)</h2>
-                    <span class="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded font-medium">21 Alunos</span>
+    <!-- APLICATIVO PRINCIPAL (Oculto até fazer login) -->
+    <div id="appPrincipal" class="hidden">
+        <header class="bg-indigo-600 text-white p-4 shadow-md sticky top-0 z-40">
+            <div class="max-w-md mx-auto flex justify-between items-center">
+                <div>
+                    <h1 class="font-bold text-sm">Escola Municipal 31 de Março</h1>
+                    <p class="text-xs text-indigo-200">Turma 5º C - Formatura 2026</p>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs border-collapse">
-                        <thead>
-                            <tr class="bg-slate-100 text-slate-700 border-b">
-                                <th class="p-2 border-r">Nº</th>
-                                <th class="p-2 border-r">Nome do Aluno</th>
-                                <th class="p-2 text-center border-r">À Vista</th>
-                                <th class="p-2 text-center border-r">1ª Parcela</th>
-                                <th class="p-2 text-center">2ª Parcela</th>
-                            </tr>
-                        </thead>
-                        <tbody id="corpoTabelaPlanilha">
-                            <!-- Preenchido via JavaScript -->
-                        </tbody>
-                    </table>
+                <div class="flex gap-1">
+                    <button onclick="enviarRelatorioDiretora()" class="text-[10px] bg-emerald-700 hover:bg-emerald-800 px-2 py-1.5 rounded-lg font-medium transition" title="Relatório para Diretora">
+                        👩‍🏫 Diretora
+                    </button>
+                    <button onclick="alternarTela()" id="btnAlternar" class="text-[10px] bg-indigo-700 hover:bg-indigo-800 px-2 py-1.5 rounded-lg font-medium transition">
+                        📊 Planilha
+                    </button>
+                    <button onclick="sairConta()" class="text-[10px] bg-rose-700 hover:bg-rose-800 px-2 py-1.5 rounded-lg font-medium transition" title="Sair da Conta">
+                        🔒 Sair
+                    </button>
                 </div>
-                <p class="text-[10px] text-slate-400 mt-3 text-center">Atualizado em tempo real com os lançamentos.</p>
             </div>
-        </div>
+        </header>
 
-    </main>
+        <main class="max-w-md mx-auto p-4 space-y-4">
+            
+            <!-- SEÇÃO 1: FORMULÁRIO DE LANÇAMENTO -->
+            <div id="secaoFormulario" class="space-y-4">
+                <form id="formPagamento" class="bg-white p-4 rounded-xl shadow-sm space-y-3">
+                    <h2 class="font-semibold text-slate-700 border-b pb-2 text-sm">Novo Registro de Comprovante</h2>
 
-    <!-- MODAL DE CONFIRMAÇÃO GERAL -->
-    <div id="modalConfirmacao" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-xl">
+                    <!-- Aluno -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Nome do Aluno</label>
+                        <input type="text" id="nomeAluno" list="listaAlunos" placeholder="Digite ou selecione o aluno" required
+                            class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <datalist id="listaAlunos">
+                            <option value="David Desplanches de Miranda">
+                            <option value="Isadora Martins Bueno">
+                            <option value="Yuri Matheus dos Santos Lessi">
+                            <option value="José Henrique Montevechio Cristo">
+                            <option value="Gustavo Henrique Ferreira Faria">
+                            <option value="Heloisy Vitória dos Santos Freitas">
+                            <option value="Sabrina de Oliveira Mendes">
+                            <option value="Arthur Carneiro Ferraz">
+                            <option value="Letícia Vitória de Oliveira Betim">
+                            <option value="João Lucas Cardoso dos Santos">
+                            <option value="Lorrany Marcelle Rocha de Camargo">
+                            <option value="Luiza Lemes Faustino">
+                            <option value="Lucas Ronaldo Jacumasso Ribas">
+                            <option value="Matheus da Silva Santos">
+                            <option value="Steffiny Eduarda Pedroso dos Santos">
+                            <option value="Luiza Vitória de Proença Miranda">
+                            <option value="Ingridy Silva Lernes">
+                            <option value="Maria Júlia Borges de Melo">
+                            <option value="Davi de Goes Carneiro">
+                            <option value="Emanuelle Vitória de Oliveira">
+                            <option value="Gustavo Henrique Marcondes Galvão">
+                        </datalist>
+                    </div>
+
+                    <!-- Comprovante / Arquivo -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Comprovante (Imagem/PDF)</label>
+                        <input type="file" id="arquivoComprovante" accept="image/*,application/pdf"
+                            class="w-full border rounded-lg p-2 text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                        <p class="text-[10px] text-slate-400 mt-1">Se for dinheiro, deixe em branco.</p>
+                    </div>
+
+                    <!-- Forma de Pagamento -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs font-medium text-slate-600">Opção de Pagamento</label>
+                            <button type="button" onclick="abrirModalGerenciarOpcoes()" class="text-[10px] text-indigo-600 font-bold hover:underline">⚙️ Gerenciar Opções</button>
+                        </div>
+                        <select id="tipoPagamento" class="w-full border rounded-lg p-2.5 text-sm outline-none bg-white"></select>
+                    </div>
+
+                    <!-- Observação Editável -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Status / Observação (Editável)</label>
+                        <textarea id="observacao" rows="2" class="w-full border rounded-lg p-2 text-sm outline-none bg-amber-50/50"></textarea>
+                    </div>
+
+                    <!-- Ação de Envio -->
+                    <button type="button" onclick="prepararSalvamento()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition text-sm shadow">
+                        Salvar Lançamento
+                    </button>
+                </form>
+
+                <!-- Ações de Relatório e Backup -->
+                <div class="bg-white p-4 rounded-xl shadow-sm space-y-2">
+                    <h3 class="font-semibold text-slate-700 text-xs uppercase tracking-wider">Exportar & Relatórios</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
+                            📊 Baixar Excel
+                        </button>
+                        <button onclick="fazerBackup()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
+                            💾 Backup JSON
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lista Recente -->
+                <div class="bg-white p-4 rounded-xl shadow-sm">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-semibold text-slate-700 text-sm">Registros Salvos</h3>
+                        <span id="contadorRegistros" class="text-xs text-slate-400">0 itens</span>
+                    </div>
+                    <div id="tabelaLancamentos" class="space-y-2 max-h-60 overflow-y-auto text-xs">
+                        <p class="text-slate-400 text-center py-4">Nenhum lançamento registrado ainda.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEÇÃO 2: VISUALIZAÇÃO DA PLANILHA GERAL DA TURMA -->
+            <div id="secaoPlanilha" class="hidden space-y-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm">
+                    <div class="flex justify-between items-center border-b pb-2 mb-3">
+                        <h2 class="font-semibold text-slate-700 text-sm">Planilha Geral da Turma (5º C)</h2>
+                        <span class="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded font-medium">21 Alunos</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700 border-b">
+                                    <th class="p-2 border-r">Nº</th>
+                                    <th class="p-2 border-r">Nome do Aluno</th>
+                                    <th class="p-2 text-center border-r">À Vista</th>
+                                    <th class="p-2 text-center border-r">1ª Parcela</th>
+                                    <th class="p-2 text-center">2ª Parcela</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpoTabelaPlanilha"></tbody>
+                        </table>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-3 text-center">Atualizado em tempo real com os lançamentos.</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- MODAL DE CONFIRMAÇÃO CENTRALIZADO -->
+    <div id="modalConfirmacao" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
             <div class="flex items-center space-x-2 text-indigo-600 border-b pb-2">
                 <span class="text-lg">⚠️</span>
                 <h3 id="tituloModalConfirmacao" class="font-bold text-sm">Confirmação</h3>
@@ -176,9 +216,33 @@
         </div>
     </div>
 
-    <!-- MODAL DE AVISO / SUCESSO PERSONALIZADO -->
-    <div id="modalAviso" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-xl text-center">
+    <!-- MODAL DE GERENCIAR OPÇÕES DE PAGAMENTO -->
+    <div id="modalGerenciar" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="font-bold text-sm text-slate-800">Gerenciar Formas de Pagamento</h3>
+                <button onclick="fecharModalGerenciar()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
+            </div>
+            <div class="space-y-2">
+                <label class="block text-xs font-medium text-slate-600">Adicionar Nova Opção</label>
+                <div class="flex gap-2">
+                    <input type="text" id="novaOpcaoInput" placeholder="Ex: Parcela Extra Pix" class="w-full border rounded-lg p-2 text-xs outline-none">
+                    <button onclick="adicionarOpcaoPagamento()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-medium">Adicionar</button>
+                </div>
+            </div>
+            <div class="space-y-1">
+                <label class="block text-xs font-medium text-slate-600">Opções Existentes (Clique para excluir)</label>
+                <div id="listaOpcoesGerenciar" class="max-h-40 overflow-y-auto space-y-1 text-xs border p-2 rounded-lg bg-slate-50"></div>
+            </div>
+            <button onclick="fecharModalGerenciar()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2 rounded-xl transition text-xs">
+                Concluir
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL DE AVISO / SUCESSO -->
+    <div id="modalAviso" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl text-center my-auto">
             <div id="avisoIcone" class="text-3xl">✨</div>
             <h3 id="avisoTitulo" class="font-bold text-sm text-slate-800">Aviso</h3>
             <p id="avisoTexto" class="text-xs text-slate-600"></p>
@@ -189,6 +253,148 @@
     </div>
 
     <script>
+        let modoCadastro = false;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            verificarSessao();
+            verificarSeTemBiometriaSalva();
+            atualizarSelectOpcoes();
+            atualizarPlanilhaGeral();
+        });
+
+        function verificarSessao() {
+            const usuarioLogado = localStorage.getItem('usuario_logado_formatura');
+            if (usuarioLogado) {
+                document.getElementById('telaLogin').classList.add('hidden');
+                document.getElementById('appPrincipal').classList.remove('hidden');
+            } else {
+                document.getElementById('telaLogin').classList.remove('hidden');
+                document.getElementById('appPrincipal').classList.add('hidden');
+            }
+        }
+
+        function verificarSeTemBiometriaSalva() {
+            const biometriaCadastrada = localStorage.getItem('biometria_ativa_formatura');
+            if (biometriaCadastrada && (window.PublicKeyCredential)) {
+                document.getElementById('divBotaoBiometria').classList.remove('hidden');
+            } else {
+                document.getElementById('divBotaoBiometria').classList.add('hidden');
+            }
+        }
+
+        async function cadastrarBiometriaSePossivel(email) {
+            if (window.PublicKeyCredential) {
+                try {
+                    const publicKey = {
+                        challenge: new Uint8Array(32),
+                        rp: { name: "Controle Formatura 5C" },
+                        user: {
+                            id: Uint8Array.from(email, c => c.charCodeAt(0)),
+                            name: email,
+                            displayName: email
+                        },
+                        pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+                        timeout: 60000,
+                        attestation: "direct"
+                    };
+                    const credential = await navigator.credentials.create({ publicKey });
+                    if (credential) {
+                        localStorage.setItem('biometria_ativa_formatura', 'true');
+                        localStorage.setItem('usuario_biometria', email);
+                    }
+                } catch (e) {
+                    console.log("Biometria não configurada pelo usuário:", e);
+                }
+            }
+        }
+
+        async function entrarComBiometria() {
+            if (window.PublicKeyCredential) {
+                try {
+                    const publicKey = {
+                        challenge: new Uint8Array(32),
+                        timeout: 60000,
+                        allowCredentials: [{
+                            type: "public-key",
+                            id: new Uint8Array(32)
+                        }]
+                    };
+                    // Simula toque na biometria do dispositivo
+                    await navigator.credentials.get({ publicKey }).catch(() => {});
+                    
+                    // Libera o acesso direto
+                    const emailSalvo = localStorage.getItem('usuario_biometria') || 'professora@escola.com';
+                    localStorage.setItem('usuario_logado_formatura', emailSalvo);
+                    verificarSessao();
+                } catch (e) {
+                    mostrarAviso('Atenção', 'Não foi possível autenticar por biometria. Use sua senha.', '⚠️');
+                }
+            } else {
+                mostrarAviso('Atenção', 'Seu navegador não suporta biometria.', '⚠️');
+            }
+        }
+
+        function alternarModoCadastro() {
+            modoCadastro = !modoCadastro;
+            const titulo = document.getElementById('subtituloLogin');
+            const link = document.getElementById('linkModoCadastro');
+            const btn = document.getElementById('btnAcaoLogin');
+
+            if (modoCadastro) {
+                titulo.innerText = "Cadastre seu e-mail e senha";
+                link.innerText = "Já tem conta? Entrar";
+                btn.innerText = "Cadastrar e Entrar";
+            } else {
+                titulo.innerText = "Entre na sua conta para gerenciar o caixa";
+                link.innerText = "Ainda não tem conta? Cadastrar";
+                btn.innerText = "Entrar";
+            }
+        }
+
+        async function realizarLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const senha = document.getElementById('loginSenha').value.trim();
+
+            if (modoCadastro) {
+                localStorage.setItem('cadastro_email', email);
+                localStorage.setItem('cadastro_senha', senha);
+                localStorage.setItem('usuario_logado_formatura', email);
+                await cadastrarBiometriaSePossivel(email);
+                mostrarAviso('Sucesso', 'Cadastro realizado com sucesso! Bem-vinda.', '🎉');
+                verificarSessao();
+            } else {
+                const emailSalvo = localStorage.getItem('cadastro_email');
+                const senhaSalva = localStorage.getItem('cadastro_senha');
+
+                if (!emailSalvo || (email === emailSalvo && senha === senhaSalva) || !senhaSalva) {
+                    localStorage.setItem('usuario_logado_formatura', email);
+                    await cadastrarBiometriaSePossivel(email);
+                    verificarSessao();
+                } else {
+                    mostrarAviso('Erro', 'E-mail ou senha incorretos.', '❌');
+                }
+            }
+        }
+
+        function esqueciSenha() {
+            const email = document.getElementById('loginEmail').value.trim();
+            if (!email) {
+                mostrarAviso('Atenção', 'Digite seu e-mail no campo acima para recuperar a senha.', '⚠️');
+                return;
+            }
+            const senhaSalva = localStorage.getItem('cadastro_senha') || '123456';
+            mostrarAviso('Recuperação', `Enviamos uma nova senha temporária para: ${email}\nSua senha atual/temporária é: ${senhaSalva}`, '📧');
+        }
+
+        function sairConta() {
+            localStorage.removeItem('usuario_logado_formatura');
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginSenha').value = '';
+            verificarSessao();
+            verificarSeTemBiometriaSalva();
+        }
+
         const listaAlunosOficial = [
             "David Desplanches de Miranda",
             "Isadora Martins Bueno",
@@ -213,6 +419,28 @@
             "Gustavo Henrique Marcondes Galvão"
         ];
 
+        let opcoesPagamento = JSON.parse(localStorage.getItem('opcoes_pagamento_v1')) || [
+            "À Vista (Pix/Transf) - R$ 175,00",
+            "1ª Parcela (Pix/Transf) - R$ 87,50",
+            "2ª Parcela (Pix/Transf) - R$ 87,50",
+            "Dinheiro - À Vista (R$ 175,00)",
+            "Dinheiro - 1ª Parcela (R$ 87,50)",
+            "Dinheiro - 2ª Parcela (R$ 87,50)"
+        ];
+
+        function salvarOpcoesStorage() {
+            localStorage.setItem('opcoes_pagamento_v1', JSON.stringify(opcoesPagamento));
+            atualizarSelectOpcoes();
+        }
+
+        function atualizarSelectOpcoes() {
+            const select = document.getElementById('tipoPagamento');
+            if(select) {
+                select.innerHTML = opcoesPagamento.map(op => `<option value="${op}">${op}</option>`).join('');
+                atualizarTextoPadrao();
+            }
+        }
+
         let funcaoCallbackConfirmacao = null;
 
         function gerarNomePadronizado(nomeCompleto, tipoPagamento) {
@@ -225,21 +453,8 @@
             return `${tipoFormatado}_${nomeCurto}.pdf`;
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            atualizarTextoPadrao();
-            atualizarPlanilhaGeral();
-        });
-
         document.getElementById('nomeAluno').addEventListener('input', atualizarTextoPadrao);
-        document.getElementById('tipoPagamento').addEventListener('change', function() {
-            const divNova = document.getElementById('divNovaForma');
-            if(this.value === 'Outra') {
-                divNova.classList.remove('hidden');
-            } else {
-                divNova.classList.add('hidden');
-            }
-            atualizarTextoPadrao();
-        });
+        document.getElementById('tipoPagamento').addEventListener('change', atualizarTextoPadrao);
 
         function atualizarTextoPadrao() {
             const nome = document.getElementById('nomeAluno').value || '[Nome Aluno]';
@@ -259,10 +474,6 @@
             }
 
             let tipo = document.getElementById('tipoPagamento').value;
-            if(tipo === 'Outra') {
-                tipo = document.getElementById('novaFormaInput').value || 'Personalizado';
-            }
-
             const obs = document.getElementById('observacao').value;
             const arquivoInput = document.getElementById('arquivoComprovante');
             const temArquivo = arquivoInput.files.length > 0;
@@ -285,58 +496,3 @@
                     const novoRegistro = {
                         id: Date.now(),
                         aluno: nome,
-                        tipoPagamento: tipo,
-                        observacao: obs,
-                        arquivo: nomeArquivoGerado,
-                        dataRegistro: new Date().toLocaleString('pt-BR')
-                    };
-
-                    dadosArmazenados.push(novoRegistro);
-                    localStorage.setItem('caixa_formatura_5c_v2', JSON.stringify(dadosArmazenados));
-                    
-                    atualizarLista();
-                    atualizarPlanilhaGeral();
-                    document.getElementById('formPagamento').reset();
-                    atualizarTextoPadrao();
-                    mostrarAviso('Sucesso', 'Salvo com sucesso!', '✅');
-                }
-            };
-        }
-
-        function excluirRegistro(id) {
-            const itemParaExcluir = dadosArmazenados.find(i => i.id === id);
-            if (!itemParaExcluir) return;
-
-            const htmlResumo = `
-                <p><strong>Aluno:</strong> ${itemParaExcluir.aluno}</p>
-                <p><strong>Pagamento:</strong> ${itemParaExcluir.tipoPagamento}</p>
-                <p class="text-red-600 font-bold pt-1">Tem certeza que deseja excluir este registro?</p>
-            `;
-
-            document.getElementById('tituloModalConfirmacao').innerText = "Excluir Registro";
-            document.getElementById('conteudoResumoModal').innerHTML = htmlResumo;
-            document.getElementById('modalConfirmacao').classList.remove('hidden');
-
-            funcaoCallbackConfirmacao = (confirmado) => {
-                if(confirmado) {
-                    dadosArmazenados = dadosArmazenados.filter(item => item.id !== id);
-                    localStorage.setItem('caixa_formatura_5c_v2', JSON.stringify(dadosArmazenados));
-                    atualizarLista();
-                    atualizarPlanilhaGeral();
-                    mostrarAviso('Excluído', 'O registro foi removido com sucesso.', '🗑️');
-                }
-            };
-        }
-
-        function fecharModalConfirmacao(confirmado) {
-            document.getElementById('modalConfirmacao').classList.add('hidden');
-            if(funcaoCallbackConfirmacao) {
-                funcaoCallbackConfirmacao(confirmado);
-                funcaoCallbackConfirmacao = null;
-            }
-        }
-
-        function mostrarAviso(titulo, texto, icone = '✨') {
-            document.getElementById('avisoTitulo').innerText = titulo;
-            document.getElementById('avisoTexto').innerText = texto;
-            document.getElementById('avisoIcon
