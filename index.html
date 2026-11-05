@@ -413,15 +413,34 @@
             }
         }
 
+        // FUNÇÃO DE EXPORTAÇÃO AJUSTADA NO FORMATO IDÊNTICO À PLANILHA ORIGINAL
         function exportarExcel() {
-            if(dadosArmazenados.length === 0) {
-                mostrarAviso('Aviso', 'Não há dados para exportar.', 'ℹ️');
-                return;
-            }
-            const worksheet = XLSX.utils.json_to_sheet(dadosArmazenados);
+            // Mapeia os 21 alunos oficiais cruzando com os pagamentos salvos
+            const dadosFormatadosParaPlanilha = listaAlunosOficial.map((aluno, index) => {
+                const pagamentosAluno = dadosArmazenados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
+                
+                const pagouAVista = pagamentosAluno.some(i => i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
+                const pagou1 = pagamentosAluno.some(i => i.tipoPagamento.includes('1ª Parcela'));
+                const pagou2 = pagamentosAluno.some(i => i.tipoPagamento.includes('2ª Parcela'));
+
+                // Pega as observações unidas do aluno
+                const obsGeral = pagamentosAluno.map(i => `${i.tipoPagamento} (${i.observacao})`).join(' | ');
+
+                return {
+                    "Nº": index + 1,
+                    "NOME DO FORMANDO": aluno,
+                    "À VISTA": pagouAVista ? "PAGO" : "",
+                    "1ª PARCELA": pagou1 ? "PAGO" : "",
+                    "2ª PARCELA": pagou2 ? "PAGO" : "",
+                    "FORMA DE PAGAMENTO": pagamentosAluno.map(i => i.tipoPagamento).join(', '),
+                    "OBSERVAÇÕES / DATA": obsGeral || "Pendente"
+                };
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(dadosFormatadosParaPlanilha);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Formatura 5C");
-            XLSX.writeFile(workbook, "Controle_Formatura_5C.xlsx");
+            XLSX.writeFile(workbook, "Controle_Formatura_Escola_31_de_Marco.xlsx");
         }
 
         function fazerBackup() {
