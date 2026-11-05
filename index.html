@@ -61,7 +61,12 @@
                 </button>
             </form>
 
-            <div class="pt-4 border-t text-[11px] text-slate-400">
+            <!-- Link para Excluir Conta Existente -->
+            <div id="divLinkExcluirConta" class="pt-2 text-center">
+                <a href="javascript:void(0)" onclick="abrirModalExcluirConta()" class="text-[11px] text-rose-600 hover:underline font-medium">🗑️ Excluir Conta Cadastrada</a>
+            </div>
+
+            <div class="pt-2 border-t text-[11px] text-slate-400">
                 Criado por Everton Taborda
             </div>
         </div>
@@ -228,6 +233,26 @@
         </div>
     </div>
 
+    <!-- MODAL DE EXCLUIR CONTA -->
+    <div id="modalExcluirConta" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto text-center">
+            <div class="text-3xl">⚠️</div>
+            <h3 class="font-bold text-sm text-slate-800">Gerenciamento de Conta</h3>
+            <div id="detalhesContaExcluir" class="text-xs bg-slate-50 p-3 rounded-lg text-left space-y-1">
+                <!-- Preenchido via JavaScript -->
+            </div>
+            <p class="text-xs text-rose-600 font-semibold">Tem certeza absoluta que deseja excluir sua conta e limpar todos os dados?</p>
+            <div class="grid grid-cols-2 gap-2 pt-2">
+                <button onclick="fecharModalExcluirConta()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2.5 rounded-xl transition text-xs">
+                    Cancelar
+                </button>
+                <button onclick="confirmarExclusaoConta()" class="bg-rose-600 hover:bg-rose-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">
+                    Sim, Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL DE CONFIRMAÇÃO CENTRALIZADO -->
     <div id="modalConfirmacao" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
@@ -294,6 +319,18 @@
             atualizarNomeProfessoraTela();
         });
 
+        // Backup automático ao sair ou mudar de página
+        window.addEventListener('beforeunload', () => {
+            fazerBackupAutomaticoSilencioso();
+        });
+
+        function fazerBackupAutomaticoSilencioso() {
+            const dados = localStorage.getItem('caixa_formatura_5c_v2');
+            if (dados) {
+                localStorage.setItem('backup_automatico_seguranca', dados);
+            }
+        }
+
         function verificarSessao() {
             const usuarioLogado = localStorage.getItem('usuario_logado_formatura');
             if (usuarioLogado) {
@@ -303,13 +340,42 @@
             } else {
                 document.getElementById('telaLogin').classList.remove('hidden');
                 document.getElementById('appPrincipal').classList.add('hidden');
-                // Força a limpeza absoluta dos campos de texto na tela de login
                 setTimeout(() => {
                     document.getElementById('loginEmail').value = '';
                     document.getElementById('loginSenha').value = '';
                     if(document.getElementById('cadastroNome')) document.getElementById('cadastroNome').value = '';
                 }, 50);
             }
+        }
+
+        function abrirModalExcluirConta() {
+            const emailSalvo = localStorage.getItem('cadastro_email');
+            const nomeSalvo = localStorage.getItem('nome_professora_formatura') || 'Não cadastrado';
+            const container = document.getElementById('detalhesContaExcluir');
+
+            if (!emailSalvo) {
+                container.innerHTML = `<p class="text-slate-500 text-center py-2">Nenhuma conta cadastrada neste dispositivo ainda.</p>`;
+            } else {
+                container.innerHTML = `
+                    <p><strong>Nome:</strong> ${nomeSalvo}</p>
+                    <p><strong>E-mail:</strong> ${emailSalvo}</p>
+                    <p><strong>Registros salvos:</strong> ${JSON.parse(localStorage.getItem('caixa_formatura_5c_v2') || '[]').length} itens</p>
+                `;
+            }
+            document.getElementById('modalExcluirConta').classList.remove('hidden');
+        }
+
+        function fecharModalExcluirConta() {
+            document.getElementById('modalExcluirConta').classList.add('hidden');
+        }
+
+        function confirmarExclusaoConta() {
+            localStorage.clear();
+            fecharModalExcluirConta();
+            mostrarAviso('Conta Excluída', 'Todos os dados e cadastros foram removidos com sucesso.', '🗑️');
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
         }
 
         function alternarVisibilidadeSenha() {
@@ -335,6 +401,7 @@
             if (novo && novo.trim() !== '') {
                 localStorage.setItem('nome_professora_formatura', novo.trim());
                 atualizarNomeProfessoraTela();
+                fazerBackupAutomaticoSilencioso();
                 mostrarAviso('Sucesso', 'Nome da professora atualizado!', '✅');
             }
         }
@@ -435,6 +502,7 @@
                 localStorage.setItem('cadastro_senha', senha);
                 localStorage.setItem('usuario_logado_formatura', email);
                 await cadastrarBiometriaSePossivel(email);
+                fazerBackupAutomaticoSilencioso();
                 mostrarAviso('Sucesso', 'Cadastro realizado com sucesso! Bem-vinda.', '🎉');
                 verificarSessao();
             } else {
@@ -444,6 +512,7 @@
                 if (!emailSalvo || (email === emailSalvo && senha === senhaSalva) || !senhaSalva) {
                     localStorage.setItem('usuario_logado_formatura', email);
                     await cadastrarBiometriaSePossivel(email);
+                    fazerBackupAutomaticoSilencioso();
                     verificarSessao();
                 } else {
                     mostrarAviso('Erro', 'E-mail ou senha incorretos.', '❌');
@@ -462,6 +531,7 @@
         }
 
         function sairConta() {
+            fazerBackupAutomaticoSilencioso();
             localStorage.removeItem('usuario_logado_formatura');
             document.getElementById('loginEmail').value = '';
             document.getElementById('loginSenha').value = '';
@@ -504,6 +574,7 @@
 
         function salvarOpcoesStorage() {
             localStorage.setItem('opcoes_pagamento_v1', JSON.stringify(opcoesPagamento));
+            fazerBackupAutomaticoSilencioso();
             atualizarSelectOpcoes();
         }
 
@@ -592,6 +663,7 @@
 
                     dadosArmazenados.push(novoRegistro);
                     localStorage.setItem('caixa_formatura_5c_v2', JSON.stringify(dadosArmazenados));
+                    fazerBackupAutomaticoSilencioso();
                     
                     atualizarLista();
                     atualizarPlanilhaGeral();
@@ -657,6 +729,7 @@
                 if(confirmado) {
                     dadosArmazenados = dadosArmazenados.filter(item => item.id !== id);
                     localStorage.setItem('caixa_formatura_5c_v2', JSON.stringify(dadosArmazenados));
+                    fazerBackupAutomaticoSilencioso();
                     atualizarLista();
                     atualizarPlanilhaGeral();
                     mostrarAviso('Excluído', 'O registro foi removido com sucesso.', '🗑️');
@@ -739,7 +812,7 @@
             document.getElementById('avisoTitulo').innerText = titulo;
             document.getElementById('avisoTexto').innerText = texto;
             document.getElementById('avisoIcone').innerText = icone;
-            document.getElementById('modalAviso').classList.remove('hidden');
+            document.getElementById('modalAviso').classList.add('hidden');
         }
 
         function fecharModalAviso() {
