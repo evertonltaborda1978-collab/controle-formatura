@@ -1,0 +1,24 @@
+{
+  "name": "Controle de Formatura 5º C",
+  "short_name": "Formatura 5C",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "share_target": {
+    "action": "./index.html",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3135/3135706.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
