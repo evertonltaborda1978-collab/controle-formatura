@@ -157,12 +157,12 @@
 
     </main>
 
-    <!-- MODAL DE CONFIRMAÇÃO -->
+    <!-- MODAL DE CONFIRMAÇÃO GERAL -->
     <div id="modalConfirmacao" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-xl">
             <div class="flex items-center space-x-2 text-indigo-600 border-b pb-2">
                 <span class="text-lg">⚠️</span>
-                <h3 class="font-bold text-sm">Confirmação de Lançamento</h3>
+                <h3 id="tituloModalConfirmacao" class="font-bold text-sm">Confirmação</h3>
             </div>
             <div id="conteudoResumoModal" class="text-xs space-y-1 text-slate-600 bg-slate-50 p-3 rounded-lg"></div>
             <div class="grid grid-cols-2 gap-2 pt-2">
@@ -170,7 +170,7 @@
                     Cancelar
                 </button>
                 <button onclick="fecharModalConfirmacao(true)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">
-                    Confirmar e Salvar
+                    Confirmar
                 </button>
             </div>
         </div>
@@ -276,6 +276,7 @@
                 <p class="text-indigo-600 font-bold pt-1">Deseja confirmar e salvar agora?</p>
             `;
 
+            document.getElementById('tituloModalConfirmacao').innerText = "Confirmação de Lançamento";
             document.getElementById('conteudoResumoModal').innerHTML = htmlResumo;
             document.getElementById('modalConfirmacao').classList.remove('hidden');
 
@@ -302,6 +303,31 @@
             };
         }
 
+        function excluirRegistro(id) {
+            const itemParaExcluir = dadosArmazenados.find(i => i.id === id);
+            if (!itemParaExcluir) return;
+
+            const htmlResumo = `
+                <p><strong>Aluno:</strong> ${itemParaExcluir.aluno}</p>
+                <p><strong>Pagamento:</strong> ${itemParaExcluir.tipoPagamento}</p>
+                <p class="text-red-600 font-bold pt-1">Tem certeza que deseja excluir este registro?</p>
+            `;
+
+            document.getElementById('tituloModalConfirmacao').innerText = "Excluir Registro";
+            document.getElementById('conteudoResumoModal').innerHTML = htmlResumo;
+            document.getElementById('modalConfirmacao').classList.remove('hidden');
+
+            funcaoCallbackConfirmacao = (confirmado) => {
+                if(confirmado) {
+                    dadosArmazenados = dadosArmazenados.filter(item => item.id !== id);
+                    localStorage.setItem('caixa_formatura_5c_v2', JSON.stringify(dadosArmazenados));
+                    atualizarLista();
+                    atualizarPlanilhaGeral();
+                    mostrarAviso('Excluído', 'O registro foi removido com sucesso.', '🗑️');
+                }
+            };
+        }
+
         function fecharModalConfirmacao(confirmado) {
             document.getElementById('modalConfirmacao').classList.add('hidden');
             if(funcaoCallbackConfirmacao) {
@@ -313,145 +339,4 @@
         function mostrarAviso(titulo, texto, icone = '✨') {
             document.getElementById('avisoTitulo').innerText = titulo;
             document.getElementById('avisoTexto').innerText = texto;
-            document.getElementById('avisoIcone').innerText = icone;
-            document.getElementById('modalAviso').classList.remove('hidden');
-        }
-
-        function fecharModalAviso() {
-            document.getElementById('modalAviso').classList.add('hidden');
-        }
-
-        function excluirRegistro(id) {
-            dadosArmazenados = dadosArmazenados.filter(item => item.id !== id);
-            localStorage.setItem('caixa_formatura_5c_v2', JSON.stringify(dadosArmazenados));
-            atualizarLista();
-            atualizarPlanilhaGeral();
-        }
-
-        function atualizarLista() {
-            const container = document.getElementById('tabelaLancamentos');
-            document.getElementById('contadorRegistros').innerText = `${dadosArmazenados.length} itens`;
-
-            if(dadosArmazenados.length === 0) {
-                container.innerHTML = `<p class="text-slate-400 text-center py-4">Nenhum lançamento registrado ainda.</p>`;
-                return;
-            }
-
-            container.innerHTML = dadosArmazenados.slice().reverse().map(item => `
-                <div class="border rounded-lg p-2.5 bg-slate-50 flex justify-between items-center">
-                    <div>
-                        <p class="font-bold text-slate-800">${item.aluno}</p>
-                        <p class="text-indigo-600 font-medium">${item.tipoPagamento} — <span class="text-emerald-600 font-bold">Pago</span></p>
-                        <p class="text-slate-500 text-[10px]">${item.observacao} | 📄 <strong>${item.arquivo}</strong></p>
-                    </div>
-                    <button onclick="excluirRegistro(${item.id})" class="text-red-500 hover:text-red-700 p-1 font-bold text-xs" title="Excluir">
-                        ✕
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        function atualizarPlanilhaGeral() {
-            const tbody = document.getElementById('corpoTabelaPlanilha');
-            tbody.innerHTML = listaAlunosOficial.map((aluno, index) => {
-                const pagamentosAluno = dadosArmazenados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
-                
-                const pagouAVista = pagamentosAluno.some(i => i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
-                const pagou1 = pagamentosAluno.some(i => i.tipoPagamento.includes('1ª Parcela'));
-                const pagou2 = pagamentosAluno.some(i => i.tipoPagamento.includes('2ª Parcela'));
-
-                const badgeAVista = pagouAVista ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Pago</span>` : `<span class="text-slate-300">-</span>`;
-                const badge1 = pagou1 ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Pago</span>` : `<span class="text-slate-300">-</span>`;
-                const badge2 = pagou2 ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Pago</span>` : `<span class="text-slate-300">-</span>`;
-
-                return `
-                    <tr class="border-b hover:bg-slate-50">
-                        <td class="p-2 border-r font-medium text-slate-500">${index + 1}</td>
-                        <td class="p-2 border-r font-semibold text-slate-800">${aluno}</td>
-                        <td class="p-2 text-center border-r">${badgeAVista}</td>
-                        <td class="p-2 text-center border-r">${badge1}</td>
-                        <td class="p-2 text-center">${badge2}</td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        function enviarRelatorioDiretora() {
-            let resumo = `📊 *Relatório de Caixa - Formatura 5º C*\nEscola Municipal 31 de Março\n\n`;
-            resumo += `Total de registros lançados: ${dadosArmazenados.length}\n\n`;
-            
-            if(dadosArmazenados.length === 0) {
-                resumo += `Nenhum pagamento registrado até o momento.`;
-            } else {
-                resumo += `*Alunos quitados/com pagamentos:* \n`;
-                dadosArmazenados.forEach(i => {
-                    resumo += `- ${i.aluno} (${i.tipoPagamento})\n`;
-                });
-            }
-
-            navigator.clipboard.writeText(resumo).then(() => {
-                mostrarAviso('Sucesso', 'Relatório para a Diretora copiado com sucesso! Agora basta colar no WhatsApp ou E-mail dela.', '📋');
-            }).catch(() => {
-                prompt("Copie o relatório abaixo para enviar à Diretora:", resumo);
-            });
-        }
-
-        function alternarTela() {
-            const formSec = document.getElementById('secaoFormulario');
-            const planilhaSec = document.getElementById('secaoPlanilha');
-            const btn = document.getElementById('btnAlternar');
-
-            if(formSec.classList.contains('hidden')) {
-                formSec.classList.remove('hidden');
-                planilhaSec.classList.add('hidden');
-                btn.innerText = "📊 Planilha";
-            } else {
-                formSec.classList.add('hidden');
-                planilhaSec.classList.remove('hidden');
-                btn.innerText = "📝 Novo Registro";
-                atualizarPlanilhaGeral();
-            }
-        }
-
-        // FUNÇÃO DE EXPORTAÇÃO AJUSTADA NO FORMATO IDÊNTICO À PLANILHA ORIGINAL
-        function exportarExcel() {
-            // Mapeia os 21 alunos oficiais cruzando com os pagamentos salvos
-            const dadosFormatadosParaPlanilha = listaAlunosOficial.map((aluno, index) => {
-                const pagamentosAluno = dadosArmazenados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
-                
-                const pagouAVista = pagamentosAluno.some(i => i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
-                const pagou1 = pagamentosAluno.some(i => i.tipoPagamento.includes('1ª Parcela'));
-                const pagou2 = pagamentosAluno.some(i => i.tipoPagamento.includes('2ª Parcela'));
-
-                // Pega as observações unidas do aluno
-                const obsGeral = pagamentosAluno.map(i => `${i.tipoPagamento} (${i.observacao})`).join(' | ');
-
-                return {
-                    "Nº": index + 1,
-                    "NOME DO FORMANDO": aluno,
-                    "À VISTA": pagouAVista ? "PAGO" : "",
-                    "1ª PARCELA": pagou1 ? "PAGO" : "",
-                    "2ª PARCELA": pagou2 ? "PAGO" : "",
-                    "FORMA DE PAGAMENTO": pagamentosAluno.map(i => i.tipoPagamento).join(', '),
-                    "OBSERVAÇÕES / DATA": obsGeral || "Pendente"
-                };
-            });
-
-            const worksheet = XLSX.utils.json_to_sheet(dadosFormatadosParaPlanilha);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Formatura 5C");
-            XLSX.writeFile(workbook, "Controle_Formatura_Escola_31_de_Marco.xlsx");
-        }
-
-        function fazerBackup() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dadosArmazenados));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `backup_formatura_5c_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        }
-    </script>
-</body>
-</html>
+            document.getElementById('avisoIcon
