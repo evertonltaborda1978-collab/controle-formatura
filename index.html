@@ -15,114 +15,173 @@
                 <h1 class="font-bold text-sm">Escola Municipal 31 de Março</h1>
                 <p class="text-xs text-indigo-200">Turma 5º C - Formatura 2026</p>
             </div>
-            <span class="text-[10px] bg-indigo-700 px-2 py-1 rounded">Versão App</span>
+            <div class="flex gap-1.5">
+                <button onclick="enviarRelatorioDiretora()" class="text-[11px] bg-emerald-700 hover:bg-emerald-800 px-2.5 py-1.5 rounded-lg font-medium transition" title="Gerar relatório para a Diretora">
+                    👩‍🏫 Diretora
+                </button>
+                <button onclick="alternarTela()" id="btnAlternar" class="text-[11px] bg-indigo-700 hover:bg-indigo-800 px-2.5 py-1.5 rounded-lg font-medium transition">
+                    📊 Planilha
+                </button>
+            </div>
         </div>
     </header>
 
     <main class="max-w-md mx-auto p-4 space-y-4">
         
-        <!-- Formulário de Lançamento -->
-        <form id="formPagamento" class="bg-white p-4 rounded-xl shadow-sm space-y-3">
-            <h2 class="font-semibold text-slate-700 border-b pb-2 text-sm">Novo Registro de Comprovante</h2>
+        <!-- SEÇÃO 1: FORMULÁRIO DE LANÇAMENTO -->
+        <div id="secaoFormulario" class="space-y-4">
+            <form id="formPagamento" class="bg-white p-4 rounded-xl shadow-sm space-y-3">
+                <h2 class="font-semibold text-slate-700 border-b pb-2 text-sm">Novo Registro de Comprovante</h2>
 
-            <!-- Aluno -->
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Nome do Aluno</label>
-                <input type="text" id="nomeAluno" list="listaAlunos" placeholder="Digite ou selecione o aluno" required
-                    class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                <datalist id="listaAlunos">
-                    <option value="David Desplanches de Miranda">
-                    <option value="Isadora Martins Bueno">
-                    <option value="Yuri Matheus dos Santos Lessi">
-                    <option value="José Henrique Montevechio Cristo">
-                    <option value="Gustavo Henrique Ferreira Faria">
-                    <option value="Heloisy Vitória dos Santos Freitas">
-                    <option value="Sabrina de Oliveira Mendes">
-                    <option value="Arthur Carneiro Ferraz">
-                    <option value="Letícia Vitória de Oliveira Betim">
-                    <option value="João Lucas Cardoso dos Santos">
-                    <option value="Lorrany Marcelle Rocha de Camargo">
-                    <option value="Luiza Lemes Faustino">
-                    <option value="Lucas Ronaldo Jacumasso Ribas">
-                    <option value="Matheus da Silva Santos">
-                    <option value="Steffiny Eduarda Pedroso dos Santos">
-                    <option value="Luiza Vitória de Proença Miranda">
-                    <option value="Ingridy Silva Lernes">
-                    <option value="Maria Júlia Borges de Melo">
-                    <option value="Davi de Goes Carneiro">
-                    <option value="Emanuelle Vitória de Oliveira">
-                    <option value="Gustavo Henrique Marcondes Galvão">
-                </datalist>
-            </div>
-
-            <!-- Comprovante / Arquivo -->
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Comprovante (Imagem/PDF)</label>
-                <input type="file" id="arquivoComprovante" accept="image/*,application/pdf"
-                    class="w-full border rounded-lg p-2 text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
-                <p class="text-[10px] text-slate-400 mt-1">Se for dinheiro, deixe em branco.</p>
-            </div>
-
-            <!-- Forma de Pagamento -->
-            <div class="grid grid-cols-2 gap-2">
+                <!-- Aluno -->
                 <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Opção de Pagamento</label>
-                    <select id="tipoPagamento" class="w-full border rounded-lg p-2.5 text-sm outline-none bg-white">
-                        <option value="À Vista">À Vista (R$ 175,00)</option>
-                        <option value="1ª Parcela">1ª Parcela (R$ 87,50)</option>
-                        <option value="2ª Parcela">2ª Parcela (R$ 87,50)</option>
-                        <option value="Dinheiro - À Vista">Dinheiro - À Vista</option>
-                        <option value="Dinheiro - 1ª Parcela">Dinheiro - 1ª Parcela</option>
-                        <option value="Dinheiro - 2ª Parcela">Dinheiro - 2ª Parcela</option>
-                        <option value="Outra">Outra (Criar nova...)</option>
-                    </select>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Nome do Aluno</label>
+                    <input type="text" id="nomeAluno" list="listaAlunos" placeholder="Digite ou selecione o aluno" required
+                        class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <datalist id="listaAlunos">
+                        <option value="David Desplanches de Miranda">
+                        <option value="Isadora Martins Bueno">
+                        <option value="Yuri Matheus dos Santos Lessi">
+                        <option value="José Henrique Montevechio Cristo">
+                        <option value="Gustavo Henrique Ferreira Faria">
+                        <option value="Heloisy Vitória dos Santos Freitas">
+                        <option value="Sabrina de Oliveira Mendes">
+                        <option value="Arthur Carneiro Ferraz">
+                        <option value="Letícia Vitória de Oliveira Betim">
+                        <option value="João Lucas Cardoso dos Santos">
+                        <option value="Lorrany Marcelle Rocha de Camargo">
+                        <option value="Luiza Lemes Faustino">
+                        <option value="Lucas Ronaldo Jacumasso Ribas">
+                        <option value="Matheus da Silva Santos">
+                        <option value="Steffiny Eduarda Pedroso dos Santos">
+                        <option value="Luiza Vitória de Proença Miranda">
+                        <option value="Ingridy Silva Lernes">
+                        <option value="Maria Júlia Borges de Melo">
+                        <option value="Davi de Goes Carneiro">
+                        <option value="Emanuelle Vitória de Oliveira">
+                        <option value="Gustavo Henrique Marcondes Galvão">
+                    </datalist>
                 </div>
-                <div id="divNovaForma" class="hidden">
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Nova Opção</label>
-                    <input type="text" id="novaFormaInput" placeholder="Ex: Parcela Extra" class="w-full border rounded-lg p-2 text-sm">
+
+                <!-- Comprovante / Arquivo -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Comprovante (Imagem/PDF)</label>
+                    <input type="file" id="arquivoComprovante" accept="image/*,application/pdf"
+                        class="w-full border rounded-lg p-2 text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                    <p class="text-[10px] text-slate-400 mt-1">Se for dinheiro, deixe em branco.</p>
+                </div>
+
+                <!-- Forma de Pagamento -->
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Opção de Pagamento</label>
+                        <select id="tipoPagamento" class="w-full border rounded-lg p-2.5 text-sm outline-none bg-white">
+                            <option value="À Vista">À Vista (R$ 175,00)</option>
+                            <option value="1ª Parcela">1ª Parcela (R$ 87,50)</option>
+                            <option value="2ª Parcela">2ª Parcela (R$ 87,50)</option>
+                            <option value="Dinheiro - À Vista">Dinheiro - À Vista</option>
+                            <option value="Dinheiro - 1ª Parcela">Dinheiro - 1ª Parcela</option>
+                            <option value="Dinheiro - 2ª Parcela">Dinheiro - 2ª Parcela</option>
+                            <option value="Outra">Outra (Criar nova...)</option>
+                        </select>
+                    </div>
+                    <div id="divNovaForma" class="hidden">
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Nova Opção</label>
+                        <input type="text" id="novaFormaInput" placeholder="Ex: Parcela Extra" class="w-full border rounded-lg p-2 text-sm">
+                    </div>
+                </div>
+
+                <!-- Observação Editável -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Status / Observação (Editável)</label>
+                    <textarea id="observacao" rows="2" class="w-full border rounded-lg p-2 text-sm outline-none bg-amber-50/50"></textarea>
+                </div>
+
+                <!-- Ação de Envio -->
+                <button type="button" onclick="prepararSalvamento()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition text-sm shadow">
+                    Salvar Lançamento
+                </button>
+            </form>
+
+            <!-- Ações de Relatório e Backup -->
+            <div class="bg-white p-4 rounded-xl shadow-sm space-y-2">
+                <h3 class="font-semibold text-slate-700 text-xs uppercase tracking-wider">Exportar & Relatórios</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
+                        📊 Baixar Excel
+                    </button>
+                    <button onclick="fazerBackup()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
+                        💾 Backup JSON
+                    </button>
                 </div>
             </div>
 
-            <!-- Observação Editável -->
-            <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Status / Observação (Editável)</label>
-                <textarea id="observacao" rows="2" class="w-full border rounded-lg p-2 text-sm outline-none bg-amber-50/50"></textarea>
-            </div>
-
-            <!-- Ação de Envio -->
-            <button type="button" onclick="prepararSalvamento()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition text-sm shadow">
-                Salvar Lançamento
-            </button>
-        </form>
-
-        <!-- Ações de Relatório e Backup -->
-        <div class="bg-white p-4 rounded-xl shadow-sm space-y-2">
-            <h3 class="font-semibold text-slate-700 text-xs uppercase tracking-wider">Exportar & Relatórios</h3>
-            <div class="grid grid-cols-2 gap-2">
-                <button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
-                    📊 Baixar Excel
-                </button>
-                <button onclick="fazerBackup()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
-                    💾 Backup JSON
-                </button>
+            <!-- Lista Recente -->
+            <div class="bg-white p-4 rounded-xl shadow-sm">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-semibold text-slate-700 text-sm">Registros Salvos</h3>
+                    <span id="contadorRegistros" class="text-xs text-slate-400">0 itens</span>
+                </div>
+                <div id="tabelaLancamentos" class="space-y-2 max-h-60 overflow-y-auto text-xs">
+                    <p class="text-slate-400 text-center py-4">Nenhum lançamento registrado ainda.</p>
+                </div>
             </div>
         </div>
 
-        <!-- Lista Recente -->
-        <div class="bg-white p-4 rounded-xl shadow-sm">
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="font-semibold text-slate-700 text-sm">Registros Salvos</h3>
-                <span id="contadorRegistros" class="text-xs text-slate-400">0 itens</span>
-            </div>
-            <div id="tabelaLancamentos" class="space-y-2 max-h-60 overflow-y-auto text-xs">
-                <p class="text-slate-400 text-center py-4">Nenhum lançamento registrado ainda.</p>
+        <!-- SEÇÃO 2: VISUALIZAÇÃO DA PLANILHA GERAL DA TURMA -->
+        <div id="secaoPlanilha" class="hidden space-y-4">
+            <div class="bg-white p-4 rounded-xl shadow-sm">
+                <div class="flex justify-between items-center border-b pb-2 mb-3">
+                    <h2 class="font-semibold text-slate-700 text-sm">Planilha Geral da Turma (5º C)</h2>
+                    <span class="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded font-medium">21 Alunos</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 border-b">
+                                <th class="p-2 border-r">Nº</th>
+                                <th class="p-2 border-r">Nome do Aluno</th>
+                                <th class="p-2 text-center border-r">À Vista</th>
+                                <th class="p-2 text-center border-r">1ª Parcela</th>
+                                <th class="p-2 text-center">2ª Parcela</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabelaPlanilha">
+                            <!-- Preenchido via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-3 text-center">Atualizado em tempo real com os lançamentos.</p>
             </div>
         </div>
 
     </main>
 
     <script>
-        // Função para gerar o nome padronizado do arquivo (Primeiro e último nome + tipo)
+        const listaAlunosOficial = [
+            "David Desplanches de Miranda",
+            "Isadora Martins Bueno",
+            "Yuri Matheus dos Santos Lessi",
+            "José Henrique Montevechio Cristo",
+            "Gustavo Henrique Ferreira Faria",
+            "Heloisy Vitória dos Santos Freitas",
+            "Sabrina de Oliveira Mendes",
+            "Arthur Carneiro Ferraz",
+            "Letícia Vitória de Oliveira Betim",
+            "João Lucas Cardoso dos Santos",
+            "Lorrany Marcelle Rocha de Camargo",
+            "Luiza Lemes Faustino",
+            "Lucas Ronaldo Jacumasso Ribas",
+            "Matheus da Silva Santos",
+            "Steffiny Eduarda Pedroso dos Santos",
+            "Luiza Vitória de Proença Miranda",
+            "Ingridy Silva Lernes",
+            "Maria Júlia Borges de Melo",
+            "Davi de Goes Carneiro",
+            "Emanuelle Vitória de Oliveira",
+            "Gustavo Henrique Marcondes Galvão"
+        ];
+
         function gerarNomePadronizado(nomeCompleto, tipoPagamento) {
             if (!nomeCompleto) return 'comprovante';
             const partes = nomeCompleto.trim().split(' ');
@@ -135,6 +194,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             atualizarTextoPadrao();
+            atualizarPlanilhaGeral();
         });
 
         document.getElementById('nomeAluno').addEventListener('input', atualizarTextoPadrao);
@@ -173,8 +233,6 @@
             const obs = document.getElementById('observacao').value;
             const arquivoInput = document.getElementById('arquivoComprovante');
             const temArquivo = arquivoInput.files.length > 0;
-            
-            // Renomeia automaticamente com base na regra solicitada
             const nomeArquivoGerado = temArquivo ? gerarNomePadronizado(nome, tipo) : 'Sem anexo (Dinheiro)';
 
             const confirmacao = confirm(`ATENÇÃO: O registro AINDA NÃO FOI SALVO!\n\nConfere os dados:\n- Aluno: ${nome}\n- Forma: ${tipo}\n- Arquivo gerado: ${nomeArquivoGerado}\n- Status: ${obs}\n\nDeseja salvar agora?`);
@@ -193,6 +251,7 @@
                 localStorage.setItem('caixa_formatura_5c_v2', JSON.stringify(dadosArmazenados));
                 
                 atualizarLista();
+                atualizarPlanilhaGeral();
                 document.getElementById('formPagamento').reset();
                 atualizarTextoPadrao();
                 alert('Salvo com sucesso!');
@@ -205,3 +264,117 @@
             if(confirm('Deseja excluir este registro?')) {
                 dadosArmazenados = dadosArmazenados.filter(item => item.id !== id);
                 localStorage.setItem('caixa_formatura_5c_v2', JSON.stringify(dadosArmazenados));
+                atualizarLista();
+                atualizarPlanilhaGeral();
+            }
+        }
+
+        function atualizarLista() {
+            const container = document.getElementById('tabelaLancamentos');
+            document.getElementById('contadorRegistros').innerText = `${dadosArmazenados.length} itens`;
+
+            if(dadosArmazenados.length === 0) {
+                container.innerHTML = `<p class="text-slate-400 text-center py-4">Nenhum lançamento registrado ainda.</p>`;
+                return;
+            }
+
+            container.innerHTML = dadosArmazenados.slice().reverse().map(item => `
+                <div class="border rounded-lg p-2.5 bg-slate-50 flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-slate-800">${item.aluno}</p>
+                        <p class="text-indigo-600 font-medium">${item.tipoPagamento} — <span class="text-emerald-600 font-bold">Pago</span></p>
+                        <p class="text-slate-500 text-[10px]">${item.observacao} | 📄 <strong>${item.arquivo}</strong></p>
+                    </div>
+                    <button onclick="excluirRegistro(${item.id})" class="text-red-500 hover:text-red-700 p-1 font-bold text-xs" title="Excluir">
+                        ✕
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function atualizarPlanilhaGeral() {
+            const tbody = document.getElementById('corpoTabelaPlanilha');
+            tbody.innerHTML = listaAlunosOficial.map((aluno, index) => {
+                const pagamentosAluno = dadosArmazenados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
+                
+                const pagouAVista = pagamentosAluno.some(i => i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
+                const pagou1 = pagamentosAluno.some(i => i.tipoPagamento.includes('1ª Parcela'));
+                const pagou2 = pagamentosAluno.some(i => i.tipoPagamento.includes('2ª Parcela'));
+
+                const badgeAVista = pagouAVista ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Pago</span>` : `<span class="text-slate-300">-</span>`;
+                const badge1 = pagou1 ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Pago</span>` : `<span class="text-slate-300">-</span>`;
+                const badge2 = pagou2 ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Pago</span>` : `<span class="text-slate-300">-</span>`;
+
+                return `
+                    <tr class="border-b hover:bg-slate-50">
+                        <td class="p-2 border-r font-medium text-slate-500">${index + 1}</td>
+                        <td class="p-2 border-r font-semibold text-slate-800">${aluno}</td>
+                        <td class="p-2 text-center border-r">${badgeAVista}</td>
+                        <td class="p-2 text-center border-r">${badge1}</td>
+                        <td class="p-2 text-center">${badge2}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function enviarRelatorioDiretora() {
+            let resumo = `📊 *Relatório de Caixa - Formatura 5º C*\nEscola Municipal 31 de Março\n\n`;
+            resumo += `Total de registros lançados: ${dadosArmazenados.length}\n\n`;
+            
+            if(dadosArmazenados.length === 0) {
+                resumo += `Nenhum pagamento registrado até o momento.`;
+            } else {
+                resumo += `*Alunos quitados/com pagamentos:* \n`;
+                dadosArmazenados.forEach(i => {
+                    resumo += `- ${i.aluno} (${i.tipoPagamento})\n`;
+                });
+            }
+
+            // Copiar para a área de transferência do celular
+            navigator.clipboard.writeText(resumo).then(() => {
+                alert('Relatório para a Diretora copiado com sucesso! Agora basta colar no WhatsApp ou E-mail dela.');
+            }).catch(() => {
+                prompt("Copie o relatório abaixo para enviar à Diretora:", resumo);
+            });
+        }
+
+        function alternarTela() {
+            const formSec = document.getElementById('secaoFormulario');
+            const planilhaSec = document.getElementById('secaoPlanilha');
+            const btn = document.getElementById('btnAlternar');
+
+            if(formSec.classList.contains('hidden')) {
+                formSec.classList.remove('hidden');
+                planilhaSec.classList.add('hidden');
+                btn.innerText = "📊 Planilha";
+            } else {
+                formSec.classList.add('hidden');
+                planilhaSec.classList.remove('hidden');
+                btn.innerText = "📝 Novo Registro";
+                atualizarPlanilhaGeral();
+            }
+        }
+
+        function exportarExcel() {
+            if(dadosArmazenados.length === 0) {
+                alert('Não há dados para exportar.');
+                return;
+            }
+            const worksheet = XLSX.utils.json_to_sheet(dadosArmazenados);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Formatura 5C");
+            XLSX.writeFile(workbook, "Controle_Formatura_5C.xlsx");
+        }
+
+        function fazerBackup() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dadosArmazenados));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `backup_formatura_5c_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+    </script>
+</body>
+</html>
