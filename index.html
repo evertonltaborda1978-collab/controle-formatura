@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caixa Formatura - 5º C</title>
+    <title>Controle de Formatura - Escola 31 de Março</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -157,6 +157,37 @@
 
     </main>
 
+    <!-- MODAL DE CONFIRMAÇÃO -->
+    <div id="modalConfirmacao" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-xl">
+            <div class="flex items-center space-x-2 text-indigo-600 border-b pb-2">
+                <span class="text-lg">⚠️</span>
+                <h3 class="font-bold text-sm">Confirmação de Lançamento</h3>
+            </div>
+            <div id="conteudoResumoModal" class="text-xs space-y-1 text-slate-600 bg-slate-50 p-3 rounded-lg"></div>
+            <div class="grid grid-cols-2 gap-2 pt-2">
+                <button onclick="fecharModalConfirmacao(false)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2.5 rounded-xl transition text-xs">
+                    Cancelar
+                </button>
+                <button onclick="fecharModalConfirmacao(true)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">
+                    Confirmar e Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE AVISO / SUCESSO PERSONALIZADO -->
+    <div id="modalAviso" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-xl text-center">
+            <div id="avisoIcone" class="text-3xl">✨</div>
+            <h3 id="avisoTitulo" class="font-bold text-sm text-slate-800">Aviso</h3>
+            <p id="avisoTexto" class="text-xs text-slate-600"></p>
+            <button onclick="fecharModalAviso()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">
+                OK
+            </button>
+        </div>
+    </div>
+
     <script>
         const listaAlunosOficial = [
             "David Desplanches de Miranda",
@@ -181,6 +212,8 @@
             "Emanuelle Vitória de Oliveira",
             "Gustavo Henrique Marcondes Galvão"
         ];
+
+        let funcaoCallbackConfirmacao = null;
 
         function gerarNomePadronizado(nomeCompleto, tipoPagamento) {
             if (!nomeCompleto) return 'comprovante';
@@ -221,7 +254,7 @@
         function prepararSalvamento() {
             const nome = document.getElementById('nomeAluno').value;
             if(!nome) {
-                alert('Por favor, informe o nome do aluno.');
+                mostrarAviso('Atenção', 'Por favor, informe o nome do aluno.', '⚠️');
                 return;
             }
 
@@ -235,38 +268,64 @@
             const temArquivo = arquivoInput.files.length > 0;
             const nomeArquivoGerado = temArquivo ? gerarNomePadronizado(nome, tipo) : 'Sem anexo (Dinheiro)';
 
-            const confirmacao = confirm(`ATENÇÃO: O registro AINDA NÃO FOI SALVO!\n\nConfere os dados:\n- Aluno: ${nome}\n- Forma: ${tipo}\n- Arquivo gerado: ${nomeArquivoGerado}\n- Status: ${obs}\n\nDeseja salvar agora?`);
-            
-            if(confirmacao) {
-                const novoRegistro = {
-                    id: Date.now(),
-                    aluno: nome,
-                    tipoPagamento: tipo,
-                    observacao: obs,
-                    arquivo: nomeArquivoGerado,
-                    dataRegistro: new Date().toLocaleString('pt-BR')
-                };
+            const htmlResumo = `
+                <p><strong>Aluno:</strong> ${nome}</p>
+                <p><strong>Forma:</strong> ${tipo}</p>
+                <p><strong>Arquivo:</strong> ${nomeArquivoGerado}</p>
+                <p><strong>Status:</strong> ${obs}</p>
+                <p class="text-indigo-600 font-bold pt-1">Deseja confirmar e salvar agora?</p>
+            `;
 
-                dadosArmazenados.push(novoRegistro);
-                localStorage.setItem('caixa_formatura_5c_v2', JSON.stringify(dadosArmazenados));
-                
-                atualizarLista();
-                atualizarPlanilhaGeral();
-                document.getElementById('formPagamento').reset();
-                atualizarTextoPadrao();
-                alert('Salvo com sucesso!');
-            } else {
-                alert('Operação cancelada. O lançamento não foi salvo.');
+            document.getElementById('conteudoResumoModal').innerHTML = htmlResumo;
+            document.getElementById('modalConfirmacao').classList.remove('hidden');
+
+            funcaoCallbackConfirmacao = (confirmado) => {
+                if(confirmado) {
+                    const novoRegistro = {
+                        id: Date.now(),
+                        aluno: nome,
+                        tipoPagamento: tipo,
+                        observacao: obs,
+                        arquivo: nomeArquivoGerado,
+                        dataRegistro: new Date().toLocaleString('pt-BR')
+                    };
+
+                    dadosArmazenados.push(novoRegistro);
+                    localStorage.setItem('caixa_formatura_5c_v2', JSON.stringify(dadosArmazenados));
+                    
+                    atualizarLista();
+                    atualizarPlanilhaGeral();
+                    document.getElementById('formPagamento').reset();
+                    atualizarTextoPadrao();
+                    mostrarAviso('Sucesso', 'Salvo com sucesso!', '✅');
+                }
+            };
+        }
+
+        function fecharModalConfirmacao(confirmado) {
+            document.getElementById('modalConfirmacao').classList.add('hidden');
+            if(funcaoCallbackConfirmacao) {
+                funcaoCallbackConfirmacao(confirmado);
+                funcaoCallbackConfirmacao = null;
             }
         }
 
+        function mostrarAviso(titulo, texto, icone = '✨') {
+            document.getElementById('avisoTitulo').innerText = titulo;
+            document.getElementById('avisoTexto').innerText = texto;
+            document.getElementById('avisoIcone').innerText = icone;
+            document.getElementById('modalAviso').classList.remove('hidden');
+        }
+
+        function fecharModalAviso() {
+            document.getElementById('modalAviso').classList.add('hidden');
+        }
+
         function excluirRegistro(id) {
-            if(confirm('Deseja excluir este registro?')) {
-                dadosArmazenados = dadosArmazenados.filter(item => item.id !== id);
-                localStorage.setItem('caixa_formatura_5c_v2', JSON.stringify(dadosArmazenados));
-                atualizarLista();
-                atualizarPlanilhaGeral();
-            }
+            dadosArmazenados = dadosArmazenados.filter(item => item.id !== id);
+            localStorage.setItem('caixa_formatura_5c_v2', JSON.stringify(dadosArmazenados));
+            atualizarLista();
+            atualizarPlanilhaGeral();
         }
 
         function atualizarLista() {
@@ -331,7 +390,7 @@
             }
 
             navigator.clipboard.writeText(resumo).then(() => {
-                alert('Relatório para a Diretora copiado com sucesso! Agora basta colar no WhatsApp ou E-mail dela.');
+                mostrarAviso('Sucesso', 'Relatório para a Diretora copiado com sucesso! Agora basta colar no WhatsApp ou E-mail dela.', '📋');
             }).catch(() => {
                 prompt("Copie o relatório abaixo para enviar à Diretora:", resumo);
             });
@@ -356,7 +415,7 @@
 
         function exportarExcel() {
             if(dadosArmazenados.length === 0) {
-                alert('Não há dados para exportar.');
+                mostrarAviso('Aviso', 'Não há dados para exportar.', 'ℹ️');
                 return;
             }
             const worksheet = XLSX.utils.json_to_sheet(dadosArmazenados);
