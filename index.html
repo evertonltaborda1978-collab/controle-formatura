@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caixa Formatura - 5º C</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans pb-12">
+
+    <header class="bg-indigo-600 text-white p-4 shadow-md sticky top-0 z-50">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="font-bold text-sm">Escola Municipal 31 de Março</h1>
+                <p class="text-xs text-indigo-200">Turma 5º C - Formatura 2026</p>
+            </div>
+            <span class="text-[10px] bg-indigo-700 px-2 py-1 rounded">Versão App</span>
+        </div>
+    </header>
+
+    <main class="max-w-md mx-auto p-4 space-y-4">
+        
+        <!-- Formulário de Lançamento -->
+        <form id="formPagamento" class="bg-white p-4 rounded-xl shadow-sm space-y-3">
+            <h2 class="font-semibold text-slate-700 border-b pb-2 text-sm">Novo Registro de Comprovante</h2>
+
+            <!-- Aluno -->
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Nome do Aluno</label>
+                <input type="text" id="nomeAluno" list="listaAlunos" placeholder="Digite ou selecione o aluno" required
+                    class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                <datalist id="listaAlunos">
+                    <option value="David Desplanches de Miranda">
+                    <option value="Isadora Martins Bueno">
+                    <option value="Yuri Matheus dos Santos Lessi">
+                    <option value="José Henrique Montevechio Cristo">
+                    <option value="Gustavo Henrique Ferreira Faria">
+                    <option value="Heloisy Vitória dos Santos Freitas">
+                    <option value="Sabrina de Oliveira Mendes">
+                    <option value="Arthur Carneiro Ferraz">
+                    <option value="Letícia Vitória de Oliveira Betim">
+                    <option value="João Lucas Cardoso dos Santos">
+                    <option value="Lorrany Marcelle Rocha de Camargo">
+                    <option value="Luiza Lemes Faustino">
+                    <option value="Lucas Ronaldo Jacumasso Ribas">
+                    <option value="Matheus da Silva Santos">
+                    <option value="Steffiny Eduarda Pedroso dos Santos">
+                    <option value="Luiza Vitória de Proença Miranda">
+                    <option value="Ingridy Silva Lernes">
+                    <option value="Maria Júlia Borges de Melo">
+                    <option value="Davi de Goes Carneiro">
+                    <option value="Emanuelle Vitória de Oliveira">
+                    <option value="Gustavo Henrique Marcondes Galvão">
+                </datalist>
+            </div>
+
+            <!-- Comprovante / Arquivo -->
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Comprovante (Imagem/PDF)</label>
+                <input type="file" id="arquivoComprovante" accept="image/*,application/pdf"
+                    class="w-full border rounded-lg p-2 text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                <p class="text-[10px] text-slate-400 mt-1">Se for dinheiro, deixe em branco.</p>
+            </div>
+
+            <!-- Forma de Pagamento -->
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Opção de Pagamento</label>
+                    <select id="tipoPagamento" class="w-full border rounded-lg p-2.5 text-sm outline-none bg-white">
+                        <option value="À Vista">À Vista (R$ 175,00)</option>
+                        <option value="1ª Parcela">1ª Parcela (R$ 87,50)</option>
+                        <option value="2ª Parcela">2ª Parcela (R$ 87,50)</option>
+                        <option value="Dinheiro - À Vista">Dinheiro - À Vista</option>
+                        <option value="Dinheiro - 1ª Parcela">Dinheiro - 1ª Parcela</option>
+                        <option value="Dinheiro - 2ª Parcela">Dinheiro - 2ª Parcela</option>
+                        <option value="Outra">Outra (Criar nova...)</option>
+                    </select>
+                </div>
+                <div id="divNovaForma" class="hidden">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Nova Opção</label>
+                    <input type="text" id="novaFormaInput" placeholder="Ex: Parcela Extra" class="w-full border rounded-lg p-2 text-sm">
+                </div>
+            </div>
+
+            <!-- Observação Editável -->
+            <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Status / Observação (Editável)</label>
+                <textarea id="observacao" rows="2" class="w-full border rounded-lg p-2 text-sm outline-none bg-amber-50/50"></textarea>
+            </div>
+
+            <!-- Ação de Envio -->
+            <button type="button" onclick="prepararSalvamento()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition text-sm shadow">
+                Salvar Lançamento
+            </button>
+        </form>
+
+        <!-- Ações de Relatório e Backup -->
+        <div class="bg-white p-4 rounded-xl shadow-sm space-y-2">
+            <h3 class="font-semibold text-slate-700 text-xs uppercase tracking-wider">Exportar & Relatórios</h3>
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
+                    📊 Baixar Excel
+                </button>
+                <button onclick="fazerBackup()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
+                    💾 Backup JSON
+                </button>
+            </div>
+        </div>
+
+        <!-- Lista Recente -->
+        <div class="bg-white p-4 rounded-xl shadow-sm">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="font-semibold text-slate-700 text-sm">Registros Salvos</h3>
+                <span id="contadorRegistros" class="text-xs text-slate-400">0 itens</span>
+            </div>
+            <div id="tabelaLancamentos" class="space-y-2 max-h-60 overflow-y-auto text-xs">
+                <p class="text-slate-400 text-center py-4">Nenhum lançamento registrado ainda.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Função para gerar o nome padronizado do arquivo (Primeiro e último nome + tipo)
+        function gerarNomePadronizado(nomeCompleto, tipoPagamento) {
+            if (!nomeCompleto) return 'comprovante';
+            const partes = nomeCompleto.trim().split(' ');
+            const primeiro = partes[0];
+            const ultimo = partes.length > 1 ? partes[partes.length - 1] : '';
+            const nomeCurto = `${primeiro}_${ultimo}`.toLowerCase();
+            const tipoFormatado = tipoPagamento.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+            return `${tipoFormatado}_${nomeCurto}.pdf`;
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            atualizarTextoPadrao();
+        });
+
+        document.getElementById('nomeAluno').addEventListener('input', atualizarTextoPadrao);
+        document.getElementById('tipoPagamento').addEventListener('change', function() {
+            const divNova = document.getElementById('divNovaForma');
+            if(this.value === 'Outra') {
+                divNova.classList.remove('hidden');
+            } else {
+                divNova.classList.add('hidden');
+            }
+            atualizarTextoPadrao();
+        });
+
+        function atualizarTextoPadrao() {
+            const nome = document.getElementById('nomeAluno').value || '[Nome Aluno]';
+            let tipo = document.getElementById('tipoPagamento').value;
+            const dataHoje = new Date().toLocaleDateString('pt-BR');
+            document.getElementById('observacao').value = `Pago ${tipo} em ${dataHoje} - Aluno: ${nome}`;
+        }
+
+        let dadosArmazenados = JSON.parse(localStorage.getItem('caixa_formatura_5c_v2')) || [];
+        atualizarLista();
+
+        function prepararSalvamento() {
+            const nome = document.getElementById('nomeAluno').value;
+            if(!nome) {
+                alert('Por favor, informe o nome do aluno.');
+                return;
+            }
+
+            let tipo = document.getElementById('tipoPagamento').value;
+            if(tipo === 'Outra') {
+                tipo = document.getElementById('novaFormaInput').value || 'Personalizado';
+            }
+
+            const obs = document.getElementById('observacao').value;
+            const arquivoInput = document.getElementById('arquivoComprovante');
+            const temArquivo = arquivoInput.files.length > 0;
+            
+            // Renomeia automaticamente com base na regra solicitada
+            const nomeArquivoGerado = temArquivo ? gerarNomePadronizado(nome, tipo) : 'Sem anexo (Dinheiro)';
+
+            const confirmacao = confirm(`ATENÇÃO: O registro AINDA NÃO FOI SALVO!\n\nConfere os dados:\n- Aluno: ${nome}\n- Forma: ${tipo}\n- Arquivo gerado: ${nomeArquivoGerado}\n- Status: ${obs}\n\nDeseja salvar agora?`);
+            
+            if(confirmacao) {
+                const novoRegistro = {
+                    id: Date.now(),
+                    aluno: nome,
+                    tipoPagamento: tipo,
+                    observacao: obs,
+                    arquivo: nomeArquivoGerado,
+                    dataRegistro: new Date().toLocaleString('pt-BR')
+                };
+
+                dadosArmazenados.push(novoRegistro);
+                localStorage.setItem('caixa_formatura_5c_v2', JSON.stringify(dadosArmazenados));
+                
+                atualizarLista();
+                document.getElementById('formPagamento').reset();
+                atualizarTextoPadrao();
+                alert('Salvo com sucesso!');
+            } else {
+                alert('Operação cancelada. O lançamento não foi salvo.');
+            }
+        }
+
+        function excluirRegistro(id) {
+            if(confirm('Deseja excluir este registro?')) {
+                dadosArmazenados = dadosArmazenados.filter(item => item.id !== id);
+                localStorage.setItem('caixa_formatura_5c_v2', JSON.stringify(dadosArmazenados));
