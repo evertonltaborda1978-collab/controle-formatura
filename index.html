@@ -18,7 +18,7 @@
                 <p id="subtituloLogin" class="text-xs text-slate-500">Entre na sua conta para gerenciar o caixa</p>
             </div>
 
-            <!-- Botão de Acesso Rápido por Biometria (Aparece se já configurado) -->
+            <!-- Botão de Acesso Rápido por Biometria -->
             <div id="divBotaoBiometria" class="hidden">
                 <button type="button" onclick="entrarComBiometria()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium p-3 rounded-xl transition text-xs shadow flex items-center justify-center gap-2">
                     <span>🧬</span> Entrar com Biometria
@@ -31,6 +31,12 @@
             </div>
 
             <form id="formLoginApp" onsubmit="realizarLogin(event)" class="space-y-3 text-left">
+                <!-- Campo de Nome (Aparece apenas no modo cadastro) -->
+                <div id="grupoNomeCadastro" class="hidden">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Nome Completo da Professora</label>
+                    <input type="text" id="cadastroNome" placeholder="Ex: Ângela Maria"
+                        class="w-full border rounded-lg p-2.5 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">E-mail de Acesso</label>
                     <input type="email" id="loginEmail" placeholder="professora@escola.com" required
@@ -38,8 +44,13 @@
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">Senha</label>
-                    <input type="password" id="loginSenha" placeholder="••••••••" required
-                        class="w-full border rounded-lg p-2.5 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                    <div class="relative">
+                        <input type="password" id="loginSenha" placeholder="••••••••" required
+                            class="w-full border rounded-lg p-2.5 pr-8 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button type="button" onclick="alternarVisibilidadeSenha()" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs" title="Mostrar/Ocultar Senha">
+                            <span id="iconeOlho">👁️</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="flex justify-between items-center text-[11px]">
                     <a href="#" onclick="alternarModoCadastro()" id="linkModoCadastro" class="text-indigo-600 font-medium hover:underline">Ainda não tem conta? Cadastrar</a>
@@ -56,17 +67,23 @@
         </div>
     </div>
 
-    <!-- APLICATIVO PRINCIPAL (Oculto até fazer login) -->
+    <!-- APLICATIVO PRINCIPAL -->
     <div id="appPrincipal" class="hidden">
-        <header class="bg-indigo-600 text-white p-4 shadow-md sticky top-0 z-40">
+        <header class="bg-indigo-600 text-white p-3 shadow-md sticky top-0 z-40">
             <div class="max-w-md mx-auto flex justify-between items-center">
-                <div>
-                    <h1 class="font-bold text-sm">Escola Municipal 31 de Março</h1>
-                    <p class="text-xs text-indigo-200">Turma 5º C - Formatura 2026</p>
+                <div class="flex items-center gap-2">
+                    <div onclick="editarNomeProfessora()" class="bg-indigo-700/80 hover:bg-indigo-800 p-1.5 rounded-lg cursor-pointer flex items-center gap-1.5 text-[11px] font-medium" title="Clique para editar seu nome">
+                        <span>👩‍🏫</span>
+                        <span id="labelNomeProfessora" class="truncate max-w-[90px]">Professora</span>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-xs">Escola 31 de Março</h1>
+                        <p class="text-[10px] text-indigo-200">Turma 5º C - 2026</p>
+                    </div>
                 </div>
                 <div class="flex gap-1">
                     <button onclick="enviarRelatorioDiretora()" class="text-[10px] bg-emerald-700 hover:bg-emerald-800 px-2 py-1.5 rounded-lg font-medium transition" title="Relatório para Diretora">
-                        👩‍🏫 Diretora
+                        Diretora
                     </button>
                     <button onclick="alternarTela()" id="btnAlternar" class="text-[10px] bg-indigo-700 hover:bg-indigo-800 px-2 py-1.5 rounded-lg font-medium transition">
                         📊 Planilha
@@ -163,7 +180,7 @@
                         <h3 class="font-semibold text-slate-700 text-sm">Registros Salvos</h3>
                         <span id="contadorRegistros" class="text-xs text-slate-400">0 itens</span>
                     </div>
-                    <div id="tabelaLancamentos" class="space-y-2 max-h-60 overflow-y-auto text-xs">
+                    <div id="tabelaLancamentos" class="space-y-2 max-h-72 overflow-y-auto text-xs">
                         <p class="text-slate-400 text-center py-4">Nenhum lançamento registrado ainda.</p>
                     </div>
                 </div>
@@ -197,6 +214,20 @@
         </main>
     </div>
 
+    <!-- MODAL PARA VISUALIZAR ARQUIVO ANEXADO -->
+    <div id="modalVisualizador" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 shadow-2xl text-center">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 id="tituloVisualizador" class="font-bold text-xs text-slate-800">Comprovante do Aluno</h3>
+                <button onclick="fecharVisualizador()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
+            </div>
+            <div id="conteudoVisualizador" class="max-h-80 overflow-y-auto flex items-center justify-center bg-slate-100 p-2 rounded-lg"></div>
+            <button onclick="fecharVisualizador()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2 rounded-xl transition text-xs">
+                Fechar
+            </button>
+        </div>
+    </div>
+
     <!-- MODAL DE CONFIRMAÇÃO CENTRALIZADO -->
     <div id="modalConfirmacao" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
@@ -205,294 +236,4 @@
                 <h3 id="tituloModalConfirmacao" class="font-bold text-sm">Confirmação</h3>
             </div>
             <div id="conteudoResumoModal" class="text-xs space-y-1 text-slate-600 bg-slate-50 p-3 rounded-lg"></div>
-            <div class="grid grid-cols-2 gap-2 pt-2">
-                <button onclick="fecharModalConfirmacao(false)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2.5 rounded-xl transition text-xs">
-                    Cancelar
-                </button>
-                <button onclick="fecharModalConfirmacao(true)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">
-                    Confirmar
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE GERENCIAR OPÇÕES DE PAGAMENTO -->
-    <div id="modalGerenciar" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
-            <div class="flex justify-between items-center border-b pb-2">
-                <h3 class="font-bold text-sm text-slate-800">Gerenciar Formas de Pagamento</h3>
-                <button onclick="fecharModalGerenciar()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
-            </div>
-            <div class="space-y-2">
-                <label class="block text-xs font-medium text-slate-600">Adicionar Nova Opção</label>
-                <div class="flex gap-2">
-                    <input type="text" id="novaOpcaoInput" placeholder="Ex: Parcela Extra Pix" class="w-full border rounded-lg p-2 text-xs outline-none">
-                    <button onclick="adicionarOpcaoPagamento()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-medium">Adicionar</button>
-                </div>
-            </div>
-            <div class="space-y-1">
-                <label class="block text-xs font-medium text-slate-600">Opções Existentes (Clique para excluir)</label>
-                <div id="listaOpcoesGerenciar" class="max-h-40 overflow-y-auto space-y-1 text-xs border p-2 rounded-lg bg-slate-50"></div>
-            </div>
-            <button onclick="fecharModalGerenciar()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2 rounded-xl transition text-xs">
-                Concluir
-            </button>
-        </div>
-    </div>
-
-    <!-- MODAL DE AVISO / SUCESSO -->
-    <div id="modalAviso" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl text-center my-auto">
-            <div id="avisoIcone" class="text-3xl">✨</div>
-            <h3 id="avisoTitulo" class="font-bold text-sm text-slate-800">Aviso</h3>
-            <p id="avisoTexto" class="text-xs text-slate-600"></p>
-            <button onclick="fecharModalAviso()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">
-                OK
-            </button>
-        </div>
-    </div>
-
-    <script>
-        let modoCadastro = false;
-
-        window.addEventListener('DOMContentLoaded', () => {
-            verificarSessao();
-            verificarSeTemBiometriaSalva();
-            atualizarSelectOpcoes();
-            atualizarPlanilhaGeral();
-        });
-
-        function verificarSessao() {
-            const usuarioLogado = localStorage.getItem('usuario_logado_formatura');
-            if (usuarioLogado) {
-                document.getElementById('telaLogin').classList.add('hidden');
-                document.getElementById('appPrincipal').classList.remove('hidden');
-            } else {
-                document.getElementById('telaLogin').classList.remove('hidden');
-                document.getElementById('appPrincipal').classList.add('hidden');
-            }
-        }
-
-        function verificarSeTemBiometriaSalva() {
-            const biometriaCadastrada = localStorage.getItem('biometria_ativa_formatura');
-            if (biometriaCadastrada && (window.PublicKeyCredential)) {
-                document.getElementById('divBotaoBiometria').classList.remove('hidden');
-            } else {
-                document.getElementById('divBotaoBiometria').classList.add('hidden');
-            }
-        }
-
-        async function cadastrarBiometriaSePossivel(email) {
-            if (window.PublicKeyCredential) {
-                try {
-                    const publicKey = {
-                        challenge: new Uint8Array(32),
-                        rp: { name: "Controle Formatura 5C" },
-                        user: {
-                            id: Uint8Array.from(email, c => c.charCodeAt(0)),
-                            name: email,
-                            displayName: email
-                        },
-                        pubKeyCredParams: [{ alg: -7, type: "public-key" }],
-                        timeout: 60000,
-                        attestation: "direct"
-                    };
-                    const credential = await navigator.credentials.create({ publicKey });
-                    if (credential) {
-                        localStorage.setItem('biometria_ativa_formatura', 'true');
-                        localStorage.setItem('usuario_biometria', email);
-                    }
-                } catch (e) {
-                    console.log("Biometria não configurada pelo usuário:", e);
-                }
-            }
-        }
-
-        async function entrarComBiometria() {
-            if (window.PublicKeyCredential) {
-                try {
-                    const publicKey = {
-                        challenge: new Uint8Array(32),
-                        timeout: 60000,
-                        allowCredentials: [{
-                            type: "public-key",
-                            id: new Uint8Array(32)
-                        }]
-                    };
-                    // Simula toque na biometria do dispositivo
-                    await navigator.credentials.get({ publicKey }).catch(() => {});
-                    
-                    // Libera o acesso direto
-                    const emailSalvo = localStorage.getItem('usuario_biometria') || 'professora@escola.com';
-                    localStorage.setItem('usuario_logado_formatura', emailSalvo);
-                    verificarSessao();
-                } catch (e) {
-                    mostrarAviso('Atenção', 'Não foi possível autenticar por biometria. Use sua senha.', '⚠️');
-                }
-            } else {
-                mostrarAviso('Atenção', 'Seu navegador não suporta biometria.', '⚠️');
-            }
-        }
-
-        function alternarModoCadastro() {
-            modoCadastro = !modoCadastro;
-            const titulo = document.getElementById('subtituloLogin');
-            const link = document.getElementById('linkModoCadastro');
-            const btn = document.getElementById('btnAcaoLogin');
-
-            if (modoCadastro) {
-                titulo.innerText = "Cadastre seu e-mail e senha";
-                link.innerText = "Já tem conta? Entrar";
-                btn.innerText = "Cadastrar e Entrar";
-            } else {
-                titulo.innerText = "Entre na sua conta para gerenciar o caixa";
-                link.innerText = "Ainda não tem conta? Cadastrar";
-                btn.innerText = "Entrar";
-            }
-        }
-
-        async function realizarLogin(event) {
-            event.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim();
-            const senha = document.getElementById('loginSenha').value.trim();
-
-            if (modoCadastro) {
-                localStorage.setItem('cadastro_email', email);
-                localStorage.setItem('cadastro_senha', senha);
-                localStorage.setItem('usuario_logado_formatura', email);
-                await cadastrarBiometriaSePossivel(email);
-                mostrarAviso('Sucesso', 'Cadastro realizado com sucesso! Bem-vinda.', '🎉');
-                verificarSessao();
-            } else {
-                const emailSalvo = localStorage.getItem('cadastro_email');
-                const senhaSalva = localStorage.getItem('cadastro_senha');
-
-                if (!emailSalvo || (email === emailSalvo && senha === senhaSalva) || !senhaSalva) {
-                    localStorage.setItem('usuario_logado_formatura', email);
-                    await cadastrarBiometriaSePossivel(email);
-                    verificarSessao();
-                } else {
-                    mostrarAviso('Erro', 'E-mail ou senha incorretos.', '❌');
-                }
-            }
-        }
-
-        function esqueciSenha() {
-            const email = document.getElementById('loginEmail').value.trim();
-            if (!email) {
-                mostrarAviso('Atenção', 'Digite seu e-mail no campo acima para recuperar a senha.', '⚠️');
-                return;
-            }
-            const senhaSalva = localStorage.getItem('cadastro_senha') || '123456';
-            mostrarAviso('Recuperação', `Enviamos uma nova senha temporária para: ${email}\nSua senha atual/temporária é: ${senhaSalva}`, '📧');
-        }
-
-        function sairConta() {
-            localStorage.removeItem('usuario_logado_formatura');
-            document.getElementById('loginEmail').value = '';
-            document.getElementById('loginSenha').value = '';
-            verificarSessao();
-            verificarSeTemBiometriaSalva();
-        }
-
-        const listaAlunosOficial = [
-            "David Desplanches de Miranda",
-            "Isadora Martins Bueno",
-            "Yuri Matheus dos Santos Lessi",
-            "José Henrique Montevechio Cristo",
-            "Gustavo Henrique Ferreira Faria",
-            "Heloisy Vitória dos Santos Freitas",
-            "Sabrina de Oliveira Mendes",
-            "Arthur Carneiro Ferraz",
-            "Letícia Vitória de Oliveira Betim",
-            "João Lucas Cardoso dos Santos",
-            "Lorrany Marcelle Rocha de Camargo",
-            "Luiza Lemes Faustino",
-            "Lucas Ronaldo Jacumasso Ribas",
-            "Matheus da Silva Santos",
-            "Steffiny Eduarda Pedroso dos Santos",
-            "Luiza Vitória de Proença Miranda",
-            "Ingridy Silva Lernes",
-            "Maria Júlia Borges de Melo",
-            "Davi de Goes Carneiro",
-            "Emanuelle Vitória de Oliveira",
-            "Gustavo Henrique Marcondes Galvão"
-        ];
-
-        let opcoesPagamento = JSON.parse(localStorage.getItem('opcoes_pagamento_v1')) || [
-            "À Vista (Pix/Transf) - R$ 175,00",
-            "1ª Parcela (Pix/Transf) - R$ 87,50",
-            "2ª Parcela (Pix/Transf) - R$ 87,50",
-            "Dinheiro - À Vista (R$ 175,00)",
-            "Dinheiro - 1ª Parcela (R$ 87,50)",
-            "Dinheiro - 2ª Parcela (R$ 87,50)"
-        ];
-
-        function salvarOpcoesStorage() {
-            localStorage.setItem('opcoes_pagamento_v1', JSON.stringify(opcoesPagamento));
-            atualizarSelectOpcoes();
-        }
-
-        function atualizarSelectOpcoes() {
-            const select = document.getElementById('tipoPagamento');
-            if(select) {
-                select.innerHTML = opcoesPagamento.map(op => `<option value="${op}">${op}</option>`).join('');
-                atualizarTextoPadrao();
-            }
-        }
-
-        let funcaoCallbackConfirmacao = null;
-
-        function gerarNomePadronizado(nomeCompleto, tipoPagamento) {
-            if (!nomeCompleto) return 'comprovante';
-            const partes = nomeCompleto.trim().split(' ');
-            const primeiro = partes[0];
-            const ultimo = partes.length > 1 ? partes[partes.length - 1] : '';
-            const nomeCurto = `${primeiro}_${ultimo}`.toLowerCase();
-            const tipoFormatado = tipoPagamento.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-            return `${tipoFormatado}_${nomeCurto}.pdf`;
-        }
-
-        document.getElementById('nomeAluno').addEventListener('input', atualizarTextoPadrao);
-        document.getElementById('tipoPagamento').addEventListener('change', atualizarTextoPadrao);
-
-        function atualizarTextoPadrao() {
-            const nome = document.getElementById('nomeAluno').value || '[Nome Aluno]';
-            let tipo = document.getElementById('tipoPagamento').value;
-            const dataHoje = new Date().toLocaleDateString('pt-BR');
-            document.getElementById('observacao').value = `Pago ${tipo} em ${dataHoje} - Aluno: ${nome}`;
-        }
-
-        let dadosArmazenados = JSON.parse(localStorage.getItem('caixa_formatura_5c_v2')) || [];
-        atualizarLista();
-
-        function prepararSalvamento() {
-            const nome = document.getElementById('nomeAluno').value;
-            if(!nome) {
-                mostrarAviso('Atenção', 'Por favor, informe o nome do aluno.', '⚠️');
-                return;
-            }
-
-            let tipo = document.getElementById('tipoPagamento').value;
-            const obs = document.getElementById('observacao').value;
-            const arquivoInput = document.getElementById('arquivoComprovante');
-            const temArquivo = arquivoInput.files.length > 0;
-            const nomeArquivoGerado = temArquivo ? gerarNomePadronizado(nome, tipo) : 'Sem anexo (Dinheiro)';
-
-            const htmlResumo = `
-                <p><strong>Aluno:</strong> ${nome}</p>
-                <p><strong>Forma:</strong> ${tipo}</p>
-                <p><strong>Arquivo:</strong> ${nomeArquivoGerado}</p>
-                <p><strong>Status:</strong> ${obs}</p>
-                <p class="text-indigo-600 font-bold pt-1">Deseja confirmar e salvar agora?</p>
-            `;
-
-            document.getElementById('tituloModalConfirmacao').innerText = "Confirmação de Lançamento";
-            document.getElementById('conteudoResumoModal').innerHTML = htmlResumo;
-            document.getElementById('modalConfirmacao').classList.remove('hidden');
-
-            funcaoCallbackConfirmacao = (confirmado) => {
-                if(confirmado) {
-                    const novoRegistro = {
-                        id: Date.now(),
-                        aluno: nome,
+            <div class="grid grid-cols-2 gap-2 pt-
