@@ -31,13 +31,15 @@
             </div>
 
             <form id="formLoginApp" onsubmit="realizarLogin(event)" class="space-y-3 text-left" autocomplete="off">
-     A           
-                <!-- Campos extras (Ocultos por padrão) -->
+                
+                <!-- Campos extras (Ocultos por padrão) com Menu Suspenso de Turmas -->
                 <div id="grupoCamposCadastro" class="hidden space-y-3">
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Nome Completo da Professora</label>
                         <input type="text" id="cadastroNome" placeholder="Ex: Ângela Horkaten Taborda" autocomplete="off"
-                   <div>
+                            class="w-full border rounded-lg p-2.5 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Selecione a Turma</label>
                         <select id="cadastroTurma" class="w-full border rounded-lg p-2.5 text-xs outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
                             <option value="5º Ano A - 2026">5º Ano A - 2026</option>
@@ -331,6 +333,7 @@
             <button onclick="fecharModalAviso()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">OK</button>
         </div>
     </div>
+
     <script>
         let modoCadastro = false;
 
@@ -474,7 +477,6 @@
             }
         }
 
-        // Função de alternância totalmente isolada e blindada
         function alternarModoCadastro() {
             modoCadastro = !modoCadastro;
             
@@ -482,9 +484,7 @@
             const link = document.getElementById('linkModoCadastro');
             const btn = document.getElementById('btnAcaoLogin');
             const grupoCampos = document.getElementById('grupoCamposCadastro');
-            
             const inputNome = document.getElementById('cadastroNome');
-            const inputTurma = document.getElementById('cadastroTurma');
 
             if (modoCadastro) {
                 titulo.innerText = "Cadastre seu CPF, Nome e Turma";
@@ -493,7 +493,6 @@
                 
                 grupoCampos.classList.remove('hidden');
                 inputNome.setAttribute('required', 'true');
-                inputTurma.setAttribute('required', 'true');
             } else {
                 titulo.innerText = "Acesse com seu CPF para gerenciar sua turma";
                 link.innerText = "Ainda não tem conta? Cadastrar";
@@ -501,7 +500,6 @@
                 
                 grupoCampos.classList.add('hidden');
                 inputNome.removeAttribute('required');
-                inputTurma.removeAttribute('required');
             }
         }
 
@@ -513,7 +511,8 @@
 
             if (modoCadastro) {
                 const nomeProf = document.getElementById('cadastroNome').value.trim();
-                const turmaProf = document.getElementById('cadastroTurma').value.trim();
+                const selectTurma = document.getElementById('cadastroTurma');
+                const turmaProf = selectTurma.value;
 
                 localStorage.setItem(`nome_professora${sufixo}`, nomeProf);
                 localStorage.setItem(`turma_professora${sufixo}`, turmaProf);
