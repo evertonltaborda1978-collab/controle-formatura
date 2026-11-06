@@ -31,7 +31,8 @@
             </div>
 
             <form id="formLoginApp" onsubmit="realizarLogin(event)" class="space-y-3 text-left" autocomplete="off">
-                <!-- Campos extras apenas no modo cadastro -->
+                
+                <!-- Campos extras (Ocultos por padrão) -->
                 <div id="grupoCamposCadastro" class="hidden space-y-3">
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Nome Completo da Professora</label>
@@ -62,6 +63,7 @@
                     </div>
                 </div>
 
+                <!-- Confirmação de Senha (Oculto por padrão) -->
                 <div id="grupoConfirmaSenha" class="hidden">
                     <label class="block text-xs font-medium text-slate-600 mb-1">Confirme a Senha</label>
                     <div class="relative">
@@ -73,18 +75,25 @@
                     </div>
                 </div>
 
-                <div class="flex justify-between items-center text-[11px] select-none">
-                    <span onclick="alternarModoCadastro()" id="linkModoCadastro" class="cursor-pointer text-indigo-600 font-medium hover:underline">Ainda não tem conta? Cadastrar</span>
-                    <span onclick="esqueciSenha()" class="cursor-pointer text-slate-500 hover:underline">Esqueceu a senha?</span>
+                <!-- Links de ação agora blindados como botões type="button" -->
+                <div class="flex justify-between items-center text-[11px] select-none pt-1">
+                    <button type="button" onclick="alternarModoCadastro()" id="linkModoCadastro" class="text-indigo-600 font-medium hover:underline focus:outline-none bg-transparent border-none p-0 cursor-pointer">
+                        Ainda não tem conta? Cadastrar
+                    </button>
+                    <button type="button" onclick="esqueciSenha()" class="text-slate-500 hover:underline focus:outline-none bg-transparent border-none p-0 cursor-pointer">
+                        Esqueceu a senha?
+                    </button>
                 </div>
 
-                <button type="submit" id="btnAcaoLogin" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition text-xs shadow">
+                <button type="submit" id="btnAcaoLogin" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition text-xs shadow mt-2">
                     Entrar
                 </button>
             </form>
 
             <div id="divLinkExcluirConta" class="pt-2 text-center select-none">
-                <span onclick="abrirModalExcluirConta()" class="cursor-pointer text-[11px] text-rose-600 hover:underline font-medium">🗑️ Excluir Conta Cadastrada</span>
+                <button type="button" onclick="abrirModalExcluirConta()" class="text-[11px] text-rose-600 hover:underline font-medium focus:outline-none bg-transparent border-none p-0 cursor-pointer">
+                    🗑️ Excluir Conta Cadastrada
+                </button>
             </div>
 
             <div class="pt-2 border-t text-[11px] text-slate-400">
@@ -193,7 +202,7 @@
                 </div>
             </div>
 
-            <!-- SEÇÃO 2: PLANILHA OFICIAL DETALHADA (ESPELHO DO DOCUMENTO) -->
+            <!-- SEÇÃO 2: PLANILHA OFICIAL DETALHADA -->
             <div id="secaoPlanilha" class="hidden space-y-4">
                 <div class="bg-white p-5 rounded-2xl shadow-sm space-y-4 border border-slate-200">
                     
@@ -377,7 +386,6 @@
             } else {
                 document.getElementById('telaLogin').classList.remove('hidden');
                 document.getElementById('appPrincipal').classList.add('hidden');
-                limparCamposLoginSeguro();
             }
         }
 
@@ -483,50 +491,49 @@
             }
         }
 
-        function limparCamposLoginSeguro() {
-            try {
-                const ids = ['loginCpf', 'loginSenha', 'loginConfirmaSenha', 'cadastroNome', 'cadastroTurma'];
-                ids.forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.value = '';
-                });
-            } catch(e) {}
-        }
-
+        // Função de alternância 100% blindada via manipulação direta de DOM
         function alternarModoCadastro() {
-            try {
-                modoCadastro = !modoCadastro;
-                const titulo = document.getElementById('subtituloLogin');
-                const link = document.getElementById('linkModoCadastro');
-                const btn = document.getElementById('btnAcaoLogin');
-                const grupoCampos = document.getElementById('grupoCamposCadastro');
-                const grupoConfirma = document.getElementById('grupoConfirmaSenha');
+            modoCadastro = !modoCadastro;
+            
+            const titulo = document.getElementById('subtituloLogin');
+            const link = document.getElementById('linkModoCadastro');
+            const btn = document.getElementById('btnAcaoLogin');
+            const grupoCampos = document.getElementById('grupoCamposCadastro');
+            const grupoConfirma = document.getElementById('grupoConfirmaSenha');
+            
+            const inputNome = document.getElementById('cadastroNome');
+            const inputTurma = document.getElementById('cadastroTurma');
+            const inputConfirma = document.getElementById('loginConfirmaSenha');
 
-                limparCamposLoginSeguro();
+            // Limpa os campos para evitar conflito de preenchimento automático
+            document.getElementById('loginCpf').value = '';
+            document.getElementById('loginSenha').value = '';
+            inputNome.value = '';
+            inputTurma.value = '';
+            inputConfirma.value = '';
 
-                if (modoCadastro) {
-                    titulo.innerText = "Cadastre seu CPF, Nome e Turma";
-                    link.innerText = "Já tem conta? Entrar";
-                    btn.innerText = "Cadastrar e Entrar";
-                    grupoCampos.classList.remove('hidden');
-                    grupoConfirma.classList.remove('hidden');
-                    
-                    document.getElementById('cadastroNome').required = true;
-                    document.getElementById('cadastroTurma').required = true;
-                    document.getElementById('loginConfirmaSenha').required = true;
-                } else {
-                    titulo.innerText = "Acesse com seu CPF para gerenciar sua turma";
-                    link.innerText = "Ainda não tem conta? Cadastrar";
-                    btn.innerText = "Entrar";
-                    grupoCampos.classList.add('hidden');
-                    grupoConfirma.classList.add('hidden');
-                    
-                    document.getElementById('cadastroNome').required = false;
-                    document.getElementById('cadastroTurma').required = false;
-                    document.getElementById('loginConfirmaSenha').required = false;
-                }
-            } catch (error) {
-                console.error("Proteção JavaScript ativada:", error);
+            if (modoCadastro) {
+                titulo.innerText = "Cadastre seu CPF, Nome e Turma";
+                link.innerText = "Já tem conta? Entrar";
+                btn.innerText = "Cadastrar e Entrar";
+                
+                grupoCampos.classList.remove('hidden');
+                grupoConfirma.classList.remove('hidden');
+                
+                inputNome.setAttribute('required', 'true');
+                inputTurma.setAttribute('required', 'true');
+                inputConfirma.setAttribute('required', 'true');
+            } else {
+                titulo.innerText = "Acesse com seu CPF para gerenciar sua turma";
+                link.innerText = "Ainda não tem conta? Cadastrar";
+                btn.innerText = "Entrar";
+                
+                grupoCampos.classList.add('hidden');
+                grupoConfirma.classList.add('hidden');
+                
+                inputNome.removeAttribute('required');
+                inputTurma.removeAttribute('required');
+                inputConfirma.removeAttribute('required');
             }
         }
 
@@ -586,3 +593,136 @@
                     await cadastrarBiometriaSePossivel(cpf);
                     fazerBackupAutomaticoSilencioso();
                     verificarSessao();
+                } else {
+                    mostrarAviso('Erro', 'CPF ou senha incorretos.', '❌');
+                }
+            }
+        }
+
+        function esqueciSenha() {
+            const cpf = document.getElementById('loginCpf').value.trim();
+            const sufixo = `_user_${cpf}`;
+            const senhaSalva = localStorage.getItem(`cadastro_senha${sufixo}`);
+            if (!cpf || !senhaSalva) {
+                mostrarAviso('Atenção', 'Digite um CPF válido no campo acima e clique aqui.', '⚠️');
+                return;
+            }
+            mostrarAviso('Recuperação', `A senha para este CPF é: ${senhaSalva}`, '🔑');
+        }
+
+        function sairConta() {
+            fazerBackupAutomaticoSilencioso();
+            localStorage.removeItem('usuario_logado_cpf');
+            verificarSessao();
+            verificarSeTemBiometriaSalva();
+        }
+
+        function abrirModalExcluirConta() {
+            const cpf = prompt("Digite o CPF da conta que deseja gerenciar/excluir:");
+            if (!cpf) return;
+            const sufixo = `_user_${cpf.trim()}`;
+            const nome = localStorage.getItem(`nome_professora${sufixo}`);
+            const turma = localStorage.getItem(`turma_professora${sufixo}`);
+
+            const container = document.getElementById('detalhesContaExcluir');
+            if (!nome) {
+                container.innerHTML = `<p class="text-rose-600 font-bold">Nenhuma conta encontrada com este CPF.</p>`;
+            } else {
+                container.innerHTML = `
+                    <p><strong>Nome:</strong> ${nome}</p>
+                    <p><strong>Turma:</strong> ${turma}</p>
+                    <p><strong>CPF:</strong> ${cpf}</p>
+                `;
+                localStorage.setItem('cpf_para_exclusao_temporario', sufixo);
+            }
+            document.getElementById('modalExcluirConta').classList.remove('hidden');
+        }
+
+        function fecharModalExcluirConta() {
+            document.getElementById('modalExcluirConta').classList.add('hidden');
+        }
+
+        function confirmarExclusaoConta() {
+            const sufixo = localStorage.getItem('cpf_para_exclusao_temporario');
+            if (sufixo) {
+                localStorage.removeItem(`nome_professora${sufixo}`);
+                localStorage.removeItem(`turma_professora${sufixo}`);
+                localStorage.removeItem(`cadastro_senha${sufixo}`);
+                localStorage.removeItem(`caixa_formatura${sufixo}`);
+                localStorage.removeItem(`alunos_turma${sufixo}`);
+                localStorage.removeItem('usuario_logado_cpf');
+            }
+            fecharModalExcluirConta();
+            mostrarAviso('Excluído', 'Conta removida com sucesso.', '🗑️');
+            setTimeout(() => location.reload(), 1500);
+        }
+
+        function obterAlunosTurma() {
+            const sufixo = obterChaveUsuario();
+            return JSON.parse(localStorage.getItem(`alunos_turma${sufixo}`)) || [];
+        }
+
+        function salvarAlunosTurma(lista) {
+            const sufixo = obterChaveUsuario();
+            localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(lista));
+            atualizarListaAlunosDinamica();
+            atualizarPlanilhaGeral();
+        }
+
+        function abrirModalGerenciarAlunos() {
+            renderizarListaAlunosGerenciar();
+            document.getElementById('modalAlunos').classList.remove('hidden');
+        }
+
+        function fecharModalGerenciarAlunos() {
+            document.getElementById('modalAlunos').classList.add('hidden');
+        }
+
+        function renderizarListaAlunosGerenciar() {
+            const alunos = obterAlunosTurma();
+            const container = document.getElementById('listaAlunosGerenciar');
+            container.innerHTML = alunos.map((aluno, index) => `
+                <div class="flex justify-between items-center bg-white p-2 rounded border">
+                    <span class="truncate max-w-[200px]">${aluno}</span>
+                    <button onclick="removerAlunoTurma(${index})" class="text-red-500 hover:text-red-700 font-bold px-2 py-0.5 text-xs">Excluir</button>
+                </div>
+            `).join('');
+        }
+
+        function adicionarAlunoTurma() {
+            const input = document.getElementById('novoAlunoInput');
+            const nome = input.value.trim();
+            if (!nome) {
+                mostrarAviso('Atenção', 'Digite o nome do aluno.', '⚠️');
+                return;
+            }
+            let alunos = obterAlunosTurma();
+            if (alunos.includes(nome)) {
+                mostrarAviso('Atenção', 'Este aluno já está na lista.', '⚠️');
+                return;
+            }
+            alunos.push(nome);
+            salvarAlunosTurma(alunos);
+            input.value = '';
+            renderizarListaAlunosGerenciar();
+            mostrarAviso('Sucesso', 'Aluno adicionado à turma!', '✅');
+        }
+
+        function removerAlunoTurma(index) {
+            let alunos = obterAlunosTurma();
+            alunos.splice(index, 1);
+            salvarAlunosTurma(alunos);
+            renderizarListaAlunosGerenciar();
+            mostrarAviso('Removido', 'Aluno retirado da turma.', '🗑️');
+        }
+
+        function atualizarListaAlunosDinamica() {
+            const alunos = obterAlunosTurma();
+            const datalist = document.getElementById('listaAlunosDinamica');
+            datalist.innerHTML = alunos.map(aluno => `<option value="${aluno}">`).join('');
+        }
+
+        let opcoesPagamento = JSON.parse(localStorage.getItem('opcoes_pagamento_v1')) || [
+            "À Vista (Pix/Transf) - R$ 175,00",
+            "1ª Parcela (Pix/Transf) - R$ 87,50",
+            "2ª Parcela (Pix/Transf) - R$
