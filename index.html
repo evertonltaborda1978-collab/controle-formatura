@@ -97,7 +97,7 @@
 
             <div id="divLinkExcluirConta" class="pt-2 text-center select-none">
                 <button type="button" onclick="abrirModalExcluirConta()" class="text-[11px] text-rose-600 hover:underline font-medium focus:outline-none bg-transparent border-none p-0 cursor-pointer">
-                    🗑️ Excluir Conta Cadastrada
+                    🗑️ Gerenciar ou Excluir Conta
                 </button>
             </div>
 
@@ -112,9 +112,9 @@
         <header class="bg-indigo-700 text-white p-3 shadow-md sticky top-0 z-40">
             <div class="max-w-md mx-auto flex justify-between items-center">
                 <div class="flex items-center gap-2">
-                    <div onclick="editarPerfilProfessora()" class="bg-indigo-800 hover:bg-indigo-900 p-1.5 rounded-lg cursor-pointer flex items-center gap-1.5 text-[11px] font-medium" title="Editar Perfil e Turma">
+                    <div onclick="abrirModalPerfil()" class="bg-indigo-800 hover:bg-indigo-900 p-1.5 rounded-lg cursor-pointer flex items-center gap-1.5 text-[11px] font-medium" title="Editar Perfil e Turma">
                         <span>👩‍🏫</span>
-                        <span id="labelNomeProfessora" class="truncate max-w-[80px]">Professora</span>
+                        <span id="labelNomeProfessora" class="font-medium">Professora</span>
                     </div>
                     <div>
                         <h1 class="font-bold text-xs">Escola 31 de Março</h1>
@@ -122,7 +122,7 @@
                     </div>
                 </div>
                 <div class="flex gap-1">
-                    <button onclick="enviarRelatorioDiretora()" class="text-[10px] bg-emerald-700 hover:bg-emerald-800 px-2 py-1.5 rounded-lg font-medium transition" title="Copiar Relatório Oficial">
+                    <button onclick="enviarRelatorioDiretora()" class="text-[10px] bg-emerald-700 hover:bg-emerald-800 px-2 py-1.5 rounded-lg font-medium transition" title="Enviar Relatório WhatsApp">
                         Diretora
                     </button>
                     <button onclick="alternarTela()" id="btnAlternar" class="text-[10px] bg-indigo-800 hover:bg-indigo-900 px-2 py-1.5 rounded-lg font-medium transition">
@@ -256,7 +256,27 @@
         </main>
     </div>
 
-    <!-- MODAIS -->
+    <!-- MODAIS DO SISTEMA -->
+    <div id="modalPerfil" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="font-bold text-sm text-slate-800">Editar Perfil e Turma</h3>
+                <button onclick="fecharModalPerfil()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Nome Completo da Professora</label>
+                    <input type="text" id="inputModalNomeProf" class="w-full border rounded-lg p-2 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Nome da Turma</label>
+                    <input type="text" id="inputModalTurmaProf" class="w-full border rounded-lg p-2 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <button onclick="salvarPerfilModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">Salvar Alterações</button>
+        </div>
+    </div>
+
     <div id="modalAlunos" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
             <div class="flex justify-between items-center border-b pb-2">
@@ -293,9 +313,13 @@
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto text-center">
             <div class="text-3xl">⚠️</div>
             <h3 class="font-bold text-sm text-slate-800">Gerenciamento de Conta</h3>
+            <div class="space-y-2 text-left">
+                <label class="block text-xs font-medium text-slate-600">Digite o CPF da conta que deseja gerenciar:</label>
+                <input type="text" id="inputCpfGerenciarConta" placeholder="000.000.000-00" class="w-full border rounded-lg p-2 text-xs outline-none">
+                <button onclick="buscarContaParaGerenciar()" class="w-full bg-indigo-600 text-white py-2 rounded-lg text-xs font-medium">Localizar Conta</button>
+            </div>
             <div id="detalhesContaExcluir" class="text-xs bg-slate-50 p-3 rounded-lg text-left space-y-1"></div>
-            <p class="text-xs text-rose-600 font-semibold">Deseja realmente excluir esta conta e os dados locais?</p>
-            <div class="grid grid-cols-2 gap-2 pt-2">
+            <div id="containerBotoesExclusao" class="hidden grid grid-cols-2 gap-2 pt-2">
                 <button onclick="fecharModalExcluirConta()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2.5 rounded-xl transition text-xs">Cancelar</button>
                 <button onclick="confirmarExclusaoConta()" class="bg-rose-600 hover:bg-rose-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">Sim, Excluir</button>
             </div>
@@ -398,23 +422,28 @@
             document.getElementById('assinaturaProfessora').innerText = `Professora: ${nomeProf}`;
         }
 
-        function editarPerfilProfessora() {
+        function abrirModalPerfil() {
             const sufixo = obterChaveUsuario();
-            const atualNome = localStorage.getItem(`nome_professora${sufixo}`) || 'Professora';
-            const atualTurma = localStorage.getItem(`turma_professora${sufixo}`) || 'Turma';
+            document.getElementById('inputModalNomeProf').value = localStorage.getItem(`nome_professora${sufixo}`) || '';
+            document.getElementById('inputModalTurmaProf').value = localStorage.getItem(`turma_professora${sufixo}`) || '';
+            document.getElementById('modalPerfil').classList.remove('hidden');
+        }
 
-            const novoNome = prompt("Nome completo da Professora:", atualNome);
-            if (novoNome && novoNome.trim() !== '') {
-                localStorage.setItem(`nome_professora${sufixo}`, novoNome.trim());
-            }
+        function fecharModalPerfil() {
+            document.getElementById('modalPerfil').classList.add('hidden');
+        }
 
-            const novaTurma = prompt("Nome da Turma (Ex: 5º Ano C):", atualTurma);
-            if (novaTurma && novaTurma.trim() !== '') {
-                localStorage.setItem(`turma_professora${sufixo}`, novaTurma.trim());
-            }
+        function salvarPerfilModal() {
+            const sufixo = obterChaveUsuario();
+            const novoNome = document.getElementById('inputModalNomeProf').value.trim();
+            const novaTurma = document.getElementById('inputModalTurmaProf').value.trim();
 
+            if (novoNome) localStorage.setItem(`nome_professora${sufixo}`, novoNome);
+            if (novaTurma) localStorage.setItem(`turma_professora${sufixo}`, novaTurma);
+
+            fecharModalPerfil();
             atualizarDadosTopoPerfil();
-            mostrarAviso('Sucesso', 'Perfil e turma atualizados com sucesso!', '✅');
+            mostrarAviso('Sucesso', 'Perfil atualizado com sucesso!', '✅');
         }
 
         function alternarVisibilidadeSenha(idInput, idIcone) {
@@ -531,10 +560,8 @@
             const senha = document.getElementById('loginSenha').value.trim();
             const sufixo = `_user_${cpf}`;
 
-            // CHAVE MESTRA: Insira o CPF da sua esposa abaixo (somente números, sem pontos ou traços)
             const cpfDaEsposa = "00000000000";
 
-            // Lista oficial com os 21 alunos da turma da sua esposa (5º Ano C)
             const alunosIniciaisTurmaEsposa = [
                 "David Desplanches de Miranda", "Isadora Martins Bueno",
                 "Yuri Matheus dos Santos Lessi", "José Henrique Montevechio Cristo",
@@ -616,28 +643,39 @@
         }
 
         function abrirModalExcluirConta() {
-            const cpfInputModal = prompt("Digite o CPF da conta que deseja gerenciar ou excluir:");
-            if (!cpfInputModal) return;
-            const sufixo = `_user_${cpfInputModal.trim()}`;
+            document.getElementById('inputCpfGerenciarConta').value = '';
+            document.getElementById('detalhesContaExcluir').innerHTML = '';
+            document.getElementById('containerBotoesExclusao').classList.add('hidden');
+            document.getElementById('modalExcluirConta').classList.remove('hidden');
+        }
+
+        function fecharModalExcluirConta() {
+            document.getElementById('modalExcluirConta').classList.add('hidden');
+        }
+
+        function buscarContaParaGerenciar() {
+            const cpfInput = document.getElementById('inputCpfGerenciarConta').value.trim();
+            if (!cpfInput) {
+                mostrarAviso('Atenção', 'Digite o CPF para localizar a conta.', '⚠️');
+                return;
+            }
+            const sufixo = `_user_${cpfInput}`;
             const nome = localStorage.getItem(`nome_professora${sufixo}`);
             const turma = localStorage.getItem(`turma_professora${sufixo}`);
 
             const container = document.getElementById('detalhesContaExcluir');
             if (!nome) {
                 container.innerHTML = `<p class="text-rose-600 font-bold">Nenhuma conta encontrada com este CPF.</p>`;
+                document.getElementById('containerBotoesExclusao').classList.add('hidden');
             } else {
                 container.innerHTML = `
                     <p><strong>Nome:</strong> ${nome}</p>
                     <p><strong>Turma:</strong> ${turma}</p>
-                    <p><strong>CPF:</strong> ${cpfInputModal}</p>
+                    <p><strong>CPF:</strong> ${cpfInput}</p>
                 `;
                 localStorage.setItem('cpf_para_exclusao_temporario', sufixo);
+                document.getElementById('containerBotoesExclusao').classList.remove('hidden');
             }
-            document.getElementById('modalExcluirConta').classList.remove('hidden');
-        }
-
-        function fecharModalExcluirConta() {
-            document.getElementById('modalExcluirConta').classList.add('hidden');
         }
 
         function confirmarExclusaoConta() {
@@ -1026,26 +1064,54 @@
 
         function enviarRelatorioDiretora() {
             const sufixo = obterChaveUsuario();
-            const turma = localStorage.getItem(`turma_professora${sufixo}`) || 'Turma';
+            const nomeProfessora = localStorage.getItem(`nome_professora${sufixo}`) || 'Professora';
+            const turmaProf = localStorage.getItem(`turma_professora${sufixo}`) || '5º C';
+            const alunos = obterAlunosTurma();
             const dadosArmazenados = obterDadosArmazenados();
 
-            let resumo = `📊 *Relatório Oficial de Pagamentos - ${turma}*\nEscola Municipal 31 de Março\n\n`;
-            resumo += `Total de registros lançados: ${dadosArmazenados.length}\n\n`;
-            
-            if(dadosArmazenados.length === 0) {
-                resumo += `Nenhum pagamento registrado até o momento.`;
-            } else {
-                resumo += `*Alunos com pagamentos:* \n`;
-                dadosArmazenados.forEach(i => {
-                    resumo += `- ${i.aluno} (${i.tipoPagamento})\n`;
-                });
-            }
+            let totalRecebidoCalculado = 0;
+            const totalPrevistoGeral = alunos.length * 175.00;
 
-            navigator.clipboard.writeText(resumo).then(() => {
-                mostrarAviso('Sucesso', 'Relatório oficial copiado para a área de transferência!', '📋');
-            }).catch(() => {
-                prompt("Copie o relatório abaixo:", resumo);
+            let textoRelatorio = `📊 *ESCOLA MUNICIPAL 31 DE MARÇO – E.I.E.F.*\n`;
+            textoRelatorio += `*CONTROLE DE PAGAMENTOS – FORMATURA 5º ANO / 2026*\n\n`;
+            textoRelatorio += `📌 *TURMA:* ${turmaProf}\n`;
+            textoRelatorio += `👩‍🏫 *Professora:* ${nomeProfessora}\n`;
+            textoRelatorio += `👥 *Total de Formandos:* ${alunos.length}\n`;
+            textoRelatorio += `💰 *Valor por Estudante:* R$ 175,00 (1ª Parc: R$ 87,50 | 2ª Parc: R$ 87,50)\n\n`;
+            textoRelatorio += `----------------------------------------\n`;
+            textoRelatorio += `📋 *STATUS DOS ALUNOS:*\n\n`;
+
+            alunos.forEach((aluno, index) => {
+                const pagamentosAluno = dadosArmazenados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
+                const pagou1 = pagamentosAluno.some(i => i.tipoPagamento.includes('1ª Parcela') || i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
+                const pagou2 = pagamentosAluno.some(i => i.tipoPagamento.includes('2ª Parcela') || i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
+
+                if(pagou1) totalRecebidoCalculado += 87.50;
+                if(pagou2) totalRecebidoCalculado += 87.50;
+
+                let statusStr = "";
+                if(pagou1 && pagou2) {
+                    statusStr = "✅ Quitado (1ª e 2ª Parc PAGO)";
+                } else if(pagou1) {
+                    statusStr = "⚠️ 1ª Parc PAGO | 2ª Pendente";
+                } else if(pagou2) {
+                    statusStr = "⚠️ 1ª Pendente | 2ª Parc PAGO";
+                } else {
+                    statusStr = "❌ Pendente";
+                }
+
+                textoRelatorio += `${index + 1}. *${aluno}*\n   ↳ ${statusStr}\n`;
             });
+
+            textoRelatorio += `----------------------------------------\n`;
+            textoRelatorio += `📈 *RESUMO FINANCEIRO:*\n`;
+            textoRelatorio += `• Total Previsto: R$ ${totalPrevistoGeral.toFixed(2).replace('.', ',')}\n`;
+            textoRelatorio += `• Total Recebido: R$ ${totalRecebidoCalculado.toFixed(2).replace('.', ',')}\n`;
+            textoRelatorio += `• Valor Pendente: R$ ${(totalPrevistoGeral - totalRecebidoCalculado).toFixed(2).replace('.', ',')}\n\n`;
+            textoRelatorio += `_Relatório gerado digitalmente pela Secretária Virtual_`;
+
+            const textoCodificado = encodeURIComponent(textoRelatorio);
+            window.open(`https://api.whatsapp.com/send?text=${textoCodificado}`, '_blank');
         }
 
         function alternarTela() {
@@ -1065,7 +1131,7 @@
             }
         }
 
-       function exportarWord() {
+        function exportarWord() {
             const sufixo = obterChaveUsuario();
             const nomeProfessora = localStorage.getItem(`nome_professora${sufixo}`) || 'Professora';
             const turmaProf = localStorage.getItem(`turma_professora${sufixo}`) || '5º C';
@@ -1086,12 +1152,12 @@
                 const formaObs = pagamentosAluno.map(i => `${i.tipoPagamento}`).join(' | ') || "-";
 
                 linhasHtml += `
-                    <tr>
-                        <td style="border: 1.5px solid #000; text-align: center; padding: 3px 5px; font-size: 10pt;">${index + 1}</td>
-                        <td style="border: 1.5px solid #000; padding: 3px 6px; font-size: 10pt;">${aluno}</td>
-                        <td style="border: 1.5px solid #000; text-align: center; padding: 3px 5px; font-size: 10pt; font-weight: bold;">${pagou1 ? "PAGO" : ""}</td>
-                        <td style="border: 1.5px solid #000; text-align: center; padding: 3px 5px; font-size: 10pt; font-weight: bold;">${pagou2 ? "PAGO" : ""}</td>
-                        <td style="border: 1.5px solid #000; padding: 3px 6px; font-size: 9pt;">${formaObs}</td>
+                    <tr style="height: 14pt;">
+                        <td style="border: 1px solid #000; text-align: center; padding: 1px 3px; font-size: 9.5pt; height: 14pt; mso-line-height-rule: exactly;">${index + 1}</td>
+                        <td style="border: 1px solid #000; padding: 1px 4px; font-size: 9.5pt; height: 14pt; mso-line-height-rule: exactly;">${aluno}</td>
+                        <td style="border: 1px solid #000; text-align: center; padding: 1px 3px; font-size: 9.5pt; font-weight: bold; height: 14pt; mso-line-height-rule: exactly;">${pagou1 ? "PAGO" : ""}</td>
+                        <td style="border: 1px solid #000; text-align: center; padding: 1px 3px; font-size: 9.5pt; font-weight: bold; height: 14pt; mso-line-height-rule: exactly;">${pagou2 ? "PAGO" : ""}</td>
+                        <td style="border: 1px solid #000; padding: 1px 4px; font-size: 9pt; height: 14pt; mso-line-height-rule: exactly;">${formaObs}</td>
                     </tr>
                 `;
             });
@@ -1105,26 +1171,26 @@
                     <title>Controle de Pagamentos</title>
                     <style>
                         @page Section1 {
-                            size: 841.7pt 595.3pt; /* Formato Paisagem (Landscape) A4 */
+                            size: 841.7pt 595.3pt;
                             mso-page-orientation: landscape;
-                            margin: 1.5cm 1.5cm 1.5cm 1.5cm;
+                            margin: 1cm 1cm 1cm 1cm;
                         }
                         div.Section1 { page: Section1; }
-                        body { font-family: Arial, sans-serif; font-size: 10pt; color: #000; line-height: 1.15; }
-                        h3, h4 { text-align: center; margin: 3px 0; font-size: 11pt; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 10px; }
-                        th { background-color: #f2f2f2; border: 1.5px solid #000; padding: 5px; text-align: center; font-size: 9.5pt; font-weight: bold; }
-                        td { padding: 3px 5px; vertical-align: middle; }
-                        p { margin: 3px 0; }
+                        body { font-family: Arial, sans-serif; font-size: 9.5pt; color: #000; line-height: 1; }
+                        h3, h4 { text-align: center; margin: 2px 0; font-size: 10.5pt; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 6px; margin-bottom: 6px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+                        th { background-color: #f2f2f2; border: 1px solid #000; padding: 3px; text-align: center; font-size: 9pt; font-weight: bold; }
+                        td { padding: 1px 3px; vertical-align: middle; }
+                        p { margin: 2px 0; }
                     </style>
                 </head>
                 <body>
                     <div class="Section1">
                         <h3>ESCOLA MUNICIPAL 31 DE MARÇO – E.I.E.F.</h3>
                         <h4>CONTROLE DE PAGAMENTOS – FORMATURA 5º ANO / 2026</h4>
-                        <p align="center" style="font-size: 9.5pt;"><b>TURMA: ${turmaProf}   |   FORMANDOS: ${alunos.length}   |   VALOR POR ESTUDANTE: R$ 175,00</b></p>
-                        <p align="center" style="font-size: 9pt;">1ª parcela: R$ 87,50 (07/11/2026)   •   2ª parcela: R$ 87,50 (06/12/2026)</p>
-                        <p style="font-size: 8.5pt; margin-bottom: 10px;"><b>OBSERVAÇÃO:</b> A professora receberá os comprovantes pelo WhatsApp e, após conferir o valor e confirmar o pagamento, dará baixa na parcela correspondente ao nome do estudante.</p>
+                        <p align="center" style="font-size: 9pt;"><b>TURMA: ${turmaProf}   |   FORMANDOS: ${alunos.length}   |   VALOR POR ESTUDANTE: R$ 175,00</b></p>
+                        <p align="center" style="font-size: 8.5pt;">1ª parcela: R$ 87,50 (07/11/2026)   •   2ª parcela: R$ 87,50 (06/12/2026)</p>
+                        <p style="font-size: 8pt; margin-bottom: 6px;"><b>OBSERVAÇÃO:</b> A professora receberá os comprovantes pelo WhatsApp e, após conferir o valor e confirmar o pagamento, dará baixa na parcela correspondente ao nome do estudante.</p>
                         
                         <table>
                             <thead>
@@ -1141,14 +1207,14 @@
                             </tbody>
                         </table>
 
-                        <p style="font-size: 10pt;"><b>Total previsto – ${turmaProf}:</b> R$ ${totalPrevistoGeral.toFixed(2).replace('.', ',')}</p>
-                        <p style="font-size: 10pt;"><b>Total recebido:</b> R$ ${totalRecebidoCalculado.toFixed(2).replace('.', ',')}</p>
+                        <p style="font-size: 9.5pt;"><b>Total previsto – ${turmaProf}:</b> R$ ${totalPrevistoGeral.toFixed(2).replace('.', ',')}</p>
+                        <p style="font-size: 9.5pt;"><b>Total recebido:</b> R$ ${totalRecebidoCalculado.toFixed(2).replace('.', ',')}</p>
                         
                         <br>
-                        <table style="width: 100%; border: none; margin-top: 15px;">
+                        <table style="width: 100%; border: none; margin-top: 10px;">
                             <tr>
-                                <td style="border: none; width: 50%;">Conferência da professora: ${nomeProfessora}</td>
-                                <td style="border: none; width: 50%;">Conferência da direção: ___________________________</td>
+                                <td style="border: none; width: 50%; padding: 0;">Conferência da professora: ${nomeProfessora}</td>
+                                <td style="border: none; width: 50%; padding: 0;">Conferência da direção: ___________________________</td>
                             </tr>
                         </table>
                     </div>
@@ -1166,7 +1232,6 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
-
         function fazerBackup() {
             const dadosArmazenados = obterDadosArmazenados();
             const sufixo = obterChaveUsuario();
