@@ -9,6 +9,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans pb-12">
 
+    <!-- TELA DE LOGIN / CADASTRO POR CPF -->
     <div id="telaLogin" class="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl text-center">
             <div class="space-y-1">
@@ -17,6 +18,7 @@
                 <p id="subtituloLogin" class="text-xs text-slate-500">Acesse com seu CPF para gerenciar sua turma</p>
             </div>
 
+            <!-- Botão de Acesso Rápido por Biometria -->
             <div id="divBotaoBiometria" class="hidden">
                 <button type="button" onclick="entrarComBiometria()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium p-3 rounded-xl transition text-xs shadow flex items-center justify-center gap-2">
                     <span>🧬</span> Entrar com Biometria
@@ -29,57 +31,84 @@
             </div>
 
             <form id="formLoginApp" onsubmit="realizarLogin(event)" class="space-y-3 text-left" autocomplete="off">
+                
+                <!-- Campos extras (Ocultos por padrão) -->
                 <div id="grupoCamposCadastro" class="hidden space-y-3">
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Nome Completo da Professora</label>
-                        <input type="text" id="cadastroNome" placeholder="Ex: Ângela Horkaten Taborda" autocomplete="off" class="w-full border rounded-lg p-2.5 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                        <input type="text" id="cadastroNome" placeholder="Ex: Ângela Horkaten Taborda" autocomplete="off"
+                            class="w-full border rounded-lg p-2.5 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Turma (Digite ou selecione)</label>
-                        <input type="text" id="cadastroTurma" list="listaTurmasSugestao" placeholder="Ex: 5º Ano A - 2026" autocomplete="off" class="w-full border rounded-lg p-2.5 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                        <input type="text" id="cadastroTurma" list="listaTurmasSugestao" placeholder="Ex: 5º Ano C - 2026" autocomplete="off"
+                            class="w-full border rounded-lg p-2.5 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
                         <datalist id="listaTurmasSugestao">
-                            <option value="5º Ano A - 2026"><option value="5º Ano B - 2026"><option value="5º Ano C - 2026"><option value="5º Ano D - 2026"><option value="5º Ano E - 2026">
+                            <option value="5º Ano A - 2026">
+                            <option value="5º Ano B - 2026">
+                            <option value="5º Ano C - 2026">
+                            <option value="5º Ano D - 2026">
+                            <option value="5º Ano E - 2026">
                         </datalist>
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">CPF de Acesso</label>
-                    <input type="text" id="loginCpf" placeholder="000.000.000-00" required autocomplete="off" class="w-full border rounded-lg p-2.5 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="text" id="loginCpf" placeholder="000.000.000-00" required autocomplete="off"
+                        class="w-full border rounded-lg p-2.5 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
 
                 <div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">Senha</label>
                     <div class="relative">
-                        <input type="password" id="loginSenha" placeholder="••••••••" required autocomplete="new-password" class="w-full border rounded-lg p-2.5 pr-8 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
-                        <button type="button" onclick="alternarVisibilidadeSenha('loginSenha', 'iconeOlho1')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs" title="Mostrar/Ocultar"><span id="iconeOlho1">👁️</span></button>
+                        <input type="password" id="loginSenha" placeholder="••••••••" required autocomplete="new-password"
+                            class="w-full border rounded-lg p-2.5 pr-8 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button type="button" onclick="alternarVisibilidadeSenha('loginSenha', 'iconeOlho1')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs" title="Mostrar/Ocultar">
+                            <span id="iconeOlho1">👁️</span>
+                        </button>
                     </div>
                 </div>
 
                 <div id="grupoConfirmaSenha" class="hidden">
                     <label class="block text-xs font-medium text-slate-600 mb-1">Confirmar Senha</label>
                     <div class="relative">
-                        <input type="password" id="loginSenhaConfirma" placeholder="••••••••" autocomplete="new-password" class="w-full border rounded-lg p-2.5 pr-8 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
-                        <button type="button" onclick="alternarVisibilidadeSenha('loginSenhaConfirma', 'iconeOlho2')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs" title="Mostrar/Ocultar"><span id="iconeOlho2">👁️</span></button>
+                        <input type="password" id="loginSenhaConfirma" placeholder="••••••••" autocomplete="new-password"
+                            class="w-full border rounded-lg p-2.5 pr-8 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button type="button" onclick="alternarVisibilidadeSenha('loginSenhaConfirma', 'iconeOlho2')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs" title="Mostrar/Ocultar">
+                            <span id="iconeOlho2">👁️</span>
+                        </button>
                     </div>
                 </div>
 
+                <!-- Botões de ação limpos e únicos -->
                 <div class="flex justify-between items-center text-[11px] select-none pt-1">
-                    <button type="button" onclick="alternarModoCadastro()" id="linkModoCadastro" class="text-indigo-600 font-medium hover:underline focus:outline-none bg-transparent border-none p-0 cursor-pointer">Ainda não tem conta? Cadastrar</button>
-                    <button type="button" onclick="esqueciSenha()" class="text-slate-500 hover:underline focus:outline-none bg-transparent border-none p-0 cursor-pointer">Esqueceu a senha?</button>
+                    <button type="button" onclick="alternarModoCadastro()" id="linkModoCadastro" class="text-indigo-600 font-medium hover:underline focus:outline-none bg-transparent border-none p-0 cursor-pointer">
+                        Ainda não tem conta? Cadastrar
+                    </button>
+                    <button type="button" onclick="esqueciSenha()" class="text-slate-500 hover:underline focus:outline-none bg-transparent border-none p-0 cursor-pointer">
+                        Esqueceu a senha?
+                    </button>
                 </div>
 
-                <button type="submit" id="btnAcaoLogin" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition text-xs shadow mt-2">Entrar</button>
+                <button type="submit" id="btnAcaoLogin" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition text-xs shadow mt-2">
+                    Entrar
+                </button>
             </form>
 
             <div id="divLinkExcluirConta" class="pt-2 text-center select-none">
-                <button type="button" onclick="abrirModalExcluirConta()" class="text-[11px] text-rose-600 hover:underline font-medium focus:outline-none bg-transparent border-none p-0 cursor-pointer">🗑️ Excluir Conta Cadastrada</button>
+                <button type="button" onclick="abrirModalExcluirConta()" class="text-[11px] text-rose-600 hover:underline font-medium focus:outline-none bg-transparent border-none p-0 cursor-pointer">
+                    🗑️ Excluir Conta Cadastrada
+                </button>
             </div>
 
-            <div class="pt-2 border-t text-[11px] text-slate-400">Desenvolvido por Everton Taborda</div>
+            <div class="pt-2 border-t text-[11px] text-slate-400">
+                Desenvolvido por Everton Taborda
+            </div>
         </div>
     </div>
-        <!-- APLICATIVO PRINCIPAL -->
+
+    <!-- APLICATIVO PRINCIPAL -->
     <div id="appPrincipal" class="hidden">
         <header class="bg-indigo-700 text-white p-3 shadow-md sticky top-0 z-40">
             <div class="max-w-md mx-auto flex justify-between items-center">
@@ -94,30 +123,46 @@
                     </div>
                 </div>
                 <div class="flex gap-1">
-                    <button onclick="enviarRelatorioDiretora()" class="text-[10px] bg-emerald-700 hover:bg-emerald-800 px-2 py-1.5 rounded-lg font-medium transition" title="Copiar Relatório Oficial">Diretora</button>
-                    <button onclick="alternarTela()" id="btnAlternar" class="text-[10px] bg-indigo-800 hover:bg-indigo-900 px-2 py-1.5 rounded-lg font-medium transition">📊 Planilha</button>
-                    <button onclick="sairConta()" class="text-[10px] bg-rose-700 hover:bg-rose-800 px-2 py-1.5 rounded-lg font-medium transition" title="Sair">🔒 Sair</button>
+                    <button onclick="enviarRelatorioDiretora()" class="text-[10px] bg-emerald-700 hover:bg-emerald-800 px-2 py-1.5 rounded-lg font-medium transition" title="Copiar Relatório Oficial">
+                        Diretora
+                    </button>
+                    <button onclick="alternarTela()" id="btnAlternar" class="text-[10px] bg-indigo-800 hover:bg-indigo-900 px-2 py-1.5 rounded-lg font-medium transition">
+                        📊 Planilha
+                    </button>
+                    <button onclick="sairConta()" class="text-[10px] bg-rose-700 hover:bg-rose-800 px-2 py-1.5 rounded-lg font-medium transition" title="Sair">
+                        🔒 Sair
+                    </button>
                 </div>
             </div>
         </header>
 
         <main class="max-w-md mx-auto p-4 space-y-4">
+            
+            <!-- SEÇÃO 1: FORMULÁRIO DE LANÇAMENTO -->
             <div id="secaoFormulario" class="space-y-4">
                 <form id="formPagamento" class="bg-white p-4 rounded-xl shadow-sm space-y-3">
                     <div class="flex justify-between items-center border-b pb-2">
                         <h2 class="font-semibold text-slate-700 text-sm">Novo Registro de Comprovante</h2>
                         <button type="button" onclick="abrirModalGerenciarAlunos()" class="text-[10px] text-indigo-600 font-bold hover:underline">👥 Gerenciar Alunos</button>
                     </div>
+
+                    <!-- Aluno -->
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Nome do Aluno</label>
-                        <input type="text" id="nomeAluno" list="listaAlunosDinamica" placeholder="Digite ou selecione o aluno" required class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <input type="text" id="nomeAluno" list="listaAlunosDinamica" placeholder="Digite ou selecione o aluno" required
+                            class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                         <datalist id="listaAlunosDinamica"></datalist>
                     </div>
+
+                    <!-- Comprovante / Arquivo -->
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Comprovante (Imagem/PDF)</label>
-                        <input type="file" id="arquivoComprovante" accept="image/*,application/pdf" class="w-full border rounded-lg p-2 text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                        <input type="file" id="arquivoComprovante" accept="image/*,application/pdf"
+                            class="w-full border rounded-lg p-2 text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
                         <p class="text-[10px] text-slate-400 mt-1">Se for dinheiro, deixe em branco.</p>
                     </div>
+
+                    <!-- Forma de Pagamento -->
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <label class="text-xs font-medium text-slate-600">Opção de Pagamento</label>
@@ -125,21 +170,33 @@
                         </div>
                         <select id="tipoPagamento" class="w-full border rounded-lg p-2.5 text-sm outline-none bg-white"></select>
                     </div>
+
+                    <!-- Observação Editável -->
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Status / Observação (Editável)</label>
                         <textarea id="observacao" rows="2" class="w-full border rounded-lg p-2 text-sm outline-none bg-amber-50/50"></textarea>
                     </div>
-                    <button type="button" onclick="prepararSalvamento()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition text-sm shadow">Salvar Lançamento</button>
+
+                    <!-- Ação de Envio -->
+                    <button type="button" onclick="prepararSalvamento()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition text-sm shadow">
+                        Salvar Lançamento
+                    </button>
                 </form>
 
+                <!-- Ações de Relatório e Backup -->
                 <div class="bg-white p-4 rounded-xl shadow-sm space-y-2">
                     <h3 class="font-semibold text-slate-700 text-xs uppercase tracking-wider">Exportar & Relatórios</h3>
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">📊 Baixar Excel Oficial</button>
-                        <button onclick="fazerBackup()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">💾 Backup JSON</button>
+                        <button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
+                            📊 Baixar Excel Oficial
+                        </button>
+                        <button onclick="fazerBackup()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
+                            💾 Backup JSON
+                        </button>
                     </div>
                 </div>
 
+                <!-- Lista Recente -->
                 <div class="bg-white p-4 rounded-xl shadow-sm">
                     <div class="flex justify-between items-center mb-2">
                         <h3 class="font-semibold text-slate-700 text-sm">Registros Salvos</h3>
@@ -151,14 +208,19 @@
                 </div>
             </div>
 
+            <!-- SEÇÃO 2: PLANILHA OFICIAL DETALHADA -->
             <div id="secaoPlanilha" class="hidden space-y-4">
                 <div class="bg-white p-5 rounded-2xl shadow-sm space-y-4 border border-slate-200">
+                    
+                    <!-- CABEÇALHO OFICIAL DO RELATÓRIO -->
                     <div class="text-center border-b pb-4 space-y-1">
                         <div class="text-2xl">🏛️</div>
                         <h2 class="font-bold text-sm text-slate-900 uppercase">Escola Municipal 31 de Março</h2>
                         <p id="relatorioTurmaSub" class="text-xs font-semibold text-indigo-600">Controle de Caixa - Formatura</p>
                         <p class="text-[10px] text-slate-400">Ano Letivo: 2026</p>
                     </div>
+
+                    <!-- TABELA FORMATAÇÃO OFICIAL -->
                     <div class="overflow-x-auto border rounded-xl">
                         <table class="w-full text-left text-xs border-collapse">
                             <thead>
@@ -173,6 +235,8 @@
                             <tbody id="corpoTabelaPlanilha"></tbody>
                         </table>
                     </div>
+
+                    <!-- RODAPÉ DE ASSINATURAS OFICIAIS -->
                     <div class="pt-6 space-y-6 text-xs text-slate-700 border-t">
                         <div class="grid grid-cols-2 gap-4 text-center pt-4">
                             <div class="space-y-2">
@@ -186,12 +250,14 @@
                         </div>
                         <p class="text-[10px] text-slate-400 text-center">Documento gerado digitalmente pela Secretária Virtual.</p>
                     </div>
+
                 </div>
             </div>
+
         </main>
     </div>
 
-    <!-- MODAIS -->
+    <!-- MODAIS RESTANTES -->
     <div id="modalAlunos" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
             <div class="flex justify-between items-center border-b pb-2">
@@ -282,7 +348,7 @@
     </div>
 
     <script>
-                    let modoCadastro = false;
+        let modoCadastro = false;
 
         window.addEventListener('DOMContentLoaded', () => {
             verificarSessao();
@@ -379,7 +445,11 @@
                     const publicKey = {
                         challenge: new Uint8Array(32),
                         rp: { name: "Secretaria Virtual Formatura" },
-                        user: { id: Uint8Array.from(cpf, c => c.charCodeAt(0)), name: cpf, displayName: cpf },
+                        user: {
+                            id: Uint8Array.from(cpf, c => c.charCodeAt(0)),
+                            name: cpf,
+                            displayName: cpf
+                        },
                         pubKeyCredParams: [{ alg: -7, type: "public-key" }],
                         timeout: 60000,
                         attestation: "direct"
@@ -389,7 +459,9 @@
                         localStorage.setItem('biometria_ativa_formatura', 'true');
                         localStorage.setItem('usuario_biometria_cpf', cpf);
                     }
-                } catch (e) { console.log("Biometria não configurada:", e); }
+                } catch (e) {
+                    console.log("Biometria não configurada:", e);
+                }
             }
         }
 
@@ -399,7 +471,10 @@
                     const publicKey = {
                         challenge: new Uint8Array(32),
                         timeout: 60000,
-                        allowCredentials: [{ type: "public-key", id: new Uint8Array(32) }]
+                        allowCredentials: [{
+                            type: "public-key",
+                            id: new Uint8Array(32)
+                        }]
                     };
                     await navigator.credentials.get({ publicKey }).catch(() => {});
                     const cpfSalvo = localStorage.getItem('usuario_biometria_cpf');
@@ -417,11 +492,13 @@
 
         function alternarModoCadastro() {
             modoCadastro = !modoCadastro;
+            
             const titulo = document.getElementById('subtituloLogin');
             const link = document.getElementById('linkModoCadastro');
             const btn = document.getElementById('btnAcaoLogin');
             const grupoCampos = document.getElementById('grupoCamposCadastro');
             const grupoConfirma = document.getElementById('grupoConfirmaSenha');
+            
             const inputNome = document.getElementById('cadastroNome');
             const inputTurma = document.getElementById('cadastroTurma');
             const inputConfirma = document.getElementById('loginSenhaConfirma');
@@ -430,6 +507,7 @@
                 titulo.innerText = "Cadastre seu CPF, Nome e Turma";
                 link.innerText = "Já tem conta? Entrar";
                 btn.innerText = "Cadastrar e Entrar";
+                
                 grupoCampos.classList.remove('hidden');
                 grupoConfirma.classList.remove('hidden');
                 inputNome.setAttribute('required', 'true');
@@ -439,6 +517,7 @@
                 titulo.innerText = "Acesse com seu CPF para gerenciar sua turma";
                 link.innerText = "Ainda não tem conta? Cadastrar";
                 btn.innerText = "Entrar";
+                
                 grupoCampos.classList.add('hidden');
                 grupoConfirma.classList.add('hidden');
                 inputNome.removeAttribute('required');
@@ -453,14 +532,22 @@
             const senha = document.getElementById('loginSenha').value.trim();
             const sufixo = `_user_${cpf}`;
 
+            // CHAVE MESTRA: Insira o CPF da sua esposa abaixo (somente números, sem pontos ou traços)
+            const cpfDaEsposa = "00000000000";
+
+            // Lista oficial com os 21 alunos da turma da sua esposa (5º Ano C)
             const alunosIniciaisTurmaEsposa = [
-                "David Desplanches de Miranda", "Isadora Martins Bueno", "Yuri Matheus dos Santos Lessi",
-                "José Henrique Montevechio Cristo", "Gustavo Henrique Ferreira Faria", "Heloisy Vitória dos Santos Freitas",
-                "Sabrina de Oliveira Mendes", "Arthur Carneiro Ferraz", "Letícia Vitoria de Oliveira Betim",
-                "João Lucas Cardoso dos Santos", "Lorrany Marcelle Rocha de Camargo", "Luiza Lemes Faustino",
-                "Lucas Ronaldo Jacumasso Ribas", "Matheus da Silva Santos", "Steffiny Eduarda Pedroso dos Santos",
-                "Luiza Vitória de Proença Miranda", "Ingridy Silva Lemes", "Maria Júlia Borges de Melo",
-                "Davi de Goes Carneiro", "Emanuelle Vitória de Oliveira", "Gustavo Henrique Marcondes Galvão"
+                "David Desplanches de Miranda", "Isadora Martins Bueno",
+                "Yuri Matheus dos Santos Lessi", "José Henrique Montevechio Cristo",
+                "Gustavo Henrique Ferreira Faria", "Heloisy Vitória dos Santos Freitas",
+                "Sabrina de Oliveira Mendes", "Arthur Carneiro Ferraz",
+                "Letícia Vitória de Oliveira Betim", "João Lucas Cardoso dos Santos",
+                "Lorrany Marcelle Rocha de Camargo", "Luiza Lemes Faustino",
+                "Lucas Ronaldo Jacumasso Ribas", "Matheus da Silva Santos",
+                "Steffiny Eduarda Pedroso dos Santos", "Luiza Vitória de Proença Miranda",
+                "Ingridy Silva Lemes", "Maria Júlia Borges de Melo",
+                "Davi de Goes Carneiro", "Emanuelle Vitória de Oliveira",
+                "Gustavo Henrique Marcondes Galvão"
             ];
 
             if (modoCadastro) {
@@ -478,11 +565,11 @@
                 localStorage.setItem(`cadastro_senha${sufixo}`, senha);
                 localStorage.setItem('usuario_logado_cpf', cpf);
 
-                // LÓGICA INTELIGENTE: Só puxa os 21 alunos se a turma for a da sua esposa (5º C)
-                if (turmaProf.toLowerCase().includes('5º ano c') || turmaProf.toLowerCase().includes('5 ano c') || turmaProf.toLowerCase().includes('c')) {
+                // LÓGICA DE SEGURANÇA: Só puxa a lista se o CPF for o da esposa
+                if (cpf === cpfDaEsposa) {
                     localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(alunosIniciaisTurmaEsposa));
                 } else {
-                    localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify([])); 
+                    localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify([])); // Outras professoras começam do zero
                 }
 
                 await cadastrarBiometriaSePossivel(cpf);
@@ -497,13 +584,16 @@
                     
                     let alunosAtuais = JSON.parse(localStorage.getItem(`alunos_turma${sufixo}`)) || [];
                     
-                    if (alunosAtuais.length === 0 && (localStorage.getItem(`turma_professora${sufixo}`) || '').toLowerCase().includes('c')) {
+                    // Se for o CPF da esposa e a lista estiver vazia, repõe a lista oficial
+                    if (alunosAtuais.length === 0 && cpf === cpfDaEsposa) {
                         localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(alunosIniciaisTurmaEsposa));
                     }
 
                     await cadastrarBiometriaSePossivel(cpf);
                     fazerBackupAutomaticoSilencioso();
                     verificarSessao();
+                    atualizarListaAlunosDinamica();
+                    atualizarPlanilhaGeral();
                 } else {
                     mostrarAviso('Erro', 'CPF ou senha incorretos.', '❌');
                 }
@@ -529,16 +619,21 @@
         }
 
         function abrirModalExcluirConta() {
-            const cpf = prompt("Digite o CPF da conta que deseja gerenciar/excluir:");
-            if (!cpf) return;
-            const sufixo = `_user_${cpf.trim()}`;
+            const cpfInputModal = prompt("Digite o CPF da conta que deseja gerenciar ou excluir:");
+            if (!cpfInputModal) return;
+            const sufixo = `_user_${cpfInputModal.trim()}`;
             const nome = localStorage.getItem(`nome_professora${sufixo}`);
             const turma = localStorage.getItem(`turma_professora${sufixo}`);
+
             const container = document.getElementById('detalhesContaExcluir');
             if (!nome) {
                 container.innerHTML = `<p class="text-rose-600 font-bold">Nenhuma conta encontrada com este CPF.</p>`;
             } else {
-                container.innerHTML = `<p><strong>Nome:</strong> ${nome}</p><p><strong>Turma:</strong> ${turma}</p><p><strong>CPF:</strong> ${cpf}</p>`;
+                container.innerHTML = `
+                    <p><strong>Nome:</strong> ${nome}</p>
+                    <p><strong>Turma:</strong> ${turma}</p>
+                    <p><strong>CPF:</strong> ${cpfInputModal}</p>
+                `;
                 localStorage.setItem('cpf_para_exclusao_temporario', sufixo);
             }
             document.getElementById('modalExcluirConta').classList.remove('hidden');
@@ -627,7 +722,8 @@
             const datalist = document.getElementById('listaAlunosDinamica');
             datalist.innerHTML = alunos.map(aluno => `<option value="${aluno}">`).join('');
         }
-                  let opcoesPagamento = JSON.parse(localStorage.getItem('opcoes_pagamento_v1')) || [
+
+        let opcoesPagamento = JSON.parse(localStorage.getItem('opcoes_pagamento_v1')) || [
             "À Vista (Pix/Transf) - R$ 175,00",
             "1ª Parcela (Pix/Transf) - R$ 87,50",
             "2ª Parcela (Pix/Transf) - R$ 87,50",
@@ -979,34 +1075,36 @@
                 const pagou2 = pagamentosAluno.some(i => i.tipoPagamento.includes('2ª Parcela'));
 
                 return {
+                    "ESCOLA": "Escola Municipal 31 de Março",
+                    "TURMA": turmaProf,
                     "Nº": index + 1,
-                    "Nome do Aluno (Formando)": aluno,
-                    "À Vista": pagouAVista ? "PAGO" : "-",
-                    "1ª Parcela": pagou1 ? "PAGO" : "-",
-                    "2ª Parcela": pagou2 ? "PAGO" : "-",
-                    "Forma de Pagamento": pagamentosAluno.map(i => i.tipoPagamento).join(', ') || "-",
-                    "Detalhes / Status": pagamentosAluno.map(i => i.observacao).join(' | ') || "Pendente"
+                    "NOME DO FORMANDO": aluno,
+                    "À VISTA": pagouAVista ? "PAGO" : "",
+                    "1ª PARCELA": pagou1 ? "PAGO" : "",
+                    "2ª PARCELA": pagou2 ? "PAGO" : "",
+                    "FORMA DE PAGAMENTO": pagamentosAluno.map(i => i.tipoPagamento).join(', ') || "",
+                    "OBSERVAÇÕES / DETALHES": pagamentosAluno.map(i => i.observacao).join(' | ') || "Pendente"
                 };
             });
 
             const estruturaFinal = [
-                { "Nº": "ESCOLA MUNICIPAL 31 DE MARÇO", "Nome do Aluno (Formando)": `TURMA: ${turmaProf}` },
-                { "Nº": "Professora:", "Nome do Aluno (Formando)": nomeProfessora },
+                { "ESCOLA": "ESCOLA MUNICIPAL 31 DE MARÇO", "TURMA": `TURMA: ${turmaProf}` },
                 {},
                 ...dadosTabelaLimpa,
                 {},
-                { "Nº": "Assinatura da Professora:", "Nome do Aluno (Formando)": nomeProfessora },
-                { "Nº": "Conferência da Direção:", "Nome do Aluno (Formando)": "___________________________________" }
+                { "ESCOLA": `Professora responsável: ${nomeProfessora}` },
+                { "ESCOLA": "Conferência da direção: ___________________________________" }
             ];
 
             const worksheet = XLSX.utils.json_to_sheet(estruturaFinal, { skipHeader: false });
             
             worksheet['!cols'] = [
-                { wch: 6 }, { wch: 35 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 30 }, { wch: 45 }
+                { wch: 28 }, { wch: 18 }, { wch: 6 }, { wch: 38 }, 
+                { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 25 }, { wch: 35 }
             ];
 
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Controle de Caixa");
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Relatorio Oficial");
             XLSX.writeFile(workbook, `Relatorio_Oficial_Formatura_${turmaProf.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`);
         }
 
@@ -1024,6 +1122,4 @@
         }
     </script>
 </body>
-</html>  
-            
-            
+</html>
