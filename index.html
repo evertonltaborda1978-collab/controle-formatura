@@ -519,6 +519,34 @@
                 inputTurma.removeAttribute('required');
             }
         }
+            modoCadastro = !modoCadastro;
+            
+            const titulo = document.getElementById('subtituloLogin');
+            const link = document.getElementById('linkModoCadastro');
+            const btn = document.getElementById('btnAcaoLogin');
+            const grupoCampos = document.getElementById('grupoCamposCadastro');
+            
+            const inputNome = document.getElementById('cadastroNome');
+            const inputTurma = document.getElementById('cadastroTurma');
+
+            if (modoCadastro) {
+                titulo.innerText = "Cadastre seu CPF, Nome e Turma";
+                link.innerText = "Já tem conta? Entrar";
+                btn.innerText = "Cadastrar e Entrar";
+                
+                grupoCampos.classList.remove('hidden');
+                inputNome.setAttribute('required', 'true');
+                inputTurma.setAttribute('required', 'true');
+            } else {
+                titulo.innerText = "Acesse com seu CPF para gerenciar sua turma";
+                link.innerText = "Ainda não tem conta? Cadastrar";
+                btn.innerText = "Entrar";
+                
+                grupoCampos.classList.add('hidden');
+                inputNome.removeAttribute('required');
+                inputTurma.removeAttribute('required');
+            }
+        }
 
         async function realizarLogin(event) {
             event.preventDefault();
