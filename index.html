@@ -1,264 +1,4 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Formatura - Escola 31 de Março</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-</head>
-<body class="bg-slate-100 text-slate-800 font-sans pb-12">
-
-    <!-- TELA DE LOGIN / CADASTRO POR CPF -->
-    <div id="telaLogin" class="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl text-center">
-            <div class="space-y-1">
-                <span class="text-3xl">🎓</span>
-                <h1 class="font-bold text-sm text-slate-900">Secretária Virtual - Formatura</h1>
-                <p id="subtituloLogin" class="text-xs text-slate-500">Acesse com seu CPF para gerenciar sua turma</p>
-            </div>
-
-            <!-- Botão de Acesso Rápido por Biometria -->
-            <div id="divBotaoBiometria" class="hidden">
-                <button type="button" onclick="entrarComBiometria()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium p-3 rounded-xl transition text-xs shadow flex items-center justify-center gap-2">
-                    <span>🧬</span> Entrar com Biometria
-                </button>
-                <div class="relative flex py-2 items-center">
-                    <div class="flex-grow border-t border-slate-200"></div>
-                    <span class="flex-shrink mx-4 text-[10px] text-slate-400">ou use o CPF</span>
-                    <div class="flex-grow border-t border-slate-200"></div>
-                </div>
-            </div>
-
-            <form id="formLoginApp" onsubmit="realizarLogin(event)" class="space-y-3 text-left" autocomplete="off">
-                <!-- Campos extras (Ocultos por padrão) -->
-               
-                <!-- Campos extras (Ocultos por padrão) -->
-                <div id="grupoCamposCadastro" class="hidden space-y-3">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Nome Completo da Professora</label>
-                        <input type="text" id="cadastroNome" placeholder="Ex: Ângela Horkaten Taborda" autocomplete="off"
-                            class="w-full border rounded-lg p-2.5 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Turma (Digite ou selecione)</label>
-                        <input type="text" id="cadastroTurma" list="listaTurmasSugestao" placeholder="Ex: 5º Ano A - 2026" autocomplete="off"
-                            class="w-full border rounded-lg p-2.5 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
-                        <datalist id="listaTurmasSugestao">
-                            <option value="5º Ano A - 2026">
-                            <option value="5º Ano B - 2026">
-                            <option value="5º Ano C - 2026">
-                            <option value="5º Ano D - 2026">
-                            <option value="5º Ano E - 2026">
-                        </datalist>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">CPF de Acesso</label>
-                    <input type="text" id="loginCpf" placeholder="000.000.000-00" required autocomplete="off"
-                        class="w-full border rounded-lg p-2.5 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Senha</label>
-                    <div class="relative">
-                        <input type="password" id="loginSenha" placeholder="••••••••" required autocomplete="new-password"
-                            class="w-full border rounded-lg p-2.5 pr-8 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
-                        <button type="button" onclick="alternarVisibilidadeSenha('loginSenha', 'iconeOlho1')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs" title="Mostrar/Ocultar">
-                            <span id="iconeOlho1">👁️</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div id="grupoConfirmaSenha">
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Confirmar Senha</label>
-                    <div class="relative">
-                        <input type="password" id="loginSenhaConfirma" placeholder="••••••••" required autocomplete="new-password"
-                            class="w-full border rounded-lg p-2.5 pr-8 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
-                        <button type="button" onclick="alternarVisibilidadeSenha('loginSenhaConfirma', 'iconeOlho2')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs" title="Mostrar/Ocultar">
-                            <span id="iconeOlho2">👁️</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Botões de ação blindados -->
-                <div class="flex justify-between items-center text-[11px] select-none pt-1">
-                    <button type="button" onclick="alternarModoCadastro()" id="linkModoCadastro" class="text-indigo-600 font-medium hover:underline focus:outline-none bg-transparent border-none p-0 cursor-pointer">
-                        Ainda não tem conta? Cadastrar
-                    </button>
-                    <button type="button" onclick="esqueciSenha()" class="text-slate-500 hover:underline focus:outline-none bg-transparent border-none p-0 cursor-pointer">
-                        Esqueceu a senha?
-                    </button>
-                </div>
-
-                <button type="submit" id="btnAcaoLogin" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition text-xs shadow mt-2">
-                    Entrar
-                </button>
-            </form>
-
-            <div id="divLinkExcluirConta" class="pt-2 text-center select-none">
-                <button type="button" onclick="abrirModalExcluirConta()" class="text-[11px] text-rose-600 hover:underline font-medium focus:outline-none bg-transparent border-none p-0 cursor-pointer">
-                    🗑️ Excluir Conta Cadastrada
-                </button>
-            </div>
-
-            <div class="pt-2 border-t text-[11px] text-slate-400">
-                Desenvolvido por Everton Taborda
-            </div>
-        </div>
-    </div>
-
-    <!-- APLICATIVO PRINCIPAL -->
-    <div id="appPrincipal" class="hidden">
-        <header class="bg-indigo-700 text-white p-3 shadow-md sticky top-0 z-40">
-            <div class="max-w-md mx-auto flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <div onclick="editarPerfilProfessora()" class="bg-indigo-800 hover:bg-indigo-900 p-1.5 rounded-lg cursor-pointer flex items-center gap-1.5 text-[11px] font-medium" title="Editar Perfil e Turma">
-                        <span>👩‍🏫</span>
-                        <span id="labelNomeProfessora" class="truncate max-w-[80px]">Professora</span>
-                    </div>
-                    <div>
-                        <h1 class="font-bold text-xs">Escola 31 de Março</h1>
-                        <p id="labelTurmaTopo" class="text-[10px] text-indigo-200">Turma - 2026</p>
-                    </div>
-                </div>
-                <div class="flex gap-1">
-                    <button onclick="enviarRelatorioDiretora()" class="text-[10px] bg-emerald-700 hover:bg-emerald-800 px-2 py-1.5 rounded-lg font-medium transition" title="Copiar Relatório Oficial">
-                        Diretora
-                    </button>
-                    <button onclick="alternarTela()" id="btnAlternar" class="text-[10px] bg-indigo-800 hover:bg-indigo-900 px-2 py-1.5 rounded-lg font-medium transition">
-                        📊 Planilha
-                    </button>
-                    <button onclick="sairConta()" class="text-[10px] bg-rose-700 hover:bg-rose-800 px-2 py-1.5 rounded-lg font-medium transition" title="Sair">
-                        🔒 Sair
-                    </button>
-                </div>
-            </div>
-        </header>
-
-        <main class="max-w-md mx-auto p-4 space-y-4">
-            
-            <!-- SEÇÃO 1: FORMULÁRIO DE LANÇAMENTO -->
-            <div id="secaoFormulario" class="space-y-4">
-                <form id="formPagamento" class="bg-white p-4 rounded-xl shadow-sm space-y-3">
-                    <div class="flex justify-between items-center border-b pb-2">
-                        <h2 class="font-semibold text-slate-700 text-sm">Novo Registro de Comprovante</h2>
-                        <button type="button" onclick="abrirModalGerenciarAlunos()" class="text-[10px] text-indigo-600 font-bold hover:underline">👥 Gerenciar Alunos</button>
-                    </div>
-
-                    <!-- Aluno -->
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Nome do Aluno</label>
-                        <input type="text" id="nomeAluno" list="listaAlunosDinamica" placeholder="Digite ou selecione o aluno" required
-                            class="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                        <datalist id="listaAlunosDinamica"></datalist>
-                    </div>
-
-                    <!-- Comprovante / Arquivo -->
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Comprovante (Imagem/PDF)</label>
-                        <input type="file" id="arquivoComprovante" accept="image/*,application/pdf"
-                            class="w-full border rounded-lg p-2 text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
-                        <p class="text-[10px] text-slate-400 mt-1">Se for dinheiro, deixe em branco.</p>
-                    </div>
-
-                    <!-- Forma de Pagamento -->
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="text-xs font-medium text-slate-600">Opção de Pagamento</label>
-                            <button type="button" onclick="abrirModalGerenciarOpcoes()" class="text-[10px] text-indigo-600 font-bold hover:underline">⚙️ Gerenciar Opções</button>
-                        </div>
-                        <select id="tipoPagamento" class="w-full border rounded-lg p-2.5 text-sm outline-none bg-white"></select>
-                    </div>
-
-                    <!-- Observação Editável -->
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Status / Observação (Editável)</label>
-                        <textarea id="observacao" rows="2" class="w-full border rounded-lg p-2 text-sm outline-none bg-amber-50/50"></textarea>
-                    </div>
-
-                    <!-- Ação de Envio -->
-                    <button type="button" onclick="prepararSalvamento()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition text-sm shadow">
-                        Salvar Lançamento
-                    </button>
-                </form>
-
-                <!-- Ações de Relatório e Backup -->
-                <div class="bg-white p-4 rounded-xl shadow-sm space-y-2">
-                    <h3 class="font-semibold text-slate-700 text-xs uppercase tracking-wider">Exportar & Relatórios</h3>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
-                            📊 Baixar Excel Oficial
-                        </button>
-                        <button onclick="fazerBackup()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
-                            💾 Backup JSON
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Lista Recente -->
-                <div class="bg-white p-4 rounded-xl shadow-sm">
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="font-semibold text-slate-700 text-sm">Registros Salvos</h3>
-                        <span id="contadorRegistros" class="text-xs text-slate-400">0 itens</span>
-                    </div>
-                    <div id="tabelaLancamentos" class="space-y-2 max-h-72 overflow-y-auto text-xs">
-                        <p class="text-slate-400 text-center py-4">Nenhum lançamento registrado ainda.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SEÇÃO 2: PLANILHA OFICIAL DETALHADA -->
-            <div id="secaoPlanilha" class="hidden space-y-4">
-                <div class="bg-white p-5 rounded-2xl shadow-sm space-y-4 border border-slate-200">
-                    
-                    <!-- CABEÇALHO OFICIAL DO RELATÓRIO -->
-                    <div class="text-center border-b pb-4 space-y-1">
-                        <div class="text-2xl">🏛️</div>
-                        <h2 class="font-bold text-sm text-slate-900 uppercase">Escola Municipal 31 de Março</h2>
-                        <p id="relatorioTurmaSub" class="text-xs font-semibold text-indigo-600">Controle de Caixa - Formatura</p>
-                        <p class="text-[10px] text-slate-400">Ano Letivo: 2026</p>
-                    </div>
-
-                    <!-- TABELA FORMATAÇÃO OFICIAL -->
-                    <div class="overflow-x-auto border rounded-xl">
-                        <table class="w-full text-left text-xs border-collapse">
-                            <thead>
-                                <tr class="bg-slate-800 text-white">
-                                    <th class="p-2.5 border-r border-slate-700 text-center w-10">Nº</th>
-                                    <th class="p-2.5 border-r border-slate-700">Nome do Aluno (Formando)</th>
-                                    <th class="p-2.5 text-center border-r border-slate-700 w-16">À Vista</th>
-                                    <th class="p-2.5 text-center border-r border-slate-700 w-16">1ª Parc</th>
-                                    <th class="p-2.5 text-center w-16">2ª Parc</th>
-                                </tr>
-                            </thead>
-                            <tbody id="corpoTabelaPlanilha"></tbody>
-                        </table>
-                    </div>
-
-                    <!-- RODAPÉ DE ASSINATURAS OFICIAIS -->
-                    <div class="pt-6 space-y-6 text-xs text-slate-700 border-t">
-                        <div class="grid grid-cols-2 gap-4 text-center pt-4">
-                            <div class="space-y-2">
-                                <div class="border-b border-slate-400 pb-1"></div>
-                                <p id="assinaturaProfessora" class="font-bold text-[11px]">Professora Responsável</p>
-                            </div>
-                            <div class="space-y-2">
-                                <div class="border-b border-slate-400 pb-1"></div>
-                                <p class="font-bold text-[11px]">Direção / Secretaria</p>
-                            </div>
-                        </div>
-                        <p class="text-[10px] text-slate-400 text-center">Documento gerado digitalmente pela Secretária Virtual.</p>
-                    </div>
-
-                </div>
-            </div>
-
-        </main>
-    </div>
-
-    <!-- MODAIS RESTANTES -->
+<!-- MODAIS RESTANTES -->
     <div id="modalAlunos" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
             <div class="flex justify-between items-center border-b pb-2">
@@ -347,6 +87,7 @@
             <button onclick="fecharModalAviso()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">OK</button>
         </div>
     </div>
+
     <script>
         let modoCadastro = false;
 
@@ -490,7 +231,6 @@
             }
         }
 
-        // Função de alternância totalmente isolada e blindada
         function alternarModoCadastro() {
             modoCadastro = !modoCadastro;
             
@@ -498,9 +238,11 @@
             const link = document.getElementById('linkModoCadastro');
             const btn = document.getElementById('btnAcaoLogin');
             const grupoCampos = document.getElementById('grupoCamposCadastro');
+            const grupoConfirma = document.getElementById('grupoConfirmaSenha');
             
             const inputNome = document.getElementById('cadastroNome');
             const inputTurma = document.getElementById('cadastroTurma');
+            const inputConfirma = document.getElementById('loginSenhaConfirma');
 
             if (modoCadastro) {
                 titulo.innerText = "Cadastre seu CPF, Nome e Turma";
@@ -508,44 +250,20 @@
                 btn.innerText = "Cadastrar e Entrar";
                 
                 grupoCampos.classList.remove('hidden');
+                grupoConfirma.classList.remove('hidden');
                 inputNome.setAttribute('required', 'true');
                 inputTurma.setAttribute('required', 'true');
+                inputConfirma.setAttribute('required', 'true');
             } else {
                 titulo.innerText = "Acesse com seu CPF para gerenciar sua turma";
                 link.innerText = "Ainda não tem conta? Cadastrar";
                 btn.innerText = "Entrar";
                 
                 grupoCampos.classList.add('hidden');
+                grupoConfirma.classList.add('hidden');
                 inputNome.removeAttribute('required');
                 inputTurma.removeAttribute('required');
-            }
-        }
-            modoCadastro = !modoCadastro;
-            
-            const titulo = document.getElementById('subtituloLogin');
-            const link = document.getElementById('linkModoCadastro');
-            const btn = document.getElementById('btnAcaoLogin');
-            const grupoCampos = document.getElementById('grupoCamposCadastro');
-            
-            const inputNome = document.getElementById('cadastroNome');
-            const inputTurma = document.getElementById('cadastroTurma');
-
-            if (modoCadastro) {
-                titulo.innerText = "Cadastre seu CPF, Nome e Turma";
-                link.innerText = "Já tem conta? Entrar";
-                btn.innerText = "Cadastrar e Entrar";
-                
-                grupoCampos.classList.remove('hidden');
-                inputNome.setAttribute('required', 'true');
-                inputTurma.setAttribute('required', 'true');
-            } else {
-                titulo.innerText = "Acesse com seu CPF para gerenciar sua turma";
-                link.innerText = "Ainda não tem conta? Cadastrar";
-                btn.innerText = "Entrar";
-                
-                grupoCampos.classList.add('hidden');
-                inputNome.removeAttribute('required');
-                inputTurma.removeAttribute('required');
+                inputConfirma.removeAttribute('required');
             }
         }
 
@@ -556,6 +274,825 @@
             const sufixo = `_user_${cpf}`;
 
             if (modoCadastro) {
+                const senhaConfirma = document.getElementById('loginSenhaConfirma').value.trim();
+                if (senha !== senhaConfirma) {
+                    mostrarAviso('Erro', 'As senhas não coincidem. Verifique por favor.', '❌');
+                    return;
+                }
+
+                const nomeProf = document.getElementById('cadastroNome').value.trim();
+                const turmaProf = document.getElementById('cadastroTurma').value.trim();
+
+                localStorage.setItem(`nome_professora${sufixo}`, nomeProf);
+                localStorage.setItem(`turma_professora${sufixo}`, turmaProf);
+                localStorage.setItem(`cadastro_senha${sufixo}`, senha);
+                localStorage.setItem('usuario_logado_cpf', cpf);
+
+                if (!localStorage.getItem(`alunos_turma${sufixo}`)) {
+                    const alunosIniciais = [
+                        "David Desplanches de Miranda", "Isadora Martins Bueno",
+                        "Yuri Matheus dos Santos Lessi", "José Henrique Montevechio Cristo",
+                        "Gustavo Henrique Ferreira Faria", "Heloisy Vitória dos Santos Freitas",
+                        "Sabrina de Oliveira Mendes", "Arthur Carneiro Ferraz",
+                        "Letícia Vitória de Oliveira Betim", "João Lucas Cardoso dos Santos",
+                        "Lorrany Marcelle Rocha de Camargo", "Luiza Lemes Faustino",
+                        "Lucas Ronaldo Jacumasso Ribas", "Matheus da Silva Santos",
+                        "Steffiny Eduarda Pedroso dos Santos", "Luiza Vitória de Proença Miranda",
+                        "Ingridy Silva Lernes", "Maria Júlia Borges de Melo",
+                        "Davi de Goes Carneiro", "Emanuelle Vitória de Oliveira",
+                        "Gustavo Henrique Marcondes Galvão"
+                    ];
+                    localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(alunosIniciais));
+                }
+
+                await cadastrarBiometriaSePossivel(cpf);
+                fazerBackupAutomaticoSilencioso();
+                mostrarAviso('Sucesso', 'Cadastro realizado com sucesso!', '🎉');
+                verificarSessao();
+            } else {
+                const senhaSalva = localStorage.getItem(`cadastro_senha${sufixo}`);
+
+                if (!senhaSalva || senha === senhaSalva) {
+                    localStorage.setItem('usuario_logado_cpf', cpf);
+                    
+                    if (!localStorage.getItem(`alunos_turma${sufixo}`)) {
+                        const alunosIniciais = ["David Desplanches de Miranda", "Isadora Martins Bueno"];
+                        localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(alunosIniciais));
+                    }
+
+                    await cadastrarBiometriaSePossivel(cpf);
+                    fazerBackupAutomaticoSilencioso();
+                    verificarSessao();
+                } else {
+                    mostrarAviso('Erro', 'CPF ou senha incorretos.', '❌');
+                }
+            }
+        }
+
+        function esqueciSenha() {
+            const cpf = document.getElementById('loginCpf').value.trim();
+            const sufixo = `_user_${cpf}`;
+            const senhaSalva = localStorage.getItem(`cadastro_senha${sufixo}`);
+            if (!cpf || !senhaSalva) {
+                mostrarAviso('Atenção', 'Digite um CPF válido no campo acima e clique aqui.', '⚠️');
+                return;
+            }
+            mostrarAviso('Recuperação', `A senha para este CPF é: ${senhaSalva}`, '🔑');
+        }
+
+        function sairConta() {
+            fazerBackupAutomaticoSilencioso();
+            localStorage.removeItem('usuario_logado_cpf');
+            verificarSessao();
+            verificarSeTemBiometriaSalva();
+        }
+
+        function abrirModalExcluirConta() {
+            const cpf = prompt("Digite o CPF da conta que deseja gerenciar/excluir:");
+            if (!cpf) return;
+            const sufixo = `_user_${cpf.trim()}`;
+            const nome = localStorage.getItem(`nome_professora${sufixo}`);
+            const turma = localStorage.getItem(`turma_professora${sufixo}`);
+
+            const container = document.getElementById('detalhesContaExcluir');
+            if (!nome) {
+                container.innerHTML = `<p class="text-rose-600 font-bold">Nenhuma conta encontrada com este CPF.</p>`;
+            } else {
+                container.innerHTML = `
+                    <p><strong>Nome:</strong> ${nome}</p>
+                    <p><strong>Turma:</strong> ${turma}</p>
+                    <p><strong>CPF:</strong> ${cpf}</p>
+                `;
+                localStorage.setItem('cpf_para_exclusao_temporario', sufixo);
+            }
+            document.getElementById('modalExcluirConta').classList.remove('hidden');
+        }
+
+        function fecharModalExcluirConta() {
+            document.getElementById('modalExcluirConta').classList.add('hidden');
+        }
+
+        function confirmarExclusaoConta() {
+            const sufixo = localStorage.getItem('cpf_para_exclusao_temporario');
+            if (sufixo) {
+                localStorage.removeItem(`nome_professora${sufixo}`);
+                localStorage.removeItem(`turma_professora${sufixo}`);
+                localStorage.removeItem(`cadastro_senha${sufixo}`);
+                localStorage.removeItem(`caixa_formatura${sufixo}`);
+                localStorage.removeItem(`alunos_turma${sufixo}`);
+                localStorage.removeItem('usuario_logado_cpf');
+            }
+            fecharModalExcluirConta();
+            mostrarAviso('Excluído', 'Conta removida com sucesso.', '🗑️');
+            setTimeout(() => location.reload(), 1500);
+        }
+
+        function obterAlunosTurma() {
+            const sufixo = obterChaveUsuario();
+            return JSON.parse(localStorage.getItem(`alunos_turma${sufixo}`)) || [];
+        }
+
+        function salvarAlunosTurma(lista) {
+            const sufixo = obterChaveUsuario();
+            localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(lista));
+            atualizarListaAlunosDinamica();
+            atualizarPlanilhaGeral();
+        }
+
+        function abrirModalGerenciarAlunos() {
+            renderizarListaAlunosGerenciar();
+            document.getElementById('modalAlunos').classList.remove('hidden');
+        }
+
+        function fecharModalGerenciarAlunos() {
+            document.getElementById('modalAlunos').classList.add('hidden');
+        }
+
+        function renderizarListaAlunosGerenciar() {
+            const alunos = obterAlunosTurma();
+            const container = document.getElementById('listaAlunosGerenciar');
+            container.innerHTML = alunos.map((aluno, index) => `
+                <div class="flex justify-between items-center bg-white p-2 rounded border">
+                    <span class="truncate max-w-[200px]">${aluno}</span>
+                    <button onclick="removerAlunoTurma(${index})" class="text-red-500 hover:text-red-700 font-bold px-2 py-0.5 text-xs">Excluir</button>
+                </div>
+            `).join('');
+        }
+
+        function adicionarAlunoTurma() {
+            const input = document.getElementById('novoAlunoInput');
+            const nome = input.value.trim();
+            if (!nome) {
+                mostrarAviso('Atenção', 'Digite o nome do aluno.', '⚠️');
+                return;
+            }
+            let alunos = obterAlunosTurma();
+            if (alunos.includes(nome)) {
+                mostrarAviso('Atenção', 'Este aluno já está na lista.', '⚠️');
+                return;
+            }
+            alunos.push(nome);
+            salvarAlunosTurma(alunos);
+            input.value = '';
+            renderizarListaAlunosGerenciar();
+            mostrarAviso('Sucesso', 'Aluno adicionado à turma!', '✅');
+        }
+
+        function removerAlunoTurma(index) {
+            let alunos = obterAlunosTurma();
+            alunos.splice(index, 1);
+            salvarAlunosTurma(alunos);
+            renderizarListaAlunosGerenciar();
+            mostrarAviso('Removido', 'Aluno retirado da turma.', '🗑️');
+        }
+
+        function atualizarListaAlunosDinamica() {
+            const alunos = obterAlunosTurma();
+            const datalist = document.getElementById('listaAlunosDinamica');
+            datalist.innerHTML = alunos.map(aluno => `<option value="${aluno}">`).join('');
+        }
+
+        let opcoesPagamento = JSON.parse(localStorage.getItem('opcoes_pagamento_v1')) || [
+            "À Vista (Pix/Transf) - R$ 175,00",
+            "1ª Parcela (Pix/Transf) - R$ 87,50",
+            "2ª Parcela (Pix/Transf) - R$ 87,50",
+            "Dinheiro - À Vista (R$ 175,00)",
+            "Dinheiro - 1ª Parcela (R$ 87,50)",
+            "Dinheiro - 2ª Parcela (R$ 87,50)"
+        ];
+
+        function salvarOpcoesStorage() {
+            localStorage.setItem('opcoes_pagamento_v1', JSON.stringify(opcoesPagamento));
+            fazerBackupAutomaticoSilencioso();
+            atualizarSelectOpcoes();
+        }
+
+        function atualizarSelectOpcoes() {
+            const select = document.getElementById('tipoPagamento');
+            if(select) {
+                select.innerHTML = opcoesPagamento.map(op => `<option value="${op}">${op}</option>`).join('');
+                atualizarTextoPadrao();
+            }
+        }
+
+        document.getElementById('nomeAluno').addEventListener('input', atualizarTextoPadrao);
+        document.getElementById('tipoPagamento').addEventListener('change', atualizarTextoPadrao);
+
+        function atualizarTextoPadrao() {
+            const nome = document.getElementById('nomeAluno').value || '[Nome Aluno]';
+            let tipo = document.getElementById('tipoPagamento').value;
+            const dataHoje = new Date().toLocaleDateString('pt-BR');
+            document.getElementById('observacao').value = `Pago ${tipo} em ${dataHoje} - Aluno: ${nome}`;
+        }
+
+        function obterDadosArmazenados() {
+            const sufixo = obterChaveUsuario();
+            return JSON.parse(localStorage.getItem(`caixa_formatura${sufixo}`)) || [];
+        }
+
+        let funcaoCallbackConfirmacao = null;
+
+        function gerarNomePadronizado(nomeCompleto, tipoPagamento) {
+            if (!nomeCompleto) return 'comprovante';
+            const partes = nomeCompleto.trim().split(' ');
+            const primeiro = partes[0];
+            const ultimo = partes.length > 1 ? partes[partes.length - 1] : '';
+            const nomeCurto = `${primeiro}_${ultimo}`.toLowerCase();
+            const tipoFormatado = tipoPagamento.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+            return `${tipoFormatado}_${nomeCurto}.pdf`;
+        }
+
+        function prepararSalvamento() {
+            const nome = document.getElementById('nomeAluno').value;
+            if(!nome) {
+                mostrarAviso('Atenção', 'Informe o nome do aluno.', '⚠️');
+                return;
+            }
+
+            let tipo = document.getElementById('tipoPagamento').value;
+            const obs = document.getElementById('observacao').value;
+            const arquivoInput = document.getElementById('arquivoComprovante');
+            
+            if (arquivoInput.files.length > 0) {
+                const arquivo = arquivoInput.files[0];
+                const leitor = new FileReader();
+                leitor.onload = function(e) {
+                    const dadosArquivoBase64 = e.target.result;
+                    const nomeArquivoGerado = gerarNomePadronizado(nome, tipo);
+                    salvarLancamentoFinal(nome, tipo, obs, nomeArquivoGerado, dadosArquivoBase64);
+                };
+                leitor.readAsDataURL(arquivo);
+            } else {
+                salvarLancamentoFinal(nome, tipo, obs, 'Sem anexo (Dinheiro)', null);
+            }
+        }
+
+        function salvarLancamentoFinal(nome, tipo, obs, nomeArquivoGerado, dadosArquivoBase64) {
+            const htmlResumo = `
+                <p><strong>Aluno:</strong> ${nome}</p>
+                <p><strong>Forma:</strong> ${tipo}</p>
+                <p><strong>Arquivo:</strong> ${nomeArquivoGerado}</p>
+                <p><strong>Status:</strong> ${obs}</p>
+                <p class="text-indigo-600 font-bold pt-1">Deseja confirmar e salvar?</p>
+            `;
+
+            document.getElementById('tituloModalConfirmacao').innerText = "Confirmação de Lançamento";
+            document.getElementById('conteudoResumoModal').innerHTML = htmlResumo;
+            document.getElementById('modalConfirmacao').classList.remove('hidden');
+
+            funcaoCallbackConfirmacao = (confirmado) => {
+                if(confirmado) {
+                    let dadosArmazenados = obterDadosArmazenados();
+                    const novoRegistro = {
+                        id: Date.now(),
+                        aluno: nome,
+                        tipoPagamento: tipo,
+                        observacao: obs,
+                        arquivo: nomeArquivoGerado,
+                        arquivoData: dadosArquivoBase64,
+                        dataRegistro: new Date().toLocaleString('pt-BR')
+                    };
+
+                    dadosArmazenados.push(novoRegistro);
+                    const sufixo = obterChaveUsuario();
+                    localStorage.setItem(`caixa_formatura${sufixo}`, JSON.stringify(dadosArmazenados));
+                    fazerBackupAutomaticoSilencioso();
+                    
+                    atualizarLista();
+                    atualizarPlanilhaGeral();
+                    document.getElementById('formPagamento').reset();
+                    atualizarTextoPadrao();
+                    mostrarAviso('Sucesso', 'Lançamento salvo com sucesso!', '✅');
+                }
+            };
+        }
+
+        function visualizarArquivo(id) {
+            const dadosArmazenados = obterDadosArmazenados();
+            const item = dadosArmazenados.find(i => i.id === id);
+            if (!item || !item.arquivoData) {
+                mostrarAviso('Atenção', 'Este registro não possui arquivo anexo.', 'ℹ️');
+                return;
+            }
+
+            document.getElementById('tituloVisualizador').innerText = `Comprovante: ${item.aluno}`;
+            const container = document.getElementById('conteudoVisualizador');
+
+            if (item.arquivoData.startsWith('data:image')) {
+                container.innerHTML = `<img src="${item.arquivoData}" class="max-h-72 rounded shadow object-contain">`;
+            } else {
+                container.innerHTML = `<iframe src="${item.arquivoData}" class="w-full h-72 rounded border"></iframe>`;
+            }
+            document.getElementById('modalVisualizador').classList.remove('hidden');
+        }
+
+        function fecharVisualizador() {
+            document.getElementById('modalVisualizador').classList.add('hidden');
+        }
+
+        function enviarWhatsApp(id) {
+            const dadosArmazenados = obterDadosArmazenados();
+            const item = dadosArmazenados.find(i => i.id === id);
+            if (!item) return;
+            const texto = encodeURIComponent(`*Comprovante de Caixa*\nAluno: ${item.aluno}\nPagamento: ${item.tipoPagamento}\nStatus: ${item.observacao}\nArquivo: ${item.arquivo}`);
+            window.open(`https://api.whatsapp.com/send?text=${texto}`, '_blank');
+        }
+
+        function enviarEmail(id) {
+            const dadosArmazenados = obterDadosArmazenados();
+            const item = dadosArmazenados.find(i => i.id === id);
+            if (!item) return;
+            const assunto = encodeURIComponent(`Comprovante - ${item.aluno}`);
+            const corpo = encodeURIComponent(`Segue dados do pagamento do aluno ${item.aluno}:\n\nForma: ${item.tipoPagamento}\nDetalhes: ${item.observacao}`);
+            window.location.href = `mailto:?subject=${assunto}&body=${corpo}`;
+        }
+
+        function excluirRegistro(id) {
+            let dadosArmazenados = obterDadosArmazenados();
+            const itemParaExcluir = dadosArmazenados.find(i => i.id === id);
+            if (!itemParaExcluir) return;
+
+            document.getElementById('tituloModalConfirmacao').innerText = "Excluir Registro";
+            document.getElementById('conteudoResumoModal').innerHTML = `
+                <p><strong>Aluno:</strong> ${itemParaExcluir.aluno}</p>
+                <p class="text-red-600 font-bold pt-1">Deseja excluir este registro?</p>
+            `;
+            document.getElementById('modalConfirmacao').classList.remove('hidden');
+
+            funcaoCallbackConfirmacao = (confirmado) => {
+                if(confirmado) {
+                    dadosArmazenados = dadosArmazenados.filter(item => item.id !== id);
+                    const sufixo = obterChaveUsuario();
+                    localStorage.setItem(`caixa_formatura${sufixo}`, JSON.stringify(dadosArmazenados));
+                    fazerBackupAutomaticoSilencioso();
+                    atualizarLista();
+                    atualizarPlanilhaGeral();
+                    mostrarAviso('Excluído', 'Registro removido.', '🗑️');
+                }
+            };
+        }
+
+        function fecharModalConfirmacao(confirmado) {
+            const callbackTemp = funcaoCallbackConfirmacao;
+            funcaoCallbackConfirmacao = null;
+            document.getElementById('modalConfirmacao').classList.add('hidden');
+            if(callbackTemp) callbackTemp(confirmado);
+        }
+
+        function abrirModalGerenciarOpcoes() {
+            renderizarListaOpcoesGerenciar();
+            document.getElementById('modalGerenciar').classList.remove('hidden');
+        }
+
+        function fecharModalGerenciar() {
+            document.getElementById('modalGerenciar').classList.add('hidden');
+        }
+
+        function renderizarListaOpcoesGerenciar() {
+            const container = document.getElementById('listaOpcoesGerenciar');
+            container.innerHTML = opcoesPagamento.map((op, index) => `
+                <div class="flex justify-between items-center bg-white p-2 rounded border">
+                    <span>${op}</span>
+                    <button onclick="pedirExclusaoOpcao(${index})" class="text-red-500 hover:text-red-700 font-bold px-2 py-0.5 text-xs">Excluir</button>
+                </div>
+            `).join('');
+        }
+
+        function adicionarOpcaoPagamento() {
+            const input = document.getElementById('novaOpcaoInput');
+            const valor = input.value.trim();
+            if(!valor) return;
+            if(opcoesPagamento.includes(valor)) return;
+            opcoesPagamento.push(valor);
+            input.value = '';
+            salvarOpcoesStorage();
+            renderizarListaOpcoesGerenciar();
+        }
+
+        function pedirExclusaoOpcao(index) {
+            if(opcoesPagamento.length <= 1) return;
+            opcoesPagamento.splice(index, 1);
+            salvarOpcoesStorage();
+            renderizarListaOpcoesGerenciar();
+        }
+
+        function mostrarAviso(titulo, texto, icone = '✨') {
+            document.getElementById('avisoTitulo').innerText = titulo;
+            document.getElementById('avisoTexto').innerText = texto;
+            document.getElementById('avisoIcone').innerText = icone;
+            document.getElementById('modalAviso').classList.remove('hidden');
+        }
+
+        function fecharModalAviso() {
+            document.getElementById('modalAviso').classList.add('hidden');
+        }
+
+        function atualizarLista() {
+            const dadosArmazenados = obterDadosArmazenados();
+            const container = document.getElementById('tabelaLancamentos');
+            document.getElementById('contadorRegistros').innerText = `${dadosArmazenados.length} itens`;
+
+            if(dadosArmazenados.length === 0) {
+                container.innerHTML = `<p class="text-slate-400 text-center py-4">Nenhum lançamento registrado ainda.</p>`;
+                return;
+            }
+
+            container.innerHTML = dadosArmazenados.slice().reverse().map(item => `
+                <div class="border rounded-lg p-2.5 bg-slate-50 space-y-2">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-slate-800">${item.aluno}</p>
+                            <p class="text-indigo-600 font-medium">${item.tipoPagamento} — <span class="text-emerald-600 font-bold">Pago</span></p>
+                            <p class="text-slate-500 text-[10px]">${item.observacao}</p>
+                        </div>
+                        <button onclick="excluirRegistro(${item.id})" class="text-red-500 hover:text-red-700 p-1 font-bold text-xs" title="Excluir">✕</button>
+                    </div>
+                    <div class="flex items-center justify-between pt-1 border-t text-[11px]">
+                        <button onclick="visualizarArquivo(${item.id})" class="text-indigo-600 hover:underline font-semibold flex items-center gap-1">
+                            📄 <span>${item.arquivo}</span>
+                        </button>
+                        <div class="flex gap-1">
+                            <button onclick="enviarWhatsApp(${item.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded font-medium">💬 WhatsApp</button>
+                            <button onclick="enviarEmail(${item.id})" class="bg-sky-600 hover:bg-sky-700 text-white px-2 py-1 rounded font-medium">✉️ E-mail</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function atualizarPlanilhaGeral() {
+            const alunos = obterAlunosTurma();
+            const dadosArmazenados = obterDadosArmazenados();
+            const tbody = document.getElementById('corpoTabelaPlanilha');
+
+            tbody.innerHTML = alunos.map((aluno, index) => {
+                const pagamentosAluno = dadosArmazenados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
+                
+                const pagouAVista = pagamentosAluno.some(i => i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
+                const pagou1 = pagamentosAluno.some(i => i.tipoPagamento.includes('1ª Parcela'));
+                const pagou2 = pagamentosAluno.some(i => i.tipoPagamento.includes('2ª Parcela'));
+
+                const badgeAVista = pagouAVista ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Pago</span>` : `<span class="text-slate-300">-</span>`;
+                const badge1 = pagou1 ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Pago</span>` : `<span class="text-slate-300">-</span>`;
+                const badge2 = pagou2 ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Pago</span>` : `<span class="text-slate-300">-</span>`;
+
+                return `
+                    <tr class="border-b hover:bg-slate-50">
+                        <td class="p-2 border-r font-medium text-slate-500 text-center">${index + 1}</td>
+                        <td class="p-2 border-r font-semibold text-slate-800">${aluno}</td>
+                        <td class="p-2 text-center border-r">${badgeAVista}</td>
+                        <td class="p-2 text-center border-r">${badge1}</td>
+                        <td class="p-2 text-center">${badge2}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function enviarRelatorioDiretora() {
+            const sufixo = obterChaveUsuario();
+            const turma = localStorage.getItem(`turma_professora${sufixo}`) || 'Turma';
+            const dadosArmazenados = obterDadosArmazenados();
+
+            let resumo = `📊 *Relatório Oficial de Caixa - ${turma}*\nEscola Municipal 31 de Março\n\n`;
+            resumo += `Total de registros lançados: ${dadosArmazenados.length}\n\n`;
+            
+            if(dadosArmazenados.length === 0) {
+                resumo += `Nenhum pagamento registrado até o momento.`;
+            } else {
+                resumo += `*Alunos quitados/com pagamentos:* \n`;
+                dadosArmazenados.forEach(i => {
+                    resumo += `- ${i.aluno} (${i.tipoPagamento})\n`;
+                });
+            }
+
+            navigator.clipboard.writeText(resumo).then(() => {
+                mostrarAviso('Sucesso', 'Relatório oficial copiado para a área de transferência!', '📋');
+            }).catch(() => {
+                prompt("Copie o relatório abaixo:", resumo);
+            });
+        }
+
+        function alternarTela() {
+            const formSec = document.getElementById('secaoFormulario');
+            const planilhaSec = document.getElementById('secaoPlanilha');
+            const btn = document.getElementById('btnAlternar');
+
+            if(formSec.classList.contains('hidden')) {
+                formSec.classList.remove('hidden');
+                planilhaSec.classList.add('hidden');
+                btn.innerText = "📊 Planilha";
+            } else {
+                formSec.classList.add('hidden');
+                planilhaSec.classList.remove('hidden');
+                btn.innerText = "📝 Novo Registro";
+                atualizarPlanilhaGeral();
+            }
+        }
+
+        function exportarExcel() {
+            const sufixo = obterChaveUsuario();
+            const nomeProfessora = localStorage.getItem(`nome_professora${sufixo}`) || 'Professora';
+            const turmaProf = localStorage.getItem(`turma_professora${sufixo}`) || 'Turma';
+            const alunos = obterAlunosTurma();
+            const dadosArmazenados = obterDadosArmazenados();
+            
+            const dadosFormatadosParaPlanilha = alunos.map((aluno, index) => {
+                const pagamentosAluno = dadosArmazenados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
+                
+                const pagouAVista = pagamentosAluno.some(i => i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
+                const pagou1 = pagamentosAluno.some(i => i.tipoPagamento.includes('1ª Parcela'));
+                const pagou2 = pagamentosAluno.some(i => i.tipoPagamento.includes('2ª Parcela'));
+
+                const obsGeral = pagamentosAluno.map(i => `${i.tipoPagamento} (${i.observacao})`).join(' | ');
+
+                return {
+                    "ESCOLA": "Escola Municipal 31 de Março",
+                    "TURMA": turmaProf,
+                    "Nº": index + 1,
+                    "NOME DO FORMANDO": aluno,
+                    "À VISTA": pag
+                    <!-- MODAIS RESTANTES -->
+    <div id="modalAlunos" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="font-bold text-sm text-slate-800">Gerenciar Alunos da Turma</h3>
+                <button onclick="fecharModalGerenciarAlunos()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
+            </div>
+            <div class="space-y-2">
+                <label class="block text-xs font-medium text-slate-600">Adicionar Novo Aluno</label>
+                <div class="flex gap-2">
+                    <input type="text" id="novoAlunoInput" placeholder="Nome completo do aluno" class="w-full border rounded-lg p-2 text-xs outline-none">
+                    <button onclick="adicionarAlunoTurma()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-medium">Adicionar</button>
+                </div>
+            </div>
+            <div class="space-y-1">
+                <label class="block text-xs font-medium text-slate-600">Alunos Cadastrados (Clique para excluir)</label>
+                <div id="listaAlunosGerenciar" class="max-h-48 overflow-y-auto space-y-1 text-xs border p-2 rounded-lg bg-slate-50"></div>
+            </div>
+            <button onclick="fecharModalGerenciarAlunos()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2 rounded-xl transition text-xs">Concluir</button>
+        </div>
+    </div>
+
+    <div id="modalVisualizador" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 shadow-2xl text-center">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 id="tituloVisualizador" class="font-bold text-xs text-slate-800">Comprovante</h3>
+                <button onclick="fecharVisualizador()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
+            </div>
+            <div id="conteudoVisualizador" class="max-h-80 overflow-y-auto flex items-center justify-center bg-slate-100 p-2 rounded-lg"></div>
+            <button onclick="fecharVisualizador()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2 rounded-xl transition text-xs">Fechar</button>
+        </div>
+    </div>
+
+    <div id="modalExcluirConta" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto text-center">
+            <div class="text-3xl">⚠️</div>
+            <h3 class="font-bold text-sm text-slate-800">Gerenciamento de Conta</h3>
+            <div id="detalhesContaExcluir" class="text-xs bg-slate-50 p-3 rounded-lg text-left space-y-1"></div>
+            <p class="text-xs text-rose-600 font-semibold">Deseja realmente excluir esta conta e os dados locais?</p>
+            <div class="grid grid-cols-2 gap-2 pt-2">
+                <button onclick="fecharModalExcluirConta()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2.5 rounded-xl transition text-xs">Cancelar</button>
+                <button onclick="confirmarExclusaoConta()" class="bg-rose-600 hover:bg-rose-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">Sim, Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalConfirmacao" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
+            <div class="flex items-center space-x-2 text-indigo-600 border-b pb-2">
+                <span class="text-lg">⚠️</span>
+                <h3 id="tituloModalConfirmacao" class="font-bold text-sm">Confirmação</h3>
+            </div>
+            <div id="conteudoResumoModal" class="text-xs space-y-1 text-slate-600 bg-slate-50 p-3 rounded-lg"></div>
+            <div class="grid grid-cols-2 gap-2 pt-2">
+                <button onclick="fecharModalConfirmacao(false)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2.5 rounded-xl transition text-xs">Cancelar</button>
+                <button onclick="fecharModalConfirmacao(true)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalGerenciar" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="font-bold text-sm text-slate-800">Gerenciar Formas de Pagamento</h3>
+                <button onclick="fecharModalGerenciar()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
+            </div>
+            <div class="space-y-2">
+                <label class="block text-xs font-medium text-slate-600">Adicionar Nova Opção</label>
+                <div class="flex gap-2">
+                    <input type="text" id="novaOpcaoInput" placeholder="Ex: Parcela Extra Pix" class="w-full border rounded-lg p-2 text-xs outline-none">
+                    <button onclick="adicionarOpcaoPagamento()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-medium">Adicionar</button>
+                </div>
+            </div>
+            <div class="space-y-1">
+                <label class="block text-xs font-medium text-slate-600">Opções Existentes (Clique para excluir)</label>
+                <div id="listaOpcoesGerenciar" class="max-h-40 overflow-y-auto space-y-1 text-xs border p-2 rounded-lg bg-slate-50"></div>
+            </div>
+            <button onclick="fecharModalGerenciar()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2 rounded-xl transition text-xs">Concluir</button>
+        </div>
+    </div>
+
+    <div id="modalAviso" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl text-center my-auto">
+            <div id="avisoIcone" class="text-3xl">✨</div>
+            <h3 id="avisoTitulo" class="font-bold text-sm text-slate-800">Aviso</h3>
+            <p id="avisoTexto" class="text-xs text-slate-600"></p>
+            <button onclick="fecharModalAviso()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">OK</button>
+        </div>
+    </div>
+
+    <script>
+        let modoCadastro = false;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            verificarSessao();
+            verificarSeTemBiometriaSalva();
+            atualizarSelectOpcoes();
+            atualizarListaAlunosDinamica();
+            atualizarPlanilhaGeral();
+            atualizarDadosTopoPerfil();
+        });
+
+        window.addEventListener('beforeunload', () => {
+            fazerBackupAutomaticoSilencioso();
+        });
+
+        function obterChaveUsuario() {
+            const cpfLogado = localStorage.getItem('usuario_logado_cpf') || 'padrao';
+            return `_user_${cpfLogado}`;
+        }
+
+        function fazerBackupAutomaticoSilencioso() {
+            const sufixo = obterChaveUsuario();
+            const dados = localStorage.getItem(`caixa_formatura${sufixo}`);
+            if (dados) {
+                localStorage.setItem(`backup_seguranca${sufixo}`, dados);
+            }
+        }
+
+        function verificarSessao() {
+            const usuarioLogado = localStorage.getItem('usuario_logado_cpf');
+            if (usuarioLogado) {
+                document.getElementById('telaLogin').classList.add('hidden');
+                document.getElementById('appPrincipal').classList.remove('hidden');
+                atualizarDadosTopoPerfil();
+            } else {
+                document.getElementById('telaLogin').classList.remove('hidden');
+                document.getElementById('appPrincipal').classList.add('hidden');
+            }
+        }
+
+        function atualizarDadosTopoPerfil() {
+            const sufixo = obterChaveUsuario();
+            const nomeProf = localStorage.getItem(`nome_professora${sufixo}`) || 'Professora';
+            const turmaProf = localStorage.getItem(`turma_professora${sufixo}`) || 'Turma 5º Ano';
+            
+            document.getElementById('labelNomeProfessora').innerText = nomeProf;
+            document.getElementById('labelTurmaTopo').innerText = turmaProf;
+            document.getElementById('relatorioTurmaSub').innerText = `Controle de Caixa - Formatura (${turmaProf})`;
+            document.getElementById('assinaturaProfessora').innerText = `Professora: ${nomeProf}`;
+        }
+
+        function editarPerfilProfessora() {
+            const sufixo = obterChaveUsuario();
+            const atualNome = localStorage.getItem(`nome_professora${sufixo}`) || 'Professora';
+            const atualTurma = localStorage.getItem(`turma_professora${sufixo}`) || 'Turma';
+
+            const novoNome = prompt("Nome completo da Professora:", atualNome);
+            if (novoNome && novoNome.trim() !== '') {
+                localStorage.setItem(`nome_professora${sufixo}`, novoNome.trim());
+            }
+
+            const novaTurma = prompt("Nome da Turma (Ex: 5º Ano A):", atualTurma);
+            if (novaTurma && novaTurma.trim() !== '') {
+                localStorage.setItem(`turma_professora${sufixo}`, novaTurma.trim());
+            }
+
+            atualizarDadosTopoPerfil();
+            mostrarAviso('Sucesso', 'Perfil e turma atualizados com sucesso!', '✅');
+        }
+
+        function alternarVisibilidadeSenha(idInput, idIcone) {
+            const inputSenha = document.getElementById(idInput);
+            const icone = document.getElementById(idIcone);
+            if (inputSenha.type === 'password') {
+                inputSenha.type = 'text';
+                icone.innerText = '🙈';
+            } else {
+                inputSenha.type = 'password';
+                icone.innerText = '👁️';
+            }
+        }
+
+        function verificarSeTemBiometriaSalva() {
+            const biometriaCadastrada = localStorage.getItem('biometria_ativa_formatura');
+            if (biometriaCadastrada && (window.PublicKeyCredential)) {
+                document.getElementById('divBotaoBiometria').classList.remove('hidden');
+            } else {
+                document.getElementById('divBotaoBiometria').classList.add('hidden');
+            }
+        }
+
+        async function cadastrarBiometriaSePossivel(cpf) {
+            if (window.PublicKeyCredential) {
+                try {
+                    const publicKey = {
+                        challenge: new Uint8Array(32),
+                        rp: { name: "Secretaria Virtual Formatura" },
+                        user: {
+                            id: Uint8Array.from(cpf, c => c.charCodeAt(0)),
+                            name: cpf,
+                            displayName: cpf
+                        },
+                        pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+                        timeout: 60000,
+                        attestation: "direct"
+                    };
+                    const credential = await navigator.credentials.create({ publicKey });
+                    if (credential) {
+                        localStorage.setItem('biometria_ativa_formatura', 'true');
+                        localStorage.setItem('usuario_biometria_cpf', cpf);
+                    }
+                } catch (e) {
+                    console.log("Biometria não configurada:", e);
+                }
+            }
+        }
+
+        async function entrarComBiometria() {
+            if (window.PublicKeyCredential) {
+                try {
+                    const publicKey = {
+                        challenge: new Uint8Array(32),
+                        timeout: 60000,
+                        allowCredentials: [{
+                            type: "public-key",
+                            id: new Uint8Array(32)
+                        }]
+                    };
+                    await navigator.credentials.get({ publicKey }).catch(() => {});
+                    const cpfSalvo = localStorage.getItem('usuario_biometria_cpf');
+                    if (cpfSalvo) {
+                        localStorage.setItem('usuario_logado_cpf', cpfSalvo);
+                        verificarSessao();
+                    } else {
+                        mostrarAviso('Atenção', 'Nenhuma biometria vinculada. Entre com o CPF.', '⚠️');
+                    }
+                } catch (e) {
+                    mostrarAviso('Atenção', 'Não foi possível autenticar por biometria.', '⚠️');
+                }
+            }
+        }
+
+        function alternarModoCadastro() {
+            modoCadastro = !modoCadastro;
+            
+            const titulo = document.getElementById('subtituloLogin');
+            const link = document.getElementById('linkModoCadastro');
+            const btn = document.getElementById('btnAcaoLogin');
+            const grupoCampos = document.getElementById('grupoCamposCadastro');
+            const grupoConfirma = document.getElementById('grupoConfirmaSenha');
+            
+            const inputNome = document.getElementById('cadastroNome');
+            const inputTurma = document.getElementById('cadastroTurma');
+            const inputConfirma = document.getElementById('loginSenhaConfirma');
+
+            if (modoCadastro) {
+                titulo.innerText = "Cadastre seu CPF, Nome e Turma";
+                link.innerText = "Já tem conta? Entrar";
+                btn.innerText = "Cadastrar e Entrar";
+                
+                grupoCampos.classList.remove('hidden');
+                grupoConfirma.classList.remove('hidden');
+                inputNome.setAttribute('required', 'true');
+                inputTurma.setAttribute('required', 'true');
+                inputConfirma.setAttribute('required', 'true');
+            } else {
+                titulo.innerText = "Acesse com seu CPF para gerenciar sua turma";
+                link.innerText = "Ainda não tem conta? Cadastrar";
+                btn.innerText = "Entrar";
+                
+                grupoCampos.classList.add('hidden');
+                grupoConfirma.classList.add('hidden');
+                inputNome.removeAttribute('required');
+                inputTurma.removeAttribute('required');
+                inputConfirma.removeAttribute('required');
+            }
+        }
+
+        async function realizarLogin(event) {
+            event.preventDefault();
+            const cpf = document.getElementById('loginCpf').value.trim();
+            const senha = document.getElementById('loginSenha').value.trim();
+            const sufixo = `_user_${cpf}`;
+
+            if (modoCadastro) {
+                const senhaConfirma = document.getElementById('loginSenhaConfirma').value.trim();
+                if (senha !== senhaConfirma) {
+                    mostrarAviso('Erro', 'As senhas não coincidem. Verifique por favor.', '❌');
+                    return;
+                }
+
                 const nomeProf = document.getElementById('cadastroNome').value.trim();
                 const turmaProf = document.getElementById('cadastroTurma').value.trim();
 
