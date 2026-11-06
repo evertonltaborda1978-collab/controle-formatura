@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controle de Formatura - Escola 31 de Março</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Biblioteca para gerar arquivos Word (.docx) -->
+    <script src="https://cdn.jsdelivr.net/npm/docx@7.3.0/build/index.js"></script>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans pb-12">
 
@@ -187,8 +188,8 @@
                 <div class="bg-white p-4 rounded-xl shadow-sm space-y-2">
                     <h3 class="font-semibold text-slate-700 text-xs uppercase tracking-wider">Exportar & Relatórios</h3>
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
-                            📊 Baixar Excel Oficial
+                        <button onclick="exportarWord()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
+                            📄 Baixar Word Oficial
                         </button>
                         <button onclick="fazerBackup()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
                             💾 Backup JSON
@@ -208,47 +209,47 @@
                 </div>
             </div>
 
-            <!-- SEÇÃO 2: PLANILHA OFICIAL DETALHADA -->
+            <!-- SEÇÃO 2: PLANILHA / VISUALIZAÇÃO -->
             <div id="secaoPlanilha" class="hidden space-y-4">
                 <div class="bg-white p-5 rounded-2xl shadow-sm space-y-4 border border-slate-200">
                     
-                    <!-- CABEÇALHO OFICIAL DO RELATÓRIO -->
                     <div class="text-center border-b pb-4 space-y-1">
                         <div class="text-2xl">🏛️</div>
                         <h2 class="font-bold text-sm text-slate-900 uppercase">Escola Municipal 31 de Março</h2>
-                        <p id="relatorioTurmaSub" class="text-xs font-semibold text-indigo-600">Controle de Caixa - Formatura</p>
-                        <p class="text-[10px] text-slate-400">Ano Letivo: 2026</p>
+                        <p id="relatorioTurmaSub" class="text-xs font-semibold text-indigo-600">Controle de Pagamentos - Formatura</p>
+                        <p class="text-[10px] text-slate-400">1ª Parcela: R$ 87,50 (07/11/2026) | 2ª Parcela: R$ 87,50 (06/12/2026)</p>
                     </div>
 
-                    <!-- TABELA FORMATAÇÃO OFICIAL -->
                     <div class="overflow-x-auto border rounded-xl">
                         <table class="w-full text-left text-xs border-collapse">
                             <thead>
                                 <tr class="bg-slate-800 text-white">
-                                    <th class="p-2.5 border-r border-slate-700 text-center w-10">Nº</th>
-                                    <th class="p-2.5 border-r border-slate-700">Nome do Aluno (Formando)</th>
-                                    <th class="p-2.5 text-center border-r border-slate-700 w-16">À Vista</th>
-                                    <th class="p-2.5 text-center border-r border-slate-700 w-16">1ª Parc</th>
-                                    <th class="p-2.5 text-center w-16">2ª Parc</th>
+                                    <th class="p-2 border-r border-slate-700 text-center w-10">Nº</th>
+                                    <th class="p-2 border-r border-slate-700">Nome do Formando</th>
+                                    <th class="p-2 text-center border-r border-slate-700 w-16">1ª Parcela</th>
+                                    <th class="p-2 text-center border-r border-slate-700 w-16">2ª Parcela</th>
+                                    <th class="p-2">Forma / Obs</th>
                                 </tr>
                             </thead>
                             <tbody id="corpoTabelaPlanilha"></tbody>
                         </table>
                     </div>
 
-                    <!-- RODAPÉ DE ASSINATURAS OFICIAIS -->
-                    <div class="pt-6 space-y-6 text-xs text-slate-700 border-t">
-                        <div class="grid grid-cols-2 gap-4 text-center pt-4">
-                            <div class="space-y-2">
+                    <div class="pt-6 space-y-4 text-xs text-slate-700 border-t">
+                        <div class="grid grid-cols-2 gap-2 font-semibold">
+                            <p id="labelTotalPrevisto">Total Previsto: R$ 0,00</p>
+                            <p id="labelTotalRecebido">Total Recebido: R$ 0,00</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 text-center pt-2">
+                            <div class="space-y-1">
                                 <div class="border-b border-slate-400 pb-1"></div>
                                 <p id="assinaturaProfessora" class="font-bold text-[11px]">Professora Responsável</p>
                             </div>
-                            <div class="space-y-2">
+                            <div class="space-y-1">
                                 <div class="border-b border-slate-400 pb-1"></div>
                                 <p class="font-bold text-[11px]">Direção / Secretaria</p>
                             </div>
                         </div>
-                        <p class="text-[10px] text-slate-400 text-center">Documento gerado digitalmente pela Secretária Virtual.</p>
                     </div>
 
                 </div>
@@ -257,7 +258,7 @@
         </main>
     </div>
 
-    <!-- MODAIS RESTANTES -->
+    <!-- MODAIS -->
     <div id="modalAlunos" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
             <div class="flex justify-between items-center border-b pb-2">
@@ -395,7 +396,7 @@
             
             document.getElementById('labelNomeProfessora').innerText = nomeProf;
             document.getElementById('labelTurmaTopo').innerText = turmaProf;
-            document.getElementById('relatorioTurmaSub').innerText = `Controle de Caixa - Formatura (${turmaProf})`;
+            document.getElementById('relatorioTurmaSub').innerText = `Controle de Pagamentos - Formatura (${turmaProf})`;
             document.getElementById('assinaturaProfessora').innerText = `Professora: ${nomeProf}`;
         }
 
@@ -409,7 +410,7 @@
                 localStorage.setItem(`nome_professora${sufixo}`, novoNome.trim());
             }
 
-            const novaTurma = prompt("Nome da Turma (Ex: 5º Ano A):", atualTurma);
+            const novaTurma = prompt("Nome da Turma (Ex: 5º Ano C):", atualTurma);
             if (novaTurma && novaTurma.trim() !== '') {
                 localStorage.setItem(`turma_professora${sufixo}`, novaTurma.trim());
             }
@@ -996,27 +997,35 @@
             const dadosArmazenados = obterDadosArmazenados();
             const tbody = document.getElementById('corpoTabelaPlanilha');
 
+            let totalPrevisto = alunos.length * 175.00;
+            let totalRecebido = 0;
+
             tbody.innerHTML = alunos.map((aluno, index) => {
                 const pagamentosAluno = dadosArmazenados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
                 
-                const pagouAVista = pagamentosAluno.some(i => i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
-                const pagou1 = pagamentosAluno.some(i => i.tipoPagamento.includes('1ª Parcela'));
-                const pagou2 = pagamentosAluno.some(i => i.tipoPagamento.includes('2ª Parcela'));
+                const pagou1 = pagamentosAluno.some(i => i.tipoPagamento.includes('1ª Parcela') || i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
+                const pagou2 = pagamentosAluno.some(i => i.tipoPagamento.includes('2ª Parcela') || i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
 
-                const badgeAVista = pagouAVista ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Pago</span>` : `<span class="text-slate-300">-</span>`;
-                const badge1 = pagou1 ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Pago</span>` : `<span class="text-slate-300">-</span>`;
-                const badge2 = pagou2 ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Pago</span>` : `<span class="text-slate-300">-</span>`;
+                if(pagou1) totalRecebido += 87.50;
+                if(pagou2) totalRecebido += 87.50;
+
+                const badge1 = pagou1 ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">PAGO</span>` : `<span class="text-slate-300">-</span>`;
+                const badge2 = pagou2 ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">PAGO</span>` : `<span class="text-slate-300">-</span>`;
+                const formaObs = pagamentosAluno.map(i => `${i.tipoPagamento}`).join(' | ') || "-";
 
                 return `
                     <tr class="border-b hover:bg-slate-50">
                         <td class="p-2 border-r font-medium text-slate-500 text-center">${index + 1}</td>
                         <td class="p-2 border-r font-semibold text-slate-800">${aluno}</td>
-                        <td class="p-2 text-center border-r">${badgeAVista}</td>
                         <td class="p-2 text-center border-r">${badge1}</td>
-                        <td class="p-2 text-center">${badge2}</td>
+                        <td class="p-2 text-center border-r">${badge2}</td>
+                        <td class="p-2 text-[11px] text-slate-600">${formaObs}</td>
                     </tr>
                 `;
             }).join('');
+
+            document.getElementById('labelTotalPrevisto').innerText = `Total Previsto: R$ ${totalPrevisto.toFixed(2).replace('.', ',')}`;
+            document.getElementById('labelTotalRecebido').innerText = `Total Recebido: R$ ${totalRecebido.toFixed(2).replace('.', ',')}`;
         }
 
         function enviarRelatorioDiretora() {
@@ -1024,13 +1033,13 @@
             const turma = localStorage.getItem(`turma_professora${sufixo}`) || 'Turma';
             const dadosArmazenados = obterDadosArmazenados();
 
-            let resumo = `📊 *Relatório Oficial de Caixa - ${turma}*\nEscola Municipal 31 de Março\n\n`;
+            let resumo = `📊 *Relatório Oficial de Pagamentos - ${turma}*\nEscola Municipal 31 de Março\n\n`;
             resumo += `Total de registros lançados: ${dadosArmazenados.length}\n\n`;
             
             if(dadosArmazenados.length === 0) {
                 resumo += `Nenhum pagamento registrado até o momento.`;
             } else {
-                resumo += `*Alunos quitados/com pagamentos:* \n`;
+                resumo += `*Alunos com pagamentos:* \n`;
                 dadosArmazenados.forEach(i => {
                     resumo += `- ${i.aluno} (${i.tipoPagamento})\n`;
                 });
@@ -1051,7 +1060,7 @@
             if(formSec.classList.contains('hidden')) {
                 formSec.classList.remove('hidden');
                 planilhaSec.classList.add('hidden');
-                btn.innerText = "📊 Planilha";
+                btn.innerText = "📊 Visualizar Tabela";
             } else {
                 formSec.classList.add('hidden');
                 planilhaSec.classList.remove('hidden');
@@ -1060,52 +1069,115 @@
             }
         }
 
-        function exportarExcel() {
+        // FUNÇÃO DE EXPORTAÇÃO PARA WORD (.DOCX) EXATA CONFORME O SEU DOCUMENTO
+        async function exportarWord() {
             const sufixo = obterChaveUsuario();
             const nomeProfessora = localStorage.getItem(`nome_professora${sufixo}`) || 'Professora';
-            const turmaProf = localStorage.getItem(`turma_professora${sufixo}`) || 'Turma';
+            const turmaProf = localStorage.getItem(`turma_professora${sufixo}`) || '5º C';
             const alunos = obterAlunosTurma();
             const dadosArmazenados = obterDadosArmazenados();
-            
-            const dadosTabelaLimpa = alunos.map((aluno, index) => {
-                const pagamentosAluno = dadosArmazenados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
-                
-                const pagouAVista = pagamentosAluno.some(i => i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
-                const pagou1 = pagamentosAluno.some(i => i.tipoPagamento.includes('1ª Parcela'));
-                const pagou2 = pagamentosAluno.some(i => i.tipoPagamento.includes('2ª Parcela'));
 
-                return {
-                    "ESCOLA": "Escola Municipal 31 de Março",
-                    "TURMA": turmaProf,
-                    "Nº": index + 1,
-                    "NOME DO FORMANDO": aluno,
-                    "À VISTA": pagouAVista ? "PAGO" : "",
-                    "1ª PARCELA": pagou1 ? "PAGO" : "",
-                    "2ª PARCELA": pagou2 ? "PAGO" : "",
-                    "FORMA DE PAGAMENTO": pagamentosAluno.map(i => i.tipoPagamento).join(', ') || "",
-                    "OBSERVAÇÕES / DETALHES": pagamentosAluno.map(i => i.observacao).join(' | ') || "Pendente"
-                };
+            let totalRecebidoCalculado = 0;
+
+            // Linhas da tabela de formandos
+            const linhasTabela = alunos.map((aluno, index) => {
+                const pagamentosAluno = dadosArmazenados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
+                const pagou1 = pagamentosAluno.some(i => i.tipoPagamento.includes('1ª Parcela') || i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
+                const pagou2 = pagamentosAluno.some(i => i.tipoPagamento.includes('2ª Parcela') || i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
+
+                if(pagou1) totalRecebidoCalculado += 87.50;
+                if(pagou2) totalRecebidoCalculado += 87.50;
+
+                const formaObs = pagamentosAluno.map(i => `${i.tipoPagamento} (${i.observacao})`).join(' | ') || "-";
+
+                return new docx.TableRow({
+                    children: [
+                        new docx.TableCell({ children: [new docx.Paragraph({ text: String(index + 1), alignment: docx.AlignmentType.CENTER })] }),
+                        new docx.TableCell({ children: [new docx.Paragraph({ text: aluno })] }),
+                        new docx.TableCell({ children: [new docx.Paragraph({ text: pagou1 ? "PAGO" : "", alignment: docx.AlignmentType.CENTER })] }),
+                        new docx.TableCell({ children: [new docx.Paragraph({ text: pagou2 ? "PAGO" : "", alignment: docx.AlignmentType.CENTER })] }),
+                        new docx.TableCell({ children: [new docx.Paragraph({ text: formaObs })] }),
+                    ],
+                });
             });
 
-            const estruturaFinal = [
-                { "ESCOLA": "ESCOLA MUNICIPAL 31 DE MARÇO", "TURMA": `TURMA: ${turmaProf}` },
-                {},
-                ...dadosTabelaLimpa,
-                {},
-                { "ESCOLA": `Professora responsável: ${nomeProfessora}` },
-                { "ESCOLA": "Conferência da direção: ___________________________________" }
-            ];
+            const totalPrevistoGeral = alunos.length * 175.00;
 
-            const worksheet = XLSX.utils.json_to_sheet(estruturaFinal, { skipHeader: false });
-            
-            worksheet['!cols'] = [
-                { wch: 28 }, { wch: 18 }, { wch: 6 }, { wch: 38 }, 
-                { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 25 }, { wch: 35 }
-            ];
+            // Montagem do documento do Word
+            const doc = new docx.Document({
+                sections: [{
+                    properties: {},
+                    children: [
+                        new docx.Paragraph({
+                            text: "ESCOLA MUNICIPAL 31 DE MARÇO – E.I.E.F.",
+                            heading: docx.HeadingLevel.HEADING_1,
+                            alignment: docx.AlignmentType.CENTER,
+                        }),
+                        new docx.Paragraph({
+                            text: "CONTROLE DE PAGAMENTOS – FORMATURA 5º ANO / 2026",
+                            alignment: docx.AlignmentType.CENTER,
+                            bold: true,
+                        }),
+                        new docx.Paragraph({
+                            text: `TURMA: ${turmaProf}   |   FORMANDOS: ${alunos.length}   |   VALOR POR ESTUDANTE: R$ 175,00`,
+                            alignment: docx.AlignmentType.CENTER,
+                        }),
+                        new docx.Paragraph({
+                            text: "1ª parcela: R$ 87,50 (07/11/2026)   •   2ª parcela: R$ 87,50 (06/12/2026)",
+                            alignment: docx.AlignmentType.CENTER,
+                        }),
+                        new docx.Paragraph({
+                            text: "OBSERVAÇÃO: A professora receberá os comprovantes pelo WhatsApp e, após conferir o valor e confirmar o pagamento, dará baixa na parcela correspondente ao nome do estudante.",
+                            spacing: { after: 200 },
+                        }),
+                        new docx.Table({
+                            rows: [
+                                new docx.TableRow({
+                                    children: [
+                                        new docx.TableCell({ children: [new docx.Paragraph({ text: "Nº", bold: true, alignment: docx.AlignmentType.CENTER })] }),
+                                        new docx.TableCell({ children: [new docx.Paragraph({ text: "NOME DO FORMANDO", bold: true })] }),
+                                        new docx.TableCell({ children: [new docx.Paragraph({ text: "1ª PARCELA\nR$ 87,50", bold: true, alignment: docx.AlignmentType.CENTER })] }),
+                                        new docx.TableCell({ children: [new docx.Paragraph({ text: "2ª PARCELA\nR$ 87,50", bold: true, alignment: docx.AlignmentType.CENTER })] }),
+                                        new docx.TableCell({ children: [new docx.Paragraph({ text: "FORMA DE PAGAMENTO / OBS", bold: true })] }),
+                                    ],
+                                }),
+                                ...linhasTabela
+                            ],
+                            width: { size: 100, type: docx.TableWidthType.PERCENTAGE },
+                        }),
+                        new docx.Paragraph({
+                            text: `Total previsto – ${turmaProf}: R$ ${totalPrevistoGeral.toFixed(2).replace('.', ',')}`,
+                            spacing: { before: 200 },
+                            bold: true,
+                        }),
+                        new docx.Paragraph({
+                            text: `Total recebido: R$ ${totalRecebidoCalculado.toFixed(2).replace('.', ',')}`,
+                            bold: true,
+                            spacing: { after: 300 },
+                        }),
+                        new docx.Paragraph({
+                            text: `Conferência da professora: ${nomeProfessora}`,
+                            spacing: { before: 100 },
+                        }),
+                        new docx.Paragraph({
+                            text: "Conferência da direção: ________________________________________",
+                            spacing: { before: 100, after: 200 },
+                        }),
+                    ],
+                }],
+            });
 
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Relatorio Oficial");
-            XLSX.writeFile(workbook, `Relatorio_Oficial_Formatura_${turmaProf.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`);
+            // Gera e baixa o arquivo .docx
+            docx.Packer.toBlob(doc).then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `Controle_Pagamentos_Formatura_${turmaProf.replace(/[^a-zA-Z0-9]/g, '_')}.docx`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            });
         }
 
         function fazerBackup() {
