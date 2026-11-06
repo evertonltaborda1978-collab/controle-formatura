@@ -112,7 +112,7 @@
         <header class="bg-indigo-700 text-white p-3 shadow-md sticky top-0 z-40">
             <div class="max-w-md mx-auto flex justify-between items-center">
                 <div class="flex items-center gap-2">
-                    <div onclick="abrirModalPerfil()" class="bg-indigo-800 hover:bg-indigo-900 p-1.5 rounded-lg cursor-pointer flex items-center gap-1.5 text-[11px] font-medium" title="Editar Perfil e Turma">
+                    <div onclick="abrirModalPerfil()" class="bg-indigo-800 hover:bg-indigo-900 px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-1.5 text-[11px] font-medium whitespace-nowrap" title="Editar Perfil e Turma">
                         <span>👩‍🏫</span>
                         <span id="labelNomeProfessora" class="font-medium">Professora</span>
                     </div>
@@ -1131,107 +1131,7 @@
             }
         }
 
-        function exportarWord() {
-            const sufixo = obterChaveUsuario();
-            const nomeProfessora = localStorage.getItem(`nome_professora${sufixo}`) || 'Professora';
-            const turmaProf = localStorage.getItem(`turma_professora${sufixo}`) || '5º C';
-            const alunos = obterAlunosTurma();
-            const dadosArmazenados = obterDadosArmazenados();
-
-            let totalRecebidoCalculado = 0;
-
-            let linhasHtml = '';
-            alunos.forEach((aluno, index) => {
-                const pagamentosAluno = dadosArmazenados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
-                const pagou1 = pagamentosAluno.some(i => i.tipoPagamento.includes('1ª Parcela') || i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
-                const pagou2 = pagamentosAluno.some(i => i.tipoPagamento.includes('2ª Parcela') || i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
-
-                if(pagou1) totalRecebidoCalculado += 87.50;
-                if(pagou2) totalRecebidoCalculado += 87.50;
-
-                const formaObs = pagamentosAluno.map(i => `${i.tipoPagamento}`).join(' | ') || "-";
-
-                linhasHtml += `
-                    <tr style="height: 14pt;">
-                        <td style="border: 1px solid #000; text-align: center; padding: 1px 3px; font-size: 9.5pt; height: 14pt; mso-line-height-rule: exactly;">${index + 1}</td>
-                        <td style="border: 1px solid #000; padding: 1px 4px; font-size: 9.5pt; height: 14pt; mso-line-height-rule: exactly;">${aluno}</td>
-                        <td style="border: 1px solid #000; text-align: center; padding: 1px 3px; font-size: 9.5pt; font-weight: bold; height: 14pt; mso-line-height-rule: exactly;">${pagou1 ? "PAGO" : ""}</td>
-                        <td style="border: 1px solid #000; text-align: center; padding: 1px 3px; font-size: 9.5pt; font-weight: bold; height: 14pt; mso-line-height-rule: exactly;">${pagou2 ? "PAGO" : ""}</td>
-                        <td style="border: 1px solid #000; padding: 1px 4px; font-size: 9pt; height: 14pt; mso-line-height-rule: exactly;">${formaObs}</td>
-                    </tr>
-                `;
-            });
-
-            const totalPrevistoGeral = alunos.length * 175.00;
-
-            const conteudoHtml = `
-                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/199/xhtml">
-                <head>
-                    <meta charset="utf-8">
-                    <title>Controle de Pagamentos</title>
-                    <style>
-                        @page Section1 {
-                            size: 841.7pt 595.3pt;
-                            mso-page-orientation: landscape;
-                            margin: 1cm 1cm 1cm 1cm;
-                        }
-                        div.Section1 { page: Section1; }
-                        body { font-family: Arial, sans-serif; font-size: 9.5pt; color: #000; line-height: 1; }
-                        h3, h4 { text-align: center; margin: 2px 0; font-size: 10.5pt; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 6px; margin-bottom: 6px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-                        th { background-color: #f2f2f2; border: 1px solid #000; padding: 3px; text-align: center; font-size: 9pt; font-weight: bold; }
-                        td { padding: 1px 3px; vertical-align: middle; }
-                        p { margin: 2px 0; }
-                    </style>
-                </head>
-                <body>
-                    <div class="Section1">
-                        <h3>ESCOLA MUNICIPAL 31 DE MARÇO – E.I.E.F.</h3>
-                        <h4>CONTROLE DE PAGAMENTOS – FORMATURA 5º ANO / 2026</h4>
-                        <p align="center" style="font-size: 9pt;"><b>TURMA: ${turmaProf}   |   FORMANDOS: ${alunos.length}   |   VALOR POR ESTUDANTE: R$ 175,00</b></p>
-                        <p align="center" style="font-size: 8.5pt;">1ª parcela: R$ 87,50 (07/11/2026)   •   2ª parcela: R$ 87,50 (06/12/2026)</p>
-                        <p style="font-size: 8pt; margin-bottom: 6px;"><b>OBSERVAÇÃO:</b> A professora receberá os comprovantes pelo WhatsApp e, após conferir o valor e confirmar o pagamento, dará baixa na parcela correspondente ao nome do estudante.</p>
-                        
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="width: 5%;">Nº</th>
-                                    <th style="width: 40%;">NOME DO FORMANDO</th>
-                                    <th style="width: 12%;">1ª PARCELA<br>R$ 87,50</th>
-                                    <th style="width: 12%;">2ª PARCELA<br>R$ 87,50</th>
-                                    <th style="width: 31%;">FORMA DE PAGAMENTO / OBS</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${linhasHtml}
-                            </tbody>
-                        </table>
-
-                        <p style="font-size: 9.5pt;"><b>Total previsto – ${turmaProf}:</b> R$ ${totalPrevistoGeral.toFixed(2).replace('.', ',')}</p>
-                        <p style="font-size: 9.5pt;"><b>Total recebido:</b> R$ ${totalRecebidoCalculado.toFixed(2).replace('.', ',')}</p>
-                        
-                        <br>
-                        <table style="width: 100%; border: none; margin-top: 10px;">
-                            <tr>
-                                <td style="border: none; width: 50%; padding: 0;">Conferência da professora: ${nomeProfessora}</td>
-                                <td style="border: none; width: 50%; padding: 0;">Conferência da direção: ___________________________</td>
-                            </tr>
-                        </table>
-                    </div>
-                </body>
-                </html>
-            `;
-
-            const blob = new Blob(['\ufeff' + conteudoHtml], { type: 'application/msword' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Controle_Pagamentos_Formatura_${turmaProf.replace(/[^a-zA-Z0-9]/g, '_')}.doc`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
+        
         function fazerBackup() {
             const dadosArmazenados = obterDadosArmazenados();
             const sufixo = obterChaveUsuario();
