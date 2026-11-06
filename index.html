@@ -532,6 +532,20 @@
             const senha = document.getElementById('loginSenha').value.trim();
             const sufixo = `_user_${cpf}`;
 
+            const alunosIniciaisTurma = [
+                "David Desplanches de Miranda", "Isadora Martins Bueno",
+                "Yuri Matheus dos Santos Lessi", "José Henrique Montevechio Cristo",
+                "Gustavo Henrique Ferreira Faria", "Heloisy Vitória dos Santos Freitas",
+                "Sabrina de Oliveira Mendes", "Arthur Carneiro Ferraz",
+                "Letícia Vitória de Oliveira Betim", "João Lucas Cardoso dos Santos",
+                "Lorrany Marcelle Rocha de Camargo", "Luiza Lemes Faustino",
+                "Lucas Ronaldo Jacumasso Ribas", "Matheus da Silva Santos",
+                "Steffiny Eduarda Pedroso dos Santos", "Luiza Vitória de Proença Miranda",
+                "Ingridy Silva Lernes", "Maria Júlia Borges de Melo",
+                "Davi de Goes Carneiro", "Emanuelle Vitória de Oliveira",
+                "Gustavo Henrique Marcondes Galvão"
+            ];
+
             if (modoCadastro) {
                 const senhaConfirma = document.getElementById('loginSenhaConfirma').value.trim();
                 if (senha !== senhaConfirma) {
@@ -546,23 +560,7 @@
                 localStorage.setItem(`turma_professora${sufixo}`, turmaProf);
                 localStorage.setItem(`cadastro_senha${sufixo}`, senha);
                 localStorage.setItem('usuario_logado_cpf', cpf);
-
-                if (!localStorage.getItem(`alunos_turma${sufixo}`)) {
-                    const alunosIniciais = [
-                        "David Desplanches de Miranda", "Isadora Martins Bueno",
-                        "Yuri Matheus dos Santos Lessi", "José Henrique Montevechio Cristo",
-                        "Gustavo Henrique Ferreira Faria", "Heloisy Vitória dos Santos Freitas",
-                        "Sabrina de Oliveira Mendes", "Arthur Carneiro Ferraz",
-                        "Letícia Vitória de Oliveira Betim", "João Lucas Cardoso dos Santos",
-                        "Lorrany Marcelle Rocha de Camargo", "Luiza Lemes Faustino",
-                        "Lucas Ronaldo Jacumasso Ribas", "Matheus da Silva Santos",
-                        "Steffiny Eduarda Pedroso dos Santos", "Luiza Vitória de Proença Miranda",
-                        "Ingridy Silva Lernes", "Maria Júlia Borges de Melo",
-                        "Davi de Goes Carneiro", "Emanuelle Vitória de Oliveira",
-                        "Gustavo Henrique Marcondes Galvão"
-                    ];
-                    localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(alunosIniciais));
-                }
+                localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(alunosIniciaisTurma));
 
                 await cadastrarBiometriaSePossivel(cpf);
                 fazerBackupAutomaticoSilencioso();
@@ -574,9 +572,9 @@
                 if (!senhaSalva || senha === senhaSalva) {
                     localStorage.setItem('usuario_logado_cpf', cpf);
                     
-                    if (!localStorage.getItem(`alunos_turma${sufixo}`)) {
-                        const alunosIniciais = ["David Desplanches de Miranda", "Isadora Martins Bueno"];
-                        localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(alunosIniciais));
+                    let alunosAtuais = JSON.parse(localStorage.getItem(`alunos_turma${sufixo}`)) || [];
+                    if (alunosAtuais.length === 0) {
+                        localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(alunosIniciaisTurma));
                     }
 
                     await cadastrarBiometriaSePossivel(cpf);
@@ -1055,35 +1053,48 @@
             const alunos = obterAlunosTurma();
             const dadosArmazenados = obterDadosArmazenados();
             
-            const dadosFormatadosParaPlanilha = alunos.map((aluno, index) => {
+            const dadosTabelaLimpa = alunos.map((aluno, index) => {
                 const pagamentosAluno = dadosArmazenados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
                 
                 const pagouAVista = pagamentosAluno.some(i => i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
                 const pagou1 = pagamentosAluno.some(i => i.tipoPagamento.includes('1ª Parcela'));
                 const pagou2 = pagamentosAluno.some(i => i.tipoPagamento.includes('2ª Parcela'));
 
-                const obsGeral = pagamentosAluno.map(i => `${i.tipoPagamento} (${i.observacao})`).join(' | ');
-
                 return {
-                    "ESCOLA": "Escola Municipal 31 de Março",
-                    "TURMA": turmaProf,
                     "Nº": index + 1,
-                    "NOME DO FORMANDO": aluno,
-                    "À VISTA": pagouAVista ? "PAGO" : "",
-                    "1ª PARCELA": pagou1 ? "PAGO" : "",
-                    "2ª PARCELA": pagou2 ? "PAGO" : "",
-                    "FORMA DE PAGAMENTO": pagamentosAluno.map(i => i.tipoPagamento).join(', '),
-                    "OBSERVAÇÕES / DETALHES": obsGeral || "Pendente"
+                    "Nome do Aluno (Formando)": aluno,
+                    "À Vista": pagouAVista ? "PAGO" : "-",
+                    "1ª Parcela": pagou1 ? "PAGO" : "-",
+                    "2ª Parcela": pagou2 ? "PAGO" : "-",
+                    "Forma de Pagamento": pagamentosAluno.map(i => i.tipoPagamento).join(', ') || "-",
+                    "Detalhes / Status": pagamentosAluno.map(i => i.observacao).join(' | ') || "Pendente"
                 };
             });
 
-            dadosFormatadosParaPlanilha.push({});
-            dadosFormatadosParaPlanilha.push({ "ESCOLA": `Professora responsável: ${nomeProfessora}` });
-            dadosFormatadosParaPlanilha.push({ "ESCOLA": "Conferência da direção:" });
+            const estruturaFinal = [
+                { "Nº": "ESCOLA MUNICIPAL 31 DE MARÇO", "Nome do Aluno (Formando)": `TURMA: ${turmaProf}` },
+                { "Nº": "Professora:", "Nome do Aluno (Formando)": nomeProfessora },
+                {},
+                ...dadosTabelaLimpa,
+                {},
+                { "Nº": "Assinatura da Professora:", "Nome do Aluno (Formando)": nomeProfessora },
+                { "Nº": "Conferência da Direção:", "Nome do Aluno (Formando)": "___________________________________" }
+            ];
 
-            const worksheet = XLSX.utils.json_to_sheet(dadosFormatadosParaPlanilha);
+            const worksheet = XLSX.utils.json_to_sheet(estruturaFinal, { skipHeader: false });
+            
+            worksheet['!cols'] = [
+                { wch: 6 },  // Nº
+                { wch: 35 }, // Nome do Aluno
+                { wch: 12 }, // À Vista
+                { wch: 12 }, // 1ª Parcela
+                { wch: 12 }, // 2ª Parcela
+                { wch: 30 }, // Forma de Pagamento
+                { wch: 45 }  // Detalhes
+            ];
+
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Relatorio Oficial");
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Controle de Caixa");
             XLSX.writeFile(workbook, `Relatorio_Oficial_Formatura_${turmaProf.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`);
         }
 
