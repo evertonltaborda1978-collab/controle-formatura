@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controle de Formatura - Escola 31 de Março</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Biblioteca para gerar arquivos Word (.docx) -->
-    <script src="https://cdn.jsdelivr.net/npm/docx@7.3.0/build/index.js"></script>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans pb-12">
 
@@ -128,7 +126,7 @@
                         Diretora
                     </button>
                     <button onclick="alternarTela()" id="btnAlternar" class="text-[10px] bg-indigo-800 hover:bg-indigo-900 px-2 py-1.5 rounded-lg font-medium transition">
-                        📊 Planilha
+                        📊 Tabela
                     </button>
                     <button onclick="sairConta()" class="text-[10px] bg-rose-700 hover:bg-rose-800 px-2 py-1.5 rounded-lg font-medium transition" title="Sair">
                         🔒 Sair
@@ -566,11 +564,10 @@
                 localStorage.setItem(`cadastro_senha${sufixo}`, senha);
                 localStorage.setItem('usuario_logado_cpf', cpf);
 
-                // LÓGICA DE SEGURANÇA: Só puxa a lista se o CPF for o da esposa
                 if (cpf === cpfDaEsposa) {
                     localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(alunosIniciaisTurmaEsposa));
                 } else {
-                    localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify([])); // Outras professoras começam do zero
+                    localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify([]));
                 }
 
                 await cadastrarBiometriaSePossivel(cpf);
@@ -585,7 +582,6 @@
                     
                     let alunosAtuais = JSON.parse(localStorage.getItem(`alunos_turma${sufixo}`)) || [];
                     
-                    // Se for o CPF da esposa e a lista estiver vazia, repõe a lista oficial
                     if (alunosAtuais.length === 0 && cpf === cpfDaEsposa) {
                         localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(alunosIniciaisTurmaEsposa));
                     }
@@ -1060,7 +1056,7 @@
             if(formSec.classList.contains('hidden')) {
                 formSec.classList.remove('hidden');
                 planilhaSec.classList.add('hidden');
-                btn.innerText = "📊 Visualizar Tabela";
+                btn.innerText = "📊 Tabela";
             } else {
                 formSec.classList.add('hidden');
                 planilhaSec.classList.remove('hidden');
@@ -1069,8 +1065,7 @@
             }
         }
 
-        // FUNÇÃO DE EXPORTAÇÃO PARA WORD (.DOCX) EXATA CONFORME O SEU DOCUMENTO
-        async function exportarWord() {
+        function exportarWord() {
             const sufixo = obterChaveUsuario();
             const nomeProfessora = localStorage.getItem(`nome_professora${sufixo}`) || 'Professora';
             const turmaProf = localStorage.getItem(`turma_professora${sufixo}`) || '5º C';
@@ -1079,8 +1074,8 @@
 
             let totalRecebidoCalculado = 0;
 
-            // Linhas da tabela de formandos
-            const linhasTabela = alunos.map((aluno, index) => {
+            let linhasHtml = '';
+            alunos.forEach((aluno, index) => {
                 const pagamentosAluno = dadosArmazenados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
                 const pagou1 = pagamentosAluno.some(i => i.tipoPagamento.includes('1ª Parcela') || i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
                 const pagou2 = pagamentosAluno.some(i => i.tipoPagamento.includes('2ª Parcela') || i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
@@ -1090,94 +1085,73 @@
 
                 const formaObs = pagamentosAluno.map(i => `${i.tipoPagamento} (${i.observacao})`).join(' | ') || "-";
 
-                return new docx.TableRow({
-                    children: [
-                        new docx.TableCell({ children: [new docx.Paragraph({ text: String(index + 1), alignment: docx.AlignmentType.CENTER })] }),
-                        new docx.TableCell({ children: [new docx.Paragraph({ text: aluno })] }),
-                        new docx.TableCell({ children: [new docx.Paragraph({ text: pagou1 ? "PAGO" : "", alignment: docx.AlignmentType.CENTER })] }),
-                        new docx.TableCell({ children: [new docx.Paragraph({ text: pagou2 ? "PAGO" : "", alignment: docx.AlignmentType.CENTER })] }),
-                        new docx.TableCell({ children: [new docx.Paragraph({ text: formaObs })] }),
-                    ],
-                });
+                linhasHtml += `
+                    <tr>
+                        <td style="border: 1px solid #000; text-align: center; padding: 5px;">${index + 1}</td>
+                        <td style="border: 1px solid #000; padding: 5px;">${aluno}</td>
+                        <td style="border: 1px solid #000; text-align: center; padding: 5px;">${pagou1 ? "PAGO" : ""}</td>
+                        <td style="border: 1px solid #000; text-align: center; padding: 5px;">${pagou2 ? "PAGO" : ""}</td>
+                        <td style="border: 1px solid #000; padding: 5px; font-size: 11px;">${formaObs}</td>
+                    </tr>
+                `;
             });
 
             const totalPrevistoGeral = alunos.length * 175.00;
 
-            // Montagem do documento do Word
-            const doc = new docx.Document({
-                sections: [{
-                    properties: {},
-                    children: [
-                        new docx.Paragraph({
-                            text: "ESCOLA MUNICIPAL 31 DE MARÇO – E.I.E.F.",
-                            heading: docx.HeadingLevel.HEADING_1,
-                            alignment: docx.AlignmentType.CENTER,
-                        }),
-                        new docx.Paragraph({
-                            text: "CONTROLE DE PAGAMENTOS – FORMATURA 5º ANO / 2026",
-                            alignment: docx.AlignmentType.CENTER,
-                            bold: true,
-                        }),
-                        new docx.Paragraph({
-                            text: `TURMA: ${turmaProf}   |   FORMANDOS: ${alunos.length}   |   VALOR POR ESTUDANTE: R$ 175,00`,
-                            alignment: docx.AlignmentType.CENTER,
-                        }),
-                        new docx.Paragraph({
-                            text: "1ª parcela: R$ 87,50 (07/11/2026)   •   2ª parcela: R$ 87,50 (06/12/2026)",
-                            alignment: docx.AlignmentType.CENTER,
-                        }),
-                        new docx.Paragraph({
-                            text: "OBSERVAÇÃO: A professora receberá os comprovantes pelo WhatsApp e, após conferir o valor e confirmar o pagamento, dará baixa na parcela correspondente ao nome do estudante.",
-                            spacing: { after: 200 },
-                        }),
-                        new docx.Table({
-                            rows: [
-                                new docx.TableRow({
-                                    children: [
-                                        new docx.TableCell({ children: [new docx.Paragraph({ text: "Nº", bold: true, alignment: docx.AlignmentType.CENTER })] }),
-                                        new docx.TableCell({ children: [new docx.Paragraph({ text: "NOME DO FORMANDO", bold: true })] }),
-                                        new docx.TableCell({ children: [new docx.Paragraph({ text: "1ª PARCELA\nR$ 87,50", bold: true, alignment: docx.AlignmentType.CENTER })] }),
-                                        new docx.TableCell({ children: [new docx.Paragraph({ text: "2ª PARCELA\nR$ 87,50", bold: true, alignment: docx.AlignmentType.CENTER })] }),
-                                        new docx.TableCell({ children: [new docx.Paragraph({ text: "FORMA DE PAGAMENTO / OBS", bold: true })] }),
-                                    ],
-                                }),
-                                ...linhasTabela
-                            ],
-                            width: { size: 100, type: docx.TableWidthType.PERCENTAGE },
-                        }),
-                        new docx.Paragraph({
-                            text: `Total previsto – ${turmaProf}: R$ ${totalPrevistoGeral.toFixed(2).replace('.', ',')}`,
-                            spacing: { before: 200 },
-                            bold: true,
-                        }),
-                        new docx.Paragraph({
-                            text: `Total recebido: R$ ${totalRecebidoCalculado.toFixed(2).replace('.', ',')}`,
-                            bold: true,
-                            spacing: { after: 300 },
-                        }),
-                        new docx.Paragraph({
-                            text: `Conferência da professora: ${nomeProfessora}`,
-                            spacing: { before: 100 },
-                        }),
-                        new docx.Paragraph({
-                            text: "Conferência da direção: ________________________________________",
-                            spacing: { before: 100, after: 200 },
-                        }),
-                    ],
-                }],
-            });
+            const conteudoHtml = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/199/xhtml">
+                <head>
+                    <meta charset="utf-8">
+                    <title>Controle de Pagamentos</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; font-size: 12pt; color: #000; line-height: 1.3; }
+                        h3, h4 { text-align: center; margin: 5px 0; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 15px; }
+                        th { background-color: #f2f2f2; border: 1px solid #000; padding: 6px; text-align: center; font-size: 11pt; }
+                        p { margin: 6px 0; }
+                    </style>
+                </head>
+                <body>
+                    <h3>ESCOLA MUNICIPAL 31 DE MARÇO – E.I.E.F.</h3>
+                    <h4>CONTROLE DE PAGAMENTOS – FORMATURA 5º ANO / 2026</h4>
+                    <p align="center"><b>TURMA: ${turmaProf}   |   FORMANDOS: ${alunos.length}   |   VALOR POR ESTUDANTE: R$ 175,00</b></p>
+                    <p align="center">1ª parcela: R$ 87,50 (07/11/2026)   •   2ª parcela: R$ 87,50 (06/12/2026)</p>
+                    <p style="font-size: 10pt; margin-bottom: 15px;"><b>OBSERVAÇÃO:</b> A professora receberá os comprovantes pelo WhatsApp e, após conferir o valor e confirmar o pagamento, dará baixa na parcela correspondente ao nome do estudante.</p>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 8%;">Nº</th>
+                                <th style="width: 37%;">NOME DO FORMANDO</th>
+                                <th style="width: 15%;">1ª PARCELA<br>R$ 87,50</th>
+                                <th style="width: 15%;">2ª PARCELA<br>R$ 87,50</th>
+                                <th style="width: 25%;">FORMA DE PAGAMENTO / OBS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${linhasHtml}
+                        </tbody>
+                    </table>
 
-            // Gera e baixa o arquivo .docx
-            docx.Packer.toBlob(doc).then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `Controle_Pagamentos_Formatura_${turmaProf.replace(/[^a-zA-Z0-9]/g, '_')}.docx`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-            });
+                    <p><b>Total previsto – ${turmaProf}:</b> R$ ${totalPrevistoGeral.toFixed(2).replace('.', ',')}</p>
+                    <p><b>Total recebido:</b> R$ ${totalRecebidoCalculado.toFixed(2).replace('.', ',')}</p>
+                    
+                    <br><br>
+                    <p>Conferência da professora: ${nomeProfessora}</p>
+                    <p>Conferência da direção: ________________________________________</p>
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob(['\ufeff' + conteudoHtml], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Controle_Pagamentos_Formatura_${turmaProf.replace(/[^a-zA-Z0-9]/g, '_')}.doc`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         function fazerBackup() {
