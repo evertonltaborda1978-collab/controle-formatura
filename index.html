@@ -211,8 +211,13 @@
             <div id="secaoPlanilha" class="hidden space-y-4">
                 <div class="bg-white p-5 rounded-2xl shadow-sm space-y-4 border border-slate-200">
                     
-                    <div class="text-center border-b pb-4 space-y-1">
-                        <div class="text-2xl">🏛️</div>
+                    <div class="text-center border-b pb-4 space-y-2 relative">
+                        <div class="absolute right-0 top-0">
+                            <button onclick="gerarPDF()" class="bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-medium py-1.5 px-2.5 rounded-lg transition shadow flex items-center gap-1">
+                                📄 Baixar PDF
+                            </button>
+                        </div>
+                        <div class="text-2xl pt-1">🏛️</div>
                         <h2 class="font-bold text-sm text-slate-900 uppercase">Escola Municipal 31 de Março</h2>
                         <p id="relatorioTurmaSub" class="text-xs font-semibold text-indigo-600">Controle de Pagamentos - Formatura</p>
                         <p class="text-[10px] text-slate-400">1ª Parcela: R$ 87,50 (07/11/2026) | 2ª Parcela: R$ 87,50 (06/12/2026)</p>
