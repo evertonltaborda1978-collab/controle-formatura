@@ -317,4 +317,788 @@
         </div>
     </div>
 
-    <div id="modalGerenciar" class="hidden fixed inset-0 bg-black/50 z-50 flex items-
+    <div id="modalGerenciar" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="font-bold text-sm text-slate-800">Gerenciar Formas de Pagamento</h3>
+                <button onclick="fecharModalGerenciar()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
+            </div>
+            <div class="space-y-2">
+                <label class="block text-xs font-medium text-slate-600">Adicionar Nova Opção</label>
+                <div class="flex gap-2">
+                    <input type="text" id="novaOpcaoInput" placeholder="Ex: Parcela Extra Pix" class="w-full border rounded-lg p-2 text-xs outline-none">
+                    <button onclick="adicionarOpcaoPagamento()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-medium">Adicionar</button>
+                </div>
+            </div>
+            <div class="space-y-1">
+                <label class="block text-xs font-medium text-slate-600">Opções Existentes (Clique para excluir)</label>
+                <div id="listaOpcoesGerenciar" class="max-h-40 overflow-y-auto space-y-1 text-xs border p-2 rounded-lg bg-slate-50"></div>
+            </div>
+            <button onclick="fecharModalGerenciar()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2 rounded-xl transition text-xs">Concluir</button>
+        </div>
+    </div>
+
+    <div id="modalAviso" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl text-center my-auto">
+            <div id="avisoIcone" class="text-3xl">✨</div>
+            <h3 id="avisoTitulo" class="font-bold text-sm text-slate-800">Aviso</h3>
+            <p id="avisoTexto" class="text-xs text-slate-600"></p>
+            <button onclick="fecharModalAviso()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">OK</button>
+        </div>
+    </div>
+
+    <script>
+        let modoCadastro = false;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            verificarSessao();
+            verificarSeTemBiometriaSalva();
+            atualizarSelectOpcoes();
+            atualizarListaAlunosDinamica();
+            atualizarPlanilhaGeral();
+            atualizarDadosTopoPerfil();
+        });
+
+        window.addEventListener('beforeunload', () => {
+            fazerBackupAutomaticoSilencioso();
+        });
+
+        function obterChaveUsuario() {
+            const cpfLogado = localStorage.getItem('usuario_logado_cpf') || 'padrao';
+            return `_user_${cpfLogado}`;
+        }
+
+        function fazerBackupAutomaticoSilencioso() {
+            const sufixo = obterChaveUsuario();
+            const dados = localStorage.getItem(`caixa_formatura${sufixo}`);
+            if (dados) {
+                localStorage.setItem(`backup_seguranca${sufixo}`, dados);
+            }
+        }
+
+        function verificarSessao() {
+            const usuarioLogado = localStorage.getItem('usuario_logado_cpf');
+            if (usuarioLogado) {
+                document.getElementById('telaLogin').classList.add('hidden');
+                document.getElementById('appPrincipal').classList.remove('hidden');
+                atualizarDadosTopoPerfil();
+            } else {
+                document.getElementById('telaLogin').classList.remove('hidden');
+                document.getElementById('appPrincipal').classList.add('hidden');
+            }
+        }
+
+        function atualizarDadosTopoPerfil() {
+            const sufixo = obterChaveUsuario();
+            const nomeProf = localStorage.getItem(`nome_professora${sufixo}`) || 'Professora';
+            const turmaProf = localStorage.getItem(`turma_professora${sufixo}`) || 'Turma 5º Ano';
+            
+            document.getElementById('labelNomeProfessora').innerText = nomeProf;
+            document.getElementById('labelTurmaTopo').innerText = turmaProf;
+            document.getElementById('relatorioTurmaSub').innerText = `Controle de Caixa - Formatura (${turmaProf})`;
+            document.getElementById('assinaturaProfessora').innerText = `Professora: ${nomeProf}`;
+        }
+
+        function editarPerfilProfessora() {
+            const sufixo = obterChaveUsuario();
+            const atualNome = localStorage.getItem(`nome_professora${sufixo}`) || 'Professora';
+            const atualTurma = localStorage.getItem(`turma_professora${sufixo}`) || 'Turma';
+
+            const novoNome = prompt("Nome completo da Professora:", atualNome);
+            if (novoNome && novoNome.trim() !== '') {
+                localStorage.setItem(`nome_professora${sufixo}`, novoNome.trim());
+            }
+
+            const novaTurma = prompt("Nome da Turma (Ex: 5º Ano A):", atualTurma);
+            if (novaTurma && novaTurma.trim() !== '') {
+                localStorage.setItem(`turma_professora${sufixo}`, novaTurma.trim());
+            }
+
+            atualizarDadosTopoPerfil();
+            mostrarAviso('Sucesso', 'Perfil e turma atualizados com sucesso!', '✅');
+        }
+
+        function alternarVisibilidadeSenha(idInput, idIcone) {
+            const inputSenha = document.getElementById(idInput);
+            const icone = document.getElementById(idIcone);
+            if (inputSenha.type === 'password') {
+                inputSenha.type = 'text';
+                icone.innerText = '🙈';
+            } else {
+                inputSenha.type = 'password';
+                icone.innerText = '👁️';
+            }
+        }
+
+        function verificarSeTemBiometriaSalva() {
+            const biometriaCadastrada = localStorage.getItem('biometria_ativa_formatura');
+            if (biometriaCadastrada && (window.PublicKeyCredential)) {
+                document.getElementById('divBotaoBiometria').classList.remove('hidden');
+            } else {
+                document.getElementById('divBotaoBiometria').classList.add('hidden');
+            }
+        }
+
+        async function cadastrarBiometriaSePossivel(cpf) {
+            if (window.PublicKeyCredential) {
+                try {
+                    const publicKey = {
+                        challenge: new Uint8Array(32),
+                        rp: { name: "Secretaria Virtual Formatura" },
+                        user: {
+                            id: Uint8Array.from(cpf, c => c.charCodeAt(0)),
+                            name: cpf,
+                            displayName: cpf
+                        },
+                        pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+                        timeout: 60000,
+                        attestation: "direct"
+                    };
+                    const credential = await navigator.credentials.create({ publicKey });
+                    if (credential) {
+                        localStorage.setItem('biometria_ativa_formatura', 'true');
+                        localStorage.setItem('usuario_biometria_cpf', cpf);
+                    }
+                } catch (e) {
+                    console.log("Biometria não configurada:", e);
+                }
+            }
+        }
+
+        async function entrarComBiometria() {
+            if (window.PublicKeyCredential) {
+                try {
+                    const publicKey = {
+                        challenge: new Uint8Array(32),
+                        timeout: 60000,
+                        allowCredentials: [{
+                            type: "public-key",
+                            id: new Uint8Array(32)
+                        }]
+                    };
+                    await navigator.credentials.get({ publicKey }).catch(() => {});
+                    const cpfSalvo = localStorage.getItem('usuario_biometria_cpf');
+                    if (cpfSalvo) {
+                        localStorage.setItem('usuario_logado_cpf', cpfSalvo);
+                        verificarSessao();
+                    } else {
+                        mostrarAviso('Atenção', 'Nenhuma biometria vinculada. Entre com o CPF.', '⚠️');
+                    }
+                } catch (e) {
+                    mostrarAviso('Atenção', 'Não foi possível autenticar por biometria.', '⚠️');
+                }
+            }
+        }
+
+        function alternarModoCadastro() {
+            modoCadastro = !modoCadastro;
+            
+            const titulo = document.getElementById('subtituloLogin');
+            const link = document.getElementById('linkModoCadastro');
+            const btn = document.getElementById('btnAcaoLogin');
+            const grupoCampos = document.getElementById('grupoCamposCadastro');
+            const grupoConfirma = document.getElementById('grupoConfirmaSenha');
+            
+            const inputNome = document.getElementById('cadastroNome');
+            const inputTurma = document.getElementById('cadastroTurma');
+            const inputConfirma = document.getElementById('loginSenhaConfirma');
+
+            if (modoCadastro) {
+                titulo.innerText = "Cadastre seu CPF, Nome e Turma";
+                link.innerText = "Já tem conta? Entrar";
+                btn.innerText = "Cadastrar e Entrar";
+                
+                grupoCampos.classList.remove('hidden');
+                grupoConfirma.classList.remove('hidden');
+                inputNome.setAttribute('required', 'true');
+                inputTurma.setAttribute('required', 'true');
+                inputConfirma.setAttribute('required', 'true');
+            } else {
+                titulo.innerText = "Acesse com seu CPF para gerenciar sua turma";
+                link.innerText = "Ainda não tem conta? Cadastrar";
+                btn.innerText = "Entrar";
+                
+                grupoCampos.classList.add('hidden');
+                grupoConfirma.classList.add('hidden');
+                inputNome.removeAttribute('required');
+                inputTurma.removeAttribute('required');
+                inputConfirma.removeAttribute('required');
+            }
+        }
+
+        async function realizarLogin(event) {
+            event.preventDefault();
+            const cpf = document.getElementById('loginCpf').value.trim();
+            const senha = document.getElementById('loginSenha').value.trim();
+            const sufixo = `_user_${cpf}`;
+
+            if (modoCadastro) {
+                const senhaConfirma = document.getElementById('loginSenhaConfirma').value.trim();
+                if (senha !== senhaConfirma) {
+                    mostrarAviso('Erro', 'As senhas não coincidem. Verifique por favor.', '❌');
+                    return;
+                }
+
+                const nomeProf = document.getElementById('cadastroNome').value.trim();
+                const turmaProf = document.getElementById('cadastroTurma').value.trim();
+
+                localStorage.setItem(`nome_professora${sufixo}`, nomeProf);
+                localStorage.setItem(`turma_professora${sufixo}`, turmaProf);
+                localStorage.setItem(`cadastro_senha${sufixo}`, senha);
+                localStorage.setItem('usuario_logado_cpf', cpf);
+
+                if (!localStorage.getItem(`alunos_turma${sufixo}`)) {
+                    const alunosIniciais = [
+                        "David Desplanches de Miranda", "Isadora Martins Bueno",
+                        "Yuri Matheus dos Santos Lessi", "José Henrique Montevechio Cristo",
+                        "Gustavo Henrique Ferreira Faria", "Heloisy Vitória dos Santos Freitas",
+                        "Sabrina de Oliveira Mendes", "Arthur Carneiro Ferraz",
+                        "Letícia Vitória de Oliveira Betim", "João Lucas Cardoso dos Santos",
+                        "Lorrany Marcelle Rocha de Camargo", "Luiza Lemes Faustino",
+                        "Lucas Ronaldo Jacumasso Ribas", "Matheus da Silva Santos",
+                        "Steffiny Eduarda Pedroso dos Santos", "Luiza Vitória de Proença Miranda",
+                        "Ingridy Silva Lernes", "Maria Júlia Borges de Melo",
+                        "Davi de Goes Carneiro", "Emanuelle Vitória de Oliveira",
+                        "Gustavo Henrique Marcondes Galvão"
+                    ];
+                    localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(alunosIniciais));
+                }
+
+                await cadastrarBiometriaSePossivel(cpf);
+                fazerBackupAutomaticoSilencioso();
+                mostrarAviso('Sucesso', 'Cadastro realizado com sucesso!', '🎉');
+                verificarSessao();
+            } else {
+                const senhaSalva = localStorage.getItem(`cadastro_senha${sufixo}`);
+
+                if (!senhaSalva || senha === senhaSalva) {
+                    localStorage.setItem('usuario_logado_cpf', cpf);
+                    
+                    if (!localStorage.getItem(`alunos_turma${sufixo}`)) {
+                        const alunosIniciais = ["David Desplanches de Miranda", "Isadora Martins Bueno"];
+                        localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(alunosIniciais));
+                    }
+
+                    await cadastrarBiometriaSePossivel(cpf);
+                    fazerBackupAutomaticoSilencioso();
+                    verificarSessao();
+                } else {
+                    mostrarAviso('Erro', 'CPF ou senha incorretos.', '❌');
+                }
+            }
+        }
+
+        function esqueciSenha() {
+            const cpf = document.getElementById('loginCpf').value.trim();
+            const sufixo = `_user_${cpf}`;
+            const senhaSalva = localStorage.getItem(`cadastro_senha${sufixo}`);
+            if (!cpf || !senhaSalva) {
+                mostrarAviso('Atenção', 'Digite um CPF válido no campo acima e clique aqui.', '⚠️');
+                return;
+            }
+            mostrarAviso('Recuperação', `A senha para este CPF é: ${senhaSalva}`, '🔑');
+        }
+
+        function sairConta() {
+            fazerBackupAutomaticoSilencioso();
+            localStorage.removeItem('usuario_logado_cpf');
+            verificarSessao();
+            verificarSeTemBiometriaSalva();
+        }
+
+        function abrirModalExcluirConta() {
+            const cpf = prompt("Digite o CPF da conta que deseja gerenciar/excluir:");
+            if (!cpf) return;
+            const sufixo = `_user_${cpf.trim()}`;
+            const nome = localStorage.getItem(`nome_professora${sufixo}`);
+            const turma = localStorage.getItem(`turma_professora${sufixo}`);
+
+            const container = document.getElementById('detalhesContaExcluir');
+            if (!nome) {
+                container.innerHTML = `<p class="text-rose-600 font-bold">Nenhuma conta encontrada com este CPF.</p>`;
+            } else {
+                container.innerHTML = `
+                    <p><strong>Nome:</strong> ${nome}</p>
+                    <p><strong>Turma:</strong> ${turma}</p>
+                    <p><strong>CPF:</strong> ${cpf}</p>
+                `;
+                localStorage.setItem('cpf_para_exclusao_temporario', sufixo);
+            }
+            document.getElementById('modalExcluirConta').classList.remove('hidden');
+        }
+
+        function fecharModalExcluirConta() {
+            document.getElementById('modalExcluirConta').classList.add('hidden');
+        }
+
+        function confirmarExclusaoConta() {
+            const sufixo = localStorage.getItem('cpf_para_exclusao_temporario');
+            if (sufixo) {
+                localStorage.removeItem(`nome_professora${sufixo}`);
+                localStorage.removeItem(`turma_professora${sufixo}`);
+                localStorage.removeItem(`cadastro_senha${sufixo}`);
+                localStorage.removeItem(`caixa_formatura${sufixo}`);
+                localStorage.removeItem(`alunos_turma${sufixo}`);
+                localStorage.removeItem('usuario_logado_cpf');
+            }
+            fecharModalExcluirConta();
+            mostrarAviso('Excluído', 'Conta removida com sucesso.', '🗑️');
+            setTimeout(() => location.reload(), 1500);
+        }
+
+        function obterAlunosTurma() {
+            const sufixo = obterChaveUsuario();
+            return JSON.parse(localStorage.getItem(`alunos_turma${sufixo}`)) || [];
+        }
+
+        function salvarAlunosTurma(lista) {
+            const sufixo = obterChaveUsuario();
+            localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(lista));
+            atualizarListaAlunosDinamica();
+            atualizarPlanilhaGeral();
+        }
+
+        function abrirModalGerenciarAlunos() {
+            renderizarListaAlunosGerenciar();
+            document.getElementById('modalAlunos').classList.remove('hidden');
+        }
+
+        function fecharModalGerenciarAlunos() {
+            document.getElementById('modalAlunos').classList.add('hidden');
+        }
+
+        function renderizarListaAlunosGerenciar() {
+            const alunos = obterAlunosTurma();
+            const container = document.getElementById('listaAlunosGerenciar');
+            container.innerHTML = alunos.map((aluno, index) => `
+                <div class="flex justify-between items-center bg-white p-2 rounded border">
+                    <span class="truncate max-w-[200px]">${aluno}</span>
+                    <button onclick="removerAlunoTurma(${index})" class="text-red-500 hover:text-red-700 font-bold px-2 py-0.5 text-xs">Excluir</button>
+                </div>
+            `).join('');
+        }
+
+        function adicionarAlunoTurma() {
+            const input = document.getElementById('novoAlunoInput');
+            const nome = input.value.trim();
+            if (!nome) {
+                mostrarAviso('Atenção', 'Digite o nome do aluno.', '⚠️');
+                return;
+            }
+            let alunos = obterAlunosTurma();
+            if (alunos.includes(nome)) {
+                mostrarAviso('Atenção', 'Este aluno já está na lista.', '⚠️');
+                return;
+            }
+            alunos.push(nome);
+            salvarAlunosTurma(alunos);
+            input.value = '';
+            renderizarListaAlunosGerenciar();
+            mostrarAviso('Sucesso', 'Aluno adicionado à turma!', '✅');
+        }
+
+        function removerAlunoTurma(index) {
+            let alunos = obterAlunosTurma();
+            alunos.splice(index, 1);
+            salvarAlunosTurma(alunos);
+            renderizarListaAlunosGerenciar();
+            mostrarAviso('Removido', 'Aluno retirado da turma.', '🗑️');
+        }
+
+        function atualizarListaAlunosDinamica() {
+            const alunos = obterAlunosTurma();
+            const datalist = document.getElementById('listaAlunosDinamica');
+            datalist.innerHTML = alunos.map(aluno => `<option value="${aluno}">`).join('');
+        }
+
+        let opcoesPagamento = JSON.parse(localStorage.getItem('opcoes_pagamento_v1')) || [
+            "À Vista (Pix/Transf) - R$ 175,00",
+            "1ª Parcela (Pix/Transf) - R$ 87,50",
+            "2ª Parcela (Pix/Transf) - R$ 87,50",
+            "Dinheiro - À Vista (R$ 175,00)",
+            "Dinheiro - 1ª Parcela (R$ 87,50)",
+            "Dinheiro - 2ª Parcela (R$ 87,50)"
+        ];
+
+        function salvarOpcoesStorage() {
+            localStorage.setItem('opcoes_pagamento_v1', JSON.stringify(opcoesPagamento));
+            fazerBackupAutomaticoSilencioso();
+            atualizarSelectOpcoes();
+        }
+
+        function atualizarSelectOpcoes() {
+            const select = document.getElementById('tipoPagamento');
+            if(select) {
+                select.innerHTML = opcoesPagamento.map(op => `<option value="${op}">${op}</option>`).join('');
+                atualizarTextoPadrao();
+            }
+        }
+
+        document.getElementById('nomeAluno').addEventListener('input', atualizarTextoPadrao);
+        document.getElementById('tipoPagamento').addEventListener('change', atualizarTextoPadrao);
+
+        function atualizarTextoPadrao() {
+            const nome = document.getElementById('nomeAluno').value || '[Nome Aluno]';
+            let tipo = document.getElementById('tipoPagamento').value;
+            const dataHoje = new Date().toLocaleDateString('pt-BR');
+            document.getElementById('observacao').value = `Pago ${tipo} em ${dataHoje} - Aluno: ${nome}`;
+        }
+
+        function obterDadosArmazenados() {
+            const sufixo = obterChaveUsuario();
+            return JSON.parse(localStorage.getItem(`caixa_formatura${sufixo}`)) || [];
+        }
+
+        let funcaoCallbackConfirmacao = null;
+
+        function gerarNomePadronizado(nomeCompleto, tipoPagamento) {
+            if (!nomeCompleto) return 'comprovante';
+            const partes = nomeCompleto.trim().split(' ');
+            const primeiro = partes[0];
+            const ultimo = partes.length > 1 ? partes[partes.length - 1] : '';
+            const nomeCurto = `${primeiro}_${ultimo}`.toLowerCase();
+            const tipoFormatado = tipoPagamento.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+            return `${tipoFormatado}_${nomeCurto}.pdf`;
+        }
+
+        function prepararSalvamento() {
+            const nome = document.getElementById('nomeAluno').value;
+            if(!nome) {
+                mostrarAviso('Atenção', 'Informe o nome do aluno.', '⚠️');
+                return;
+            }
+
+            let tipo = document.getElementById('tipoPagamento').value;
+            const obs = document.getElementById('observacao').value;
+            const arquivoInput = document.getElementById('arquivoComprovante');
+            
+            if (arquivoInput.files.length > 0) {
+                const arquivo = arquivoInput.files[0];
+                const leitor = new FileReader();
+                leitor.onload = function(e) {
+                    const dadosArquivoBase64 = e.target.result;
+                    const nomeArquivoGerado = gerarNomePadronizado(nome, tipo);
+                    salvarLancamentoFinal(nome, tipo, obs, nomeArquivoGerado, dadosArquivoBase64);
+                };
+                leitor.readAsDataURL(arquivo);
+            } else {
+                salvarLancamentoFinal(nome, tipo, obs, 'Sem anexo (Dinheiro)', null);
+            }
+        }
+
+        function salvarLancamentoFinal(nome, tipo, obs, nomeArquivoGerado, dadosArquivoBase64) {
+            const htmlResumo = `
+                <p><strong>Aluno:</strong> ${nome}</p>
+                <p><strong>Forma:</strong> ${tipo}</p>
+                <p><strong>Arquivo:</strong> ${nomeArquivoGerado}</p>
+                <p><strong>Status:</strong> ${obs}</p>
+                <p class="text-indigo-600 font-bold pt-1">Deseja confirmar e salvar?</p>
+            `;
+
+            document.getElementById('tituloModalConfirmacao').innerText = "Confirmação de Lançamento";
+            document.getElementById('conteudoResumoModal').innerHTML = htmlResumo;
+            document.getElementById('modalConfirmacao').classList.remove('hidden');
+
+            funcaoCallbackConfirmacao = (confirmado) => {
+                if(confirmado) {
+                    let dadosArmazenados = obterDadosArmazenados();
+                    const novoRegistro = {
+                        id: Date.now(),
+                        aluno: nome,
+                        tipoPagamento: tipo,
+                        observacao: obs,
+                        arquivo: nomeArquivoGerado,
+                        arquivoData: dadosArquivoBase64,
+                        dataRegistro: new Date().toLocaleString('pt-BR')
+                    };
+
+                    dadosArmazenados.push(novoRegistro);
+                    const sufixo = obterChaveUsuario();
+                    localStorage.setItem(`caixa_formatura${sufixo}`, JSON.stringify(dadosArmazenados));
+                    fazerBackupAutomaticoSilencioso();
+                    
+                    atualizarLista();
+                    atualizarPlanilhaGeral();
+                    document.getElementById('formPagamento').reset();
+                    atualizarTextoPadrao();
+                    mostrarAviso('Sucesso', 'Lançamento salvo com sucesso!', '✅');
+                }
+            };
+        }
+
+        function visualizarArquivo(id) {
+            const dadosArmazenados = obterDadosArmazenados();
+            const item = dadosArmazenados.find(i => i.id === id);
+            if (!item || !item.arquivoData) {
+                mostrarAviso('Atenção', 'Este registro não possui arquivo anexo.', 'ℹ️');
+                return;
+            }
+
+            document.getElementById('tituloVisualizador').innerText = `Comprovante: ${item.aluno}`;
+            const container = document.getElementById('conteudoVisualizador');
+
+            if (item.arquivoData.startsWith('data:image')) {
+                container.innerHTML = `<img src="${item.arquivoData}" class="max-h-72 rounded shadow object-contain">`;
+            } else {
+                container.innerHTML = `<iframe src="${item.arquivoData}" class="w-full h-72 rounded border"></iframe>`;
+            }
+            document.getElementById('modalVisualizador').classList.remove('hidden');
+        }
+
+        function fecharVisualizador() {
+            document.getElementById('modalVisualizador').classList.add('hidden');
+        }
+
+        function enviarWhatsApp(id) {
+            const dadosArmazenados = obterDadosArmazenados();
+            const item = dadosArmazenados.find(i => i.id === id);
+            if (!item) return;
+            const texto = encodeURIComponent(`*Comprovante de Caixa*\nAluno: ${item.aluno}\nPagamento: ${item.tipoPagamento}\nStatus: ${item.observacao}\nArquivo: ${item.arquivo}`);
+            window.open(`https://api.whatsapp.com/send?text=${texto}`, '_blank');
+        }
+
+        function enviarEmail(id) {
+            const dadosArmazenados = obterDadosArmazenados();
+            const item = dadosArmazenados.find(i => i.id === id);
+            if (!item) return;
+            const assunto = encodeURIComponent(`Comprovante - ${item.aluno}`);
+            const corpo = encodeURIComponent(`Segue dados do pagamento do aluno ${item.aluno}:\n\nForma: ${item.tipoPagamento}\nDetalhes: ${item.observacao}`);
+            window.location.href = `mailto:?subject=${assunto}&body=${corpo}`;
+        }
+
+        function excluirRegistro(id) {
+            let dadosArmazenados = obterDadosArmazenados();
+            const itemParaExcluir = dadosArmazenados.find(i => i.id === id);
+            if (!itemParaExcluir) return;
+
+            document.getElementById('tituloModalConfirmacao').innerText = "Excluir Registro";
+            document.getElementById('conteudoResumoModal').innerHTML = `
+                <p><strong>Aluno:</strong> ${itemParaExcluir.aluno}</p>
+                <p class="text-red-600 font-bold pt-1">Deseja excluir este registro?</p>
+            `;
+            document.getElementById('modalConfirmacao').classList.remove('hidden');
+
+            funcaoCallbackConfirmacao = (confirmado) => {
+                if(confirmado) {
+                    dadosArmazenados = dadosArmazenados.filter(item => item.id !== id);
+                    const sufixo = obterChaveUsuario();
+                    localStorage.setItem(`caixa_formatura${sufixo}`, JSON.stringify(dadosArmazenados));
+                    fazerBackupAutomaticoSilencioso();
+                    atualizarLista();
+                    atualizarPlanilhaGeral();
+                    mostrarAviso('Excluído', 'Registro removido.', '🗑️');
+                }
+            };
+        }
+
+        function fecharModalConfirmacao(confirmado) {
+            const callbackTemp = funcaoCallbackConfirmacao;
+            funcaoCallbackConfirmacao = null;
+            document.getElementById('modalConfirmacao').classList.add('hidden');
+            if(callbackTemp) callbackTemp(confirmado);
+        }
+
+        function abrirModalGerenciarOpcoes() {
+            renderizarListaOpcoesGerenciar();
+            document.getElementById('modalGerenciar').classList.remove('hidden');
+        }
+
+        function fecharModalGerenciar() {
+            document.getElementById('modalGerenciar').classList.add('hidden');
+        }
+
+        function renderizarListaOpcoesGerenciar() {
+            const container = document.getElementById('listaOpcoesGerenciar');
+            container.innerHTML = opcoesPagamento.map((op, index) => `
+                <div class="flex justify-between items-center bg-white p-2 rounded border">
+                    <span>${op}</span>
+                    <button onclick="pedirExclusaoOpcao(${index})" class="text-red-500 hover:text-red-700 font-bold px-2 py-0.5 text-xs">Excluir</button>
+                </div>
+            `).join('');
+        }
+
+        function adicionarOpcaoPagamento() {
+            const input = document.getElementById('novaOpcaoInput');
+            const valor = input.value.trim();
+            if(!valor) return;
+            if(opcoesPagamento.includes(valor)) return;
+            opcoesPagamento.push(valor);
+            input.value = '';
+            salvarOpcoesStorage();
+            renderizarListaOpcoesGerenciar();
+        }
+
+        function pedirExclusaoOpcao(index) {
+            if(opcoesPagamento.length <= 1) return;
+            opcoesPagamento.splice(index, 1);
+            salvarOpcoesStorage();
+            renderizarListaOpcoesGerenciar();
+        }
+
+        function mostrarAviso(titulo, texto, icone = '✨') {
+            document.getElementById('avisoTitulo').innerText = titulo;
+            document.getElementById('avisoTexto').innerText = texto;
+            document.getElementById('avisoIcone').innerText = icone;
+            document.getElementById('modalAviso').classList.remove('hidden');
+        }
+
+        function fecharModalAviso() {
+            document.getElementById('modalAviso').classList.add('hidden');
+        }
+
+        function atualizarLista() {
+            const dadosArmazenados = obterDadosArmazenados();
+            const container = document.getElementById('tabelaLancamentos');
+            document.getElementById('contadorRegistros').innerText = `${dadosArmazenados.length} itens`;
+
+            if(dadosArmazenados.length === 0) {
+                container.innerHTML = `<p class="text-slate-400 text-center py-4">Nenhum lançamento registrado ainda.</p>`;
+                return;
+            }
+
+            container.innerHTML = dadosArmazenados.slice().reverse().map(item => `
+                <div class="border rounded-lg p-2.5 bg-slate-50 space-y-2">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-slate-800">${item.aluno}</p>
+                            <p class="text-indigo-600 font-medium">${item.tipoPagamento} — <span class="text-emerald-600 font-bold">Pago</span></p>
+                            <p class="text-slate-500 text-[10px]">${item.observacao}</p>
+                        </div>
+                        <button onclick="excluirRegistro(${item.id})" class="text-red-500 hover:text-red-700 p-1 font-bold text-xs" title="Excluir">✕</button>
+                    </div>
+                    <div class="flex items-center justify-between pt-1 border-t text-[11px]">
+                        <button onclick="visualizarArquivo(${item.id})" class="text-indigo-600 hover:underline font-semibold flex items-center gap-1">
+                            📄 <span>${item.arquivo}</span>
+                        </button>
+                        <div class="flex gap-1">
+                            <button onclick="enviarWhatsApp(${item.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded font-medium">💬 WhatsApp</button>
+                            <button onclick="enviarEmail(${item.id})" class="bg-sky-600 hover:bg-sky-700 text-white px-2 py-1 rounded font-medium">✉️ E-mail</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function atualizarPlanilhaGeral() {
+            const alunos = obterAlunosTurma();
+            const dadosArmazenados = obterDadosArmazenados();
+            const tbody = document.getElementById('corpoTabelaPlanilha');
+
+            tbody.innerHTML = alunos.map((aluno, index) => {
+                const pagamentosAluno = dadosArmazenados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
+                
+                const pagouAVista = pagamentosAluno.some(i => i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
+                const pagou1 = pagamentosAluno.some(i => i.tipoPagamento.includes('1ª Parcela'));
+                const pagou2 = pagamentosAluno.some(i => i.tipoPagamento.includes('2ª Parcela'));
+
+                const badgeAVista = pagouAVista ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Pago</span>` : `<span class="text-slate-300">-</span>`;
+                const badge1 = pagou1 ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Pago</span>` : `<span class="text-slate-300">-</span>`;
+                const badge2 = pagou2 ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">Pago</span>` : `<span class="text-slate-300">-</span>`;
+
+                return `
+                    <tr class="border-b hover:bg-slate-50">
+                        <td class="p-2 border-r font-medium text-slate-500 text-center">${index + 1}</td>
+                        <td class="p-2 border-r font-semibold text-slate-800">${aluno}</td>
+                        <td class="p-2 text-center border-r">${badgeAVista}</td>
+                        <td class="p-2 text-center border-r">${badge1}</td>
+                        <td class="p-2 text-center">${badge2}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function enviarRelatorioDiretora() {
+            const sufixo = obterChaveUsuario();
+            const turma = localStorage.getItem(`turma_professora${sufixo}`) || 'Turma';
+            const dadosArmazenados = obterDadosArmazenados();
+
+            let resumo = `📊 *Relatório Oficial de Caixa - ${turma}*\nEscola Municipal 31 de Março\n\n`;
+            resumo += `Total de registros lançados: ${dadosArmazenados.length}\n\n`;
+            
+            if(dadosArmazenados.length === 0) {
+                resumo += `Nenhum pagamento registrado até o momento.`;
+            } else {
+                resumo += `*Alunos quitados/com pagamentos:* \n`;
+                dadosArmazenados.forEach(i => {
+                    resumo += `- ${i.aluno} (${i.tipoPagamento})\n`;
+                });
+            }
+
+            navigator.clipboard.writeText(resumo).then(() => {
+                mostrarAviso('Sucesso', 'Relatório oficial copiado para a área de transferência!', '📋');
+            }).catch(() => {
+                prompt("Copie o relatório abaixo:", resumo);
+            });
+        }
+
+        function alternarTela() {
+            const formSec = document.getElementById('secaoFormulario');
+            const planilhaSec = document.getElementById('secaoPlanilha');
+            const btn = document.getElementById('btnAlternar');
+
+            if(formSec.classList.contains('hidden')) {
+                formSec.classList.remove('hidden');
+                planilhaSec.classList.add('hidden');
+                btn.innerText = "📊 Planilha";
+            } else {
+                formSec.classList.add('hidden');
+                planilhaSec.classList.remove('hidden');
+                btn.innerText = "📝 Novo Registro";
+                atualizarPlanilhaGeral();
+            }
+        }
+
+        function exportarExcel() {
+            const sufixo = obterChaveUsuario();
+            const nomeProfessora = localStorage.getItem(`nome_professora${sufixo}`) || 'Professora';
+            const turmaProf = localStorage.getItem(`turma_professora${sufixo}`) || 'Turma';
+            const alunos = obterAlunosTurma();
+            const dadosArmazenados = obterDadosArmazenados();
+            
+            const dadosFormatadosParaPlanilha = alunos.map((aluno, index) => {
+                const pagamentosAluno = dadosArmazenados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
+                
+                const pagouAVista = pagamentosAluno.some(i => i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
+                const pagou1 = pagamentosAluno.some(i => i.tipoPagamento.includes('1ª Parcela'));
+                const pagou2 = pagamentosAluno.some(i => i.tipoPagamento.includes('2ª Parcela'));
+
+                const obsGeral = pagamentosAluno.map(i => `${i.tipoPagamento} (${i.observacao})`).join(' | ');
+
+                return {
+                    "ESCOLA": "Escola Municipal 31 de Março",
+                    "TURMA": turmaProf,
+                    "Nº": index + 1,
+                    "NOME DO FORMANDO": aluno,
+                    "À VISTA": pagouAVista ? "PAGO" : "",
+                    "1ª PARCELA": pagou1 ? "PAGO" : "",
+                    "2ª PARCELA": pagou2 ? "PAGO" : "",
+                    "FORMA DE PAGAMENTO": pagamentosAluno.map(i => i.tipoPagamento).join(', '),
+                    "OBSERVAÇÕES / DETALHES": obsGeral || "Pendente"
+                };
+            });
+
+            dadosFormatadosParaPlanilha.push({});
+            dadosFormatadosParaPlanilha.push({ "ESCOLA": `Professora responsável: ${nomeProfessora}` });
+            dadosFormatadosParaPlanilha.push({ "ESCOLA": "Conferência da direção:" });
+
+            const worksheet = XLSX.utils.json_to_sheet(dadosFormatadosParaPlanilha);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Relatorio Oficial");
+            XLSX.writeFile(workbook, `Relatorio_Oficial_Formatura_${turmaProf.replace(/[^a-zA-Z0-9]/g, '_')}.xlsx`);
+        }
+
+        function fazerBackup() {
+            const dadosArmazenados = obterDadosArmazenados();
+            const sufixo = obterChaveUsuario();
+            const turma = localStorage.getItem(`turma_professora${sufixo}`) || 'turma';
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dadosArmazenados));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `backup_${turma.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+    </script>
+</body>
+</html>
