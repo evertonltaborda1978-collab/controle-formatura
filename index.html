@@ -1065,7 +1065,7 @@
             }
         }
 
-        function exportarWord() {
+       function exportarWord() {
             const sufixo = obterChaveUsuario();
             const nomeProfessora = localStorage.getItem(`nome_professora${sufixo}`) || 'Professora';
             const turmaProf = localStorage.getItem(`turma_professora${sufixo}`) || '5º C';
@@ -1083,15 +1083,15 @@
                 if(pagou1) totalRecebidoCalculado += 87.50;
                 if(pagou2) totalRecebidoCalculado += 87.50;
 
-                const formaObs = pagamentosAluno.map(i => `${i.tipoPagamento} (${i.observacao})`).join(' | ') || "-";
+                const formaObs = pagamentosAluno.map(i => `${i.tipoPagamento}`).join(' | ') || "-";
 
                 linhasHtml += `
                     <tr>
-                        <td style="border: 1px solid #000; text-align: center; padding: 5px;">${index + 1}</td>
-                        <td style="border: 1px solid #000; padding: 5px;">${aluno}</td>
-                        <td style="border: 1px solid #000; text-align: center; padding: 5px;">${pagou1 ? "PAGO" : ""}</td>
-                        <td style="border: 1px solid #000; text-align: center; padding: 5px;">${pagou2 ? "PAGO" : ""}</td>
-                        <td style="border: 1px solid #000; padding: 5px; font-size: 11px;">${formaObs}</td>
+                        <td style="border: 1.5px solid #000; text-align: center; padding: 3px 5px; font-size: 10pt;">${index + 1}</td>
+                        <td style="border: 1.5px solid #000; padding: 3px 6px; font-size: 10pt;">${aluno}</td>
+                        <td style="border: 1.5px solid #000; text-align: center; padding: 3px 5px; font-size: 10pt; font-weight: bold;">${pagou1 ? "PAGO" : ""}</td>
+                        <td style="border: 1.5px solid #000; text-align: center; padding: 3px 5px; font-size: 10pt; font-weight: bold;">${pagou2 ? "PAGO" : ""}</td>
+                        <td style="border: 1.5px solid #000; padding: 3px 6px; font-size: 9pt;">${formaObs}</td>
                     </tr>
                 `;
             });
@@ -1104,41 +1104,54 @@
                     <meta charset="utf-8">
                     <title>Controle de Pagamentos</title>
                     <style>
-                        body { font-family: Arial, sans-serif; font-size: 12pt; color: #000; line-height: 1.3; }
-                        h3, h4 { text-align: center; margin: 5px 0; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 15px; }
-                        th { background-color: #f2f2f2; border: 1px solid #000; padding: 6px; text-align: center; font-size: 11pt; }
-                        p { margin: 6px 0; }
+                        @page Section1 {
+                            size: 841.7pt 595.3pt; /* Formato Paisagem (Landscape) A4 */
+                            mso-page-orientation: landscape;
+                            margin: 1.5cm 1.5cm 1.5cm 1.5cm;
+                        }
+                        div.Section1 { page: Section1; }
+                        body { font-family: Arial, sans-serif; font-size: 10pt; color: #000; line-height: 1.15; }
+                        h3, h4 { text-align: center; margin: 3px 0; font-size: 11pt; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 10px; }
+                        th { background-color: #f2f2f2; border: 1.5px solid #000; padding: 5px; text-align: center; font-size: 9.5pt; font-weight: bold; }
+                        td { padding: 3px 5px; vertical-align: middle; }
+                        p { margin: 3px 0; }
                     </style>
                 </head>
                 <body>
-                    <h3>ESCOLA MUNICIPAL 31 DE MARÇO – E.I.E.F.</h3>
-                    <h4>CONTROLE DE PAGAMENTOS – FORMATURA 5º ANO / 2026</h4>
-                    <p align="center"><b>TURMA: ${turmaProf}   |   FORMANDOS: ${alunos.length}   |   VALOR POR ESTUDANTE: R$ 175,00</b></p>
-                    <p align="center">1ª parcela: R$ 87,50 (07/11/2026)   •   2ª parcela: R$ 87,50 (06/12/2026)</p>
-                    <p style="font-size: 10pt; margin-bottom: 15px;"><b>OBSERVAÇÃO:</b> A professora receberá os comprovantes pelo WhatsApp e, após conferir o valor e confirmar o pagamento, dará baixa na parcela correspondente ao nome do estudante.</p>
-                    
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 8%;">Nº</th>
-                                <th style="width: 37%;">NOME DO FORMANDO</th>
-                                <th style="width: 15%;">1ª PARCELA<br>R$ 87,50</th>
-                                <th style="width: 15%;">2ª PARCELA<br>R$ 87,50</th>
-                                <th style="width: 25%;">FORMA DE PAGAMENTO / OBS</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${linhasHtml}
-                        </tbody>
-                    </table>
+                    <div class="Section1">
+                        <h3>ESCOLA MUNICIPAL 31 DE MARÇO – E.I.E.F.</h3>
+                        <h4>CONTROLE DE PAGAMENTOS – FORMATURA 5º ANO / 2026</h4>
+                        <p align="center" style="font-size: 9.5pt;"><b>TURMA: ${turmaProf}   |   FORMANDOS: ${alunos.length}   |   VALOR POR ESTUDANTE: R$ 175,00</b></p>
+                        <p align="center" style="font-size: 9pt;">1ª parcela: R$ 87,50 (07/11/2026)   •   2ª parcela: R$ 87,50 (06/12/2026)</p>
+                        <p style="font-size: 8.5pt; margin-bottom: 10px;"><b>OBSERVAÇÃO:</b> A professora receberá os comprovantes pelo WhatsApp e, após conferir o valor e confirmar o pagamento, dará baixa na parcela correspondente ao nome do estudante.</p>
+                        
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%;">Nº</th>
+                                    <th style="width: 40%;">NOME DO FORMANDO</th>
+                                    <th style="width: 12%;">1ª PARCELA<br>R$ 87,50</th>
+                                    <th style="width: 12%;">2ª PARCELA<br>R$ 87,50</th>
+                                    <th style="width: 31%;">FORMA DE PAGAMENTO / OBS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${linhasHtml}
+                            </tbody>
+                        </table>
 
-                    <p><b>Total previsto – ${turmaProf}:</b> R$ ${totalPrevistoGeral.toFixed(2).replace('.', ',')}</p>
-                    <p><b>Total recebido:</b> R$ ${totalRecebidoCalculado.toFixed(2).replace('.', ',')}</p>
-                    
-                    <br><br>
-                    <p>Conferência da professora: ${nomeProfessora}</p>
-                    <p>Conferência da direção: ________________________________________</p>
+                        <p style="font-size: 10pt;"><b>Total previsto – ${turmaProf}:</b> R$ ${totalPrevistoGeral.toFixed(2).replace('.', ',')}</p>
+                        <p style="font-size: 10pt;"><b>Total recebido:</b> R$ ${totalRecebidoCalculado.toFixed(2).replace('.', ',')}</p>
+                        
+                        <br>
+                        <table style="width: 100%; border: none; margin-top: 15px;">
+                            <tr>
+                                <td style="border: none; width: 50%;">Conferência da professora: ${nomeProfessora}</td>
+                                <td style="border: none; width: 50%;">Conferência da direção: ___________________________</td>
+                            </tr>
+                        </table>
+                    </div>
                 </body>
                 </html>
             `;
