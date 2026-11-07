@@ -17,19 +17,27 @@
 <body class="bg-slate-100 text-slate-800 font-sans pb-12">
 
     <!-- TELA DE LOGIN / CADASTRO POR CPF -->
-    <div id="telaLogin" class="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl text-center">
+    <div id="telaLogin" class="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl text-center my-auto">
             <div class="space-y-1">
                 <span class="text-3xl">🎓</span>
                 <h1 class="font-bold text-sm text-slate-900">Secretária Virtual - Formatura</h1>
                 <p id="subtituloLogin" class="text-xs text-slate-500">Acesse com seu CPF para gerenciar sua turma</p>
             </div>
 
+            <!-- SELETOR RÁPIDO DE PROFESSORAS CADASTRADAS -->
+            <div id="containerSeletorProfessoras" class="space-y-1 text-left bg-slate-50 p-2.5 rounded-xl border">
+                <label class="block text-[11px] font-medium text-slate-600">Selecionar Professora / Turma Cadastrada:</label>
+                <select id="selectProfessoraRapido" onchange="selecionarProfessoraRapida(this.value)" class="w-full border rounded-lg p-2 text-xs outline-none bg-white">
+                    <option value="">-- Escolher da lista --</option>
+                </select>
+            </div>
+
             <div id="divBotaoBiometria" class="hidden">
                 <button type="button" onclick="entrarComBiometria()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium p-3 rounded-xl transition text-xs shadow flex items-center justify-center gap-2">
                     <span>🧬</span> Entrar com Biometria
                 </button>
-                <div class="relative flex py-2 items-center">
+                <div class="relative flex py-1 items-center">
                     <div class="flex-grow border-t border-slate-200"></div>
                     <span class="flex-shrink mx-4 text-[10px] text-slate-400">ou use o CPF</span>
                     <div class="flex-grow border-t border-slate-200"></div>
@@ -381,6 +389,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             verificarSessao();
+            carregarListaProfessorasNoLogin();
             verificarSeTemBiometriaSalva();
             atualizarSelectOpcoes();
             atualizarListaAlunosDinamica();
@@ -406,6 +415,39 @@
             }
         }
 
+        function carregarListaProfessorasNoLogin() {
+            const select = document.getElementById('selectProfessoraRapido');
+            let opcoesHtml = '<option value="">-- Escolher professora cadastrada --</option>';
+            let encontrou = false;
+
+            // Percorre o localStorage para encontrar contas de usuários salvas
+            for (let i = 0; i < localStorage.length; i++) {
+                const chave = localStorage.key(i);
+                if (chave.startsWith('_user_')) {
+                    const cpf = chave.replace('_user_', '');
+                    const nomeProf = localStorage.getItem(`nome_professora${chave}`) || 'Professora';
+                    const turmaProf = localStorage.getItem(`turma_professora${chave}`) || 'Turma';
+                    opcoesHtml += `<option value="${cpf}">${nomeProf} (${turmaProf})</option>`;
+                    encontrou = true;
+                }
+            }
+
+            if (encontrou) {
+                select.innerHTML = opcoesHtml;
+                document.getElementById('containerSeletorProfessoras').classList.remove('hidden');
+            } else {
+                document.getElementById('containerSeletorProfessoras').classList.add('hidden');
+            }
+        }
+
+        function selecionarProfessoraRapida(cpf) {
+            if (!cpf) return;
+            document.getElementById('loginCpf').value = cpf;
+            const sufixo = `_user_${cpf}`;
+            const senhaSalva = localStorage.getItem(`cadastro_senha${sufixo}`) || '';
+            document.getElementById('loginSenha').value = senhaSalva;
+        }
+
         function verificarSessao() {
             const usuarioLogado = localStorage.getItem('usuario_logado_cpf');
             if (usuarioLogado) {
@@ -415,6 +457,7 @@
             } else {
                 document.getElementById('telaLogin').classList.remove('hidden');
                 document.getElementById('appPrincipal').classList.add('hidden');
+                carregarListaProfessorasNoLogin();
             }
         }
 
@@ -533,6 +576,7 @@
             const btn = document.getElementById('btnAcaoLogin');
             const grupoCampos = document.getElementById('grupoCamposCadastro');
             const grupoConfirma = document.getElementById('grupoConfirmaSenha');
+            const seletorRapido = document.getElementById('containerSeletorProfessoras');
             
             const inputNome = document.getElementById('cadastroNome');
             const inputTurma = document.getElementById('cadastroTurma');
@@ -542,6 +586,7 @@
                 titulo.innerText = "Cadastre seu CPF, Nome e Turma";
                 link.innerText = "Já tem conta? Entrar";
                 btn.innerText = "Cadastrar e Entrar";
+                seletorRapido.classList.add('hidden');
                 
                 grupoCampos.classList.remove('hidden');
                 grupoConfirma.classList.remove('hidden');
@@ -552,6 +597,7 @@
                 titulo.innerText = "Acesse com seu CPF para gerenciar sua turma";
                 link.innerText = "Ainda não tem conta? Cadastrar";
                 btn.innerText = "Entrar";
+                seletorRapido.classList.remove('hidden');
                 
                 grupoCampos.classList.add('hidden');
                 grupoConfirma.classList.add('hidden');
