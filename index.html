@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controle de Formatura - Escola 31 de Março</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Biblioteca correta do QR Code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         @media print {
             body { background: white; color: black; }
@@ -23,6 +25,13 @@
                 <span class="text-3xl">🎓</span>
                 <h1 class="font-bold text-sm text-slate-900">Secretária Virtual - Formatura</h1>
                 <p id="subtituloLogin" class="text-xs text-slate-500">Acesse com seu CPF para gerenciar sua turma</p>
+            </div>
+
+            <!-- QR CODE DO APLICATIVO NA TELA DE LOGIN -->
+            <div class="bg-slate-50 p-3 rounded-xl border space-y-1">
+                <p class="text-[11px] font-medium text-slate-600">Aceder ao App via Telemóvel:</p>
+                <div id="qrcodeLogin" class="flex justify-center py-1"></div>
+                <p class="text-[10px] text-slate-400">Aponte a câmara para ler o QR Code</p>
             </div>
 
             <!-- SELETOR RÁPIDO DE PROFESSORAS CADASTRADAS -->
@@ -389,6 +398,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             verificarSessao();
+            gerarQRCodeLogin();
             carregarListaProfessorasNoLogin();
             verificarSeTemBiometriaSalva();
             atualizarSelectOpcoes();
@@ -401,6 +411,20 @@
         window.addEventListener('beforeunload', () => {
             fazerBackupAutomaticoSilencioso();
         });
+
+        function gerarQRCodeLogin() {
+            const container = document.getElementById('qrcodeLogin');
+            if (container && container.innerHTML.trim() === '') {
+                new QRCode(container, {
+                    text: "https://evertonltaborda1978-collab.github.io/controle-formatura/",
+                    width: 120,
+                    height: 120,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
+        }
 
         function obterChaveUsuario() {
             const cpfLogado = localStorage.getItem('usuario_logado_cpf') || 'padrao';
@@ -420,7 +444,6 @@
             let opcoesHtml = '<option value="">-- Escolher professora cadastrada --</option>';
             let encontrou = false;
 
-            // Percorre o localStorage para encontrar contas de usuários salvas
             for (let i = 0; i < localStorage.length; i++) {
                 const chave = localStorage.key(i);
                 if (chave.startsWith('_user_')) {
@@ -457,6 +480,7 @@
             } else {
                 document.getElementById('telaLogin').classList.remove('hidden');
                 document.getElementById('appPrincipal').classList.add('hidden');
+                gerarQRCodeLogin();
                 carregarListaProfessorasNoLogin();
             }
         }
