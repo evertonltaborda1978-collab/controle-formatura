@@ -653,8 +653,8 @@
             const titulo = document.getElementById('subtituloLogin');
             const link = document.getElementById('linkModoCadastro');
             const btn = document.getElementById('btnAcaoLogin');
-            const grupoCampos = document.getElementById('grupoCamposCadastro');
-            const grupoConfirma = document.getElementById('grupoConfirmaSenha');
+            const grupoCamposCadastro = document.getElementById('grupoCamposCadastro');
+            const grupoConfirmaSenha = document.getElementById('grupoConfirmaSenha');
             const seletorRapido = document.getElementById('containerSeletorProfessoras');
             
             const inputNome = document.getElementById('cadastroNome');
@@ -667,8 +667,8 @@
                 btn.innerText = "Cadastrar e Entrar";
                 seletorRapido.classList.add('hidden');
                 
-                grupoCampos.classList.remove('hidden');
-                grupoConfirma.classList.remove('hidden');
+                grupoCamposCadastro.classList.remove('hidden');
+                grupoConfirmaSenha.classList.remove('hidden');
                 inputNome.setAttribute('required', 'true');
                 inputTurma.setAttribute('required', 'true');
                 inputConfirma.setAttribute('required', 'true');
@@ -679,8 +679,8 @@
                 btn.innerText = "Entrar";
                 seletorRapido.classList.remove('hidden');
                 
-                grupoCampos.classList.add('hidden');
-                grupoConfirma.classList.add('hidden');
+                grupoCamposCadastro.classList.add('hidden');
+                grupoConfirmaSenha.classList.add('hidden');
                 inputNome.removeAttribute('required');
                 inputTurma.removeAttribute('required');
                 inputConfirma.removeAttribute('required');
@@ -721,6 +721,7 @@
                     return;
                 }
 
+                // Inicia com lista vazia para garantir que injete a lista padrão na primeira vez
                 const listaAlunosNovaConta = [];
 
                 localStorage.setItem(`nome_professora${sufixo}`, nomeProf);
@@ -735,6 +736,8 @@
                 fazerBackupAutomaticoSilencioso();
                 mostrarAviso('Sucesso', 'Cadastro realizado com sucesso!', '🎉');
                 verificarSessao();
+                atualizarListaAlunosDinamica();
+                atualizarPlanilhaGeral();
             } else {
                 if (!senhaSalva) {
                     mostrarAviso('Atenção', 'Este CPF não está cadastrado. Clique em "Ainda não tem conta? Cadastrar".', '⚠️');
@@ -828,21 +831,49 @@
             setTimeout(() => location.reload(), 1500);
         }
 
-        // ----------- SINCRONIZAÇÃO DE ALUNOS CORRIGIDA -----------
+        // ----------- SINCRONIZAÇÃO DE ALUNOS CORRIGIDA COM LISTA PADRÃO DA ÂNGELA -----------
         function obterAlunosTurma() {
             const sufixo = obterChaveUsuario();
             let lista = JSON.parse(localStorage.getItem(`alunos_turma${sufixo}`)) || [];
             
-            // Se estiver vazio, pega da lista padrão geral para nunca ficar em branco
+            // Lista fixa extraída do documento oficial
+            const listaFixaDeAlunos = [
+                "David Desplanches de Miranda",
+                "Isadora Martins Bueno",
+                "Yuri Matheus dos Santos Lessi",
+                "José Henrique Montevechio Cristo",
+                "Gustavo Henrique Ferreira Faria",
+                "Heloisy Vitória dos Santos Freitas",
+                "Sabrina de Oliveira Mendes",
+                "Arthur Carneiro Ferraz",
+                "Letícia Vitória de Oliveira Betim",
+                "João Lucas Cardoso dos Santos",
+                "Lorrany Marcelle Rocha de Camargo",
+                "Luiza Lemes Faustino",
+                "Lucas Ronaldo Jacumasso Ribas",
+                "Matheus da Silva Santos",
+                "Steffiny Eduarda Pedroso dos Santos",
+                "Luiza Vitória de Proença Miranda",
+                "Ingridy Silva Lernes",
+                "Maria Júlia Borges de Melo",
+                "Davi de Goes Carneiro",
+                "Emanuelle Vitória de Oliveira",
+                "Gustavo Henrique Marcondes Galvão"
+            ];
+            
+            // Se a lista no dispositivo estiver vazia, injeta a lista fixa da Ângela
             if (lista.length === 0) {
-                lista = JSON.parse(localStorage.getItem('alunos_turma')) || [];
+                lista = listaFixaDeAlunos;
+                // Salva a lista fixa na memória do aparelho
+                localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(lista));
+                localStorage.setItem('alunos_turma', JSON.stringify(lista));
             }
+            
             return lista;
         }
 
         function salvarAlunosTurma(lista) {
             const sufixo = obterChaveUsuario();
-            // Salva na chave da usuária atual e também na chave geral para sincronizar
             localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(lista));
             localStorage.setItem('alunos_turma', JSON.stringify(lista));
             atualizarListaAlunosDinamica();
