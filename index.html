@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controle de Formatura - Escola 31 de Março</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Biblioteca correta do QR Code -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         @media print {
@@ -637,8 +636,7 @@
             const senha = document.getElementById('loginSenha').value.trim();
             const sufixo = `_user_${cpf}`;
 
-            const cpfDaEsposa = "00000000000";
-
+            // Lista base garantida para sempre que não houver alunos
             const alunosIniciaisTurmaEsposa = [
                 "David Desplanches de Miranda", "Isadora Martins Bueno",
                 "Yuri Matheus dos Santos Lessi", "José Henrique Montevechio Cristo",
@@ -652,6 +650,10 @@
                 "Davi de Goes Carneiro", "Emanuelle Vitória de Oliveira",
                 "Gustavo Henrique Marcondes Galvão"
             ];
+
+            // Tenta recuperar qualquer lista antiga sem CPF salvo anteriormente
+            const alunosAntigos = JSON.parse(localStorage.getItem('alunos_turma')) || JSON.parse(localStorage.getItem('alunos_turma_padrao')) || [];
+            const listaPadrao = alunosAntigos.length > 0 ? alunosAntigos : alunosIniciaisTurmaEsposa;
 
             if (modoCadastro) {
                 const senhaConfirma = document.getElementById('loginSenhaConfirma').value.trim();
@@ -668,11 +670,8 @@
                 localStorage.setItem(`cadastro_senha${sufixo}`, senha);
                 localStorage.setItem('usuario_logado_cpf', cpf);
 
-                if (cpf === cpfDaEsposa) {
-                    localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(alunosIniciaisTurmaEsposa));
-                } else {
-                    localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify([]));
-                }
+                // Cadastra sempre com a lista base
+                localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(listaPadrao));
 
                 await cadastrarBiometriaSePossivel(cpf);
                 fazerBackupAutomaticoSilencioso();
@@ -686,8 +685,9 @@
                     
                     let alunosAtuais = JSON.parse(localStorage.getItem(`alunos_turma${sufixo}`)) || [];
                     
-                    if (alunosAtuais.length === 0 && cpf === cpfDaEsposa) {
-                        localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(alunosIniciaisTurmaEsposa));
+                    // Se a lista estiver vazia ao fazer login, injeta a lista base para não perder
+                    if (alunosAtuais.length === 0) {
+                        localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(listaPadrao));
                     }
 
                     await cadastrarBiometriaSePossivel(cpf);
@@ -871,7 +871,16 @@
 
         function obterDadosArmazenados() {
             const sufixo = obterChaveUsuario();
-            return JSON.parse(localStorage.getItem(`caixa_formatura${sufixo}`)) || [];
+            // Também tenta resgatar lançamentos antigos que estavam sem CPF
+            const lançamentosNovos = JSON.parse(localStorage.getItem(`caixa_formatura${sufixo}`)) || [];
+            if (lançamentosNovos.length === 0) {
+                const lançamentosAntigos = JSON.parse(localStorage.getItem('caixa_formatura')) || [];
+                if (lançamentosAntigos.length > 0) {
+                    localStorage.setItem(`caixa_formatura${sufixo}`, JSON.stringify(lançamentosAntigos));
+                    return lançamentosAntigos;
+                }
+            }
+            return lançamentosNovos;
         }
 
         let funcaoCallbackConfirmacao = null;
