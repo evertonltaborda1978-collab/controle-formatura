@@ -477,7 +477,6 @@
                 document.getElementById('containerSeletorProfessoras').classList.add('hidden');
             }
 
-            // Carregar CPF memorizado anteriormente, se houver
             const cpfSalvoMemoria = localStorage.getItem('cpf_memorizado_login');
             if (cpfSalvoMemoria && !modoCadastro) {
                 document.getElementById('loginCpf').value = cpfSalvoMemoria;
@@ -674,23 +673,6 @@
 
             const senhaSalva = localStorage.getItem(`cadastro_senha${sufixo}`);
 
-            const alunosIniciaisTurmaEsposa = [
-                "David Desplanches de Miranda", "Isadora Martins Bueno",
-                "Yuri Matheus dos Santos Lessi", "José Henrique Montevechio Cristo",
-                "Gustavo Henrique Ferreira Faria", "Heloisy Vitória dos Santos Freitas",
-                "Sabrina de Oliveira Mendes", "Arthur Carneiro Ferraz",
-                "Letícia Vitória de Oliveira Betim", "João Lucas Cardoso dos Santos",
-                "Lorrany Marcelle Rocha de Camargo", "Luiza Lemes Faustino",
-                "Lucas Ronaldo Jacumasso Ribas", "Matheus da Silva Santos",
-                "Steffiny Eduarda Pedroso dos Santos", "Luiza Vitória de Proença Miranda",
-                "Ingridy Silva Lemes", "Maria Júlia Borges de Melo",
-                "Davi de Goes Carneiro", "Emanuelle Vitória de Oliveira",
-                "Gustavo Henrique Marcondes Galvão"
-            ];
-
-            const alunosAntigos = JSON.parse(localStorage.getItem('alunos_turma')) || JSON.parse(localStorage.getItem('alunos_turma_padrao')) || [];
-            const listaPadrao = alunosAntigos.length > 0 ? alunosAntigos : alunosIniciaisTurmaEsposa;
-
             if (modoCadastro) {
                 if (senhaSalva) {
                     mostrarAviso('Erro', 'Este CPF já possui uma conta cadastrada. Faça login.', '❌');
@@ -711,13 +693,17 @@
                     return;
                 }
 
+                // Se for o CPF da Ângela, garante que a lista oficial seja preservada se já existir, senão inicia vazia ou padrão
+                const alunosExistentes = JSON.parse(localStorage.getItem(`alunos_turma${sufixo}`)) || [];
+                const listaFinalAlunos = alunosExistentes.length > 0 ? alunosExistentes : [];
+
                 localStorage.setItem(`nome_professora${sufixo}`, nomeProf);
                 localStorage.setItem(`turma_professora${sufixo}`, turmaProf);
                 localStorage.setItem(`cadastro_senha${sufixo}`, senha);
                 localStorage.setItem('usuario_logado_cpf', cpf);
                 localStorage.setItem('cpf_memorizado_login', cpf);
 
-                localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(listaPadrao));
+                localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(listaFinalAlunos));
 
                 await cadastrarBiometriaSePossivel(cpf);
                 fazerBackupAutomaticoSilencioso();
@@ -732,12 +718,6 @@
                 if (senha === senhaSalva) {
                     localStorage.setItem('usuario_logado_cpf', cpf);
                     localStorage.setItem('cpf_memorizado_login', cpf);
-                    
-                    let alunosAtuais = JSON.parse(localStorage.getItem(`alunos_turma${sufixo}`)) || [];
-                    
-                    if (alunosAtuais.length === 0) {
-                        localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(listaPadrao));
-                    }
 
                     await cadastrarBiometriaSePossivel(cpf);
                     fazerBackupAutomaticoSilencioso();
