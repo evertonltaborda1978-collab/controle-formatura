@@ -175,9 +175,12 @@
                         <label class="block text-xs font-medium text-slate-600 mb-1">Status / Observação (Editável)</label>
                         <textarea id="observacao" rows="2" class="w-full border rounded-lg p-2 text-sm outline-none bg-amber-50/50"></textarea>
                     </div>
-
+                    
                     <button type="button" onclick="prepararSalvamento()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition text-sm shadow">
                         Salvar Lançamento
+                    </button>
+                    <button type="button" id="btnCancelarEdicao" onclick="resetarFormularioAposEdicao()" class="hidden w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium p-3 rounded-xl transition text-sm shadow">
+                        Cancelar Edição
                     </button>
                 </form>
 
@@ -374,6 +377,7 @@
 
     <script>
         let modoCadastro = false;
+        let registroEmEdicaoId = null;
 
         window.addEventListener('DOMContentLoaded', () => {
             verificarSessao();
@@ -812,6 +816,40 @@
             return `${tipoFormatado}_${nomeCurto}.pdf`;
         }
 
+        function editarRegistro(id) {
+            const dadosArmazenados = obterDadosArmazenados();
+            const item = dadosArmazenados.find(i => i.id === id);
+            if (!item) return;
+
+            document.getElementById('nomeAluno').value = item.aluno;
+            document.getElementById('tipoPagamento').value = item.tipoPagamento;
+            document.getElementById('observacao').value = item.observacao;
+            
+            registroEmEdicaoId = id;
+
+            const btnSalvar = document.querySelector('#formPagamento button[onclick="prepararSalvamento()"]');
+            btnSalvar.innerText = "Atualizar Lançamento";
+            btnSalvar.classList.replace('bg-indigo-600', 'bg-amber-500');
+            btnSalvar.classList.replace('hover:bg-indigo-700', 'hover:bg-amber-600');
+            
+            document.getElementById('btnCancelarEdicao').classList.remove('hidden');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetarFormularioAposEdicao() {
+            registroEmEdicaoId = null;
+            document.getElementById('formPagamento').reset();
+            atualizarTextoPadrao();
+            
+            const btnSalvar = document.querySelector('#formPagamento button[onclick="prepararSalvamento()"]');
+            btnSalvar.innerText = "Salvar Lançamento";
+            btnSalvar.classList.replace('bg-amber-500', 'bg-indigo-600');
+            btnSalvar.classList.replace('hover:bg-amber-600', 'hover:bg-indigo-700');
+            
+            document.getElementById('btnCancelarEdicao').classList.add('hidden');
+        }
+
         function prepararSalvamento() {
             const nome = document.getElementById('nomeAluno').value;
             if(!nome) {
@@ -833,7 +871,12 @@
                 };
                 leitor.readAsDataURL(arquivo);
             } else {
-                salvarLancamentoFinal(nome, tipo, obs, 'Sem anexo (Dinheiro)', null);
+                if (registroEmEdicaoId !== null) {
+                    const itemAntigo = obterDadosArmazenados().find(i => i.id === registroEmEdicaoId);
+                    salvarLancamentoFinal(nome, tipo, obs, itemAntigo.arquivo, itemAntigo.arquivoData);
+                } else {
+                    salvarLancamentoFinal(nome, tipo, obs, 'Sem anexo (Dinheiro)', null);
+                }
             }
         }
 
@@ -843,36 +886,49 @@
                 <p><strong>Forma:</strong> ${tipo}</p>
                 <p><strong>Arquivo:</strong> ${nomeArquivoGerado}</p>
                 <p><strong>Status:</strong> ${obs}</p>
-                <p class="text-indigo-600 font-bold pt-1">Deseja confirmar e salvar?</p>
+                <p class="text-indigo-600 font-bold pt-1">${registroEmEdicaoId ? 'Deseja confirmar a edição?' : 'Deseja confirmar e salvar?'}</p>
             `;
 
-            document.getElementById('tituloModalConfirmacao').innerText = "Confirmação de Lançamento";
+            document.getElementById('tituloModalConfirmacao').innerText = registroEmEdicaoId ? "Confirmar Edição" : "Confirmação de Lançamento";
             document.getElementById('conteudoResumoModal').innerHTML = htmlResumo;
             document.getElementById('modalConfirmacao').classList.remove('hidden');
 
             funcaoCallbackConfirmacao = (confirmado) => {
                 if(confirmado) {
                     let dadosArmazenados = obterDadosArmazenados();
-                    const novoRegistro = {
-                        id: Date.now(),
-                        aluno: nome,
-                        tipoPagamento: tipo,
-                        observacao: obs,
-                        arquivo: nomeArquivoGerado,
-                        arquivoData: dadosArquivoBase64,
-                        dataRegistro: new Date().toLocaleString('pt-BR')
-                    };
 
-                    dadosArmazenados.push(novoRegistro);
+                    if (registroEmEdicaoId !== null) {
+                        const index = dadosArmazenados.findIndex(i => i.id === registroEmEdicaoId);
+                        if (index !== -1) {
+                            dadosArmazenados[index].aluno = nome;
+                            dadosArmazenados[index].tipoPagamento = tipo;
+                            dadosArmazenados[index].observacao = obs;
+                            dadosArmazenados[index].arquivo = nomeArquivoGerado;
+                            dadosArmazenados[index].arquivoData = dadosArquivoBase64;
+                        }
+                    } else {
+                        const novoRegistro = {
+                            id: Date.now(),
+                            aluno: nome,
+                            tipoPagamento: tipo,
+                            observacao: obs,
+                            arquivo: nomeArquivoGerado,
+                            arquivoData: dadosArquivoBase64,
+                            dataRegistro: new Date().toLocaleString('pt-BR')
+                        };
+                        dadosArmazenados.push(novoRegistro);
+                    }
+
                     const sufixo = obterChaveUsuario();
                     localStorage.setItem(`caixa_formatura${sufixo}`, JSON.stringify(dadosArmazenados));
                     fazerBackupAutomaticoSilencioso();
                     
                     atualizarLista();
                     atualizarPlanilhaGeral();
-                    document.getElementById('formPagamento').reset();
-                    atualizarTextoPadrao();
-                    mostrarAviso('Sucesso', 'Lançamento salvo com sucesso!', '✅');
+                    
+                    resetarFormularioAposEdicao();
+                    
+                    mostrarAviso('Sucesso', 'Registro salvo com sucesso!', '✅');
                 }
             };
         }
@@ -1015,7 +1071,10 @@
                             <p class="text-indigo-600 font-medium">${item.tipoPagamento} — <span class="text-emerald-600 font-bold">Pago</span></p>
                             <p class="text-slate-500 text-[10px]">${item.observacao}</p>
                         </div>
-                        <button onclick="excluirRegistro(${item.id})" class="text-red-500 hover:text-red-700 p-1 font-bold text-xs" title="Excluir">✕</button>
+                        <div class="flex gap-3">
+                            <button onclick="editarRegistro(${item.id})" class="text-indigo-500 hover:text-indigo-700 p-1 font-bold text-xs" title="Editar">✏️</button>
+                            <button onclick="excluirRegistro(${item.id})" class="text-red-500 hover:text-red-700 p-1 font-bold text-xs" title="Excluir">✕</button>
+                        </div>
                     </div>
                     <div class="flex items-center justify-between pt-1 border-t text-[11px]">
                         <button onclick="visualizarArquivo(${item.id})" class="text-indigo-600 hover:underline font-semibold flex items-center gap-1">
