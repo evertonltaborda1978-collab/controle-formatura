@@ -941,8 +941,14 @@
             document.getElementById('btnCancelarEdicao').classList.add('hidden');
         }
 
+        function extrairValorOpcao(tipoPagamentoStr) {
+            if (tipoPagamentoStr.includes('175')) return 175.00;
+            if (tipoPagamentoStr.includes('87,50')) return 87.50;
+            return 0.00;
+        }
+
         function prepararSalvamento() {
-            const nome = document.getElementById('nomeAluno').value;
+            const nome = document.getElementById('nomeAluno').value.trim();
             if(!nome) {
                 mostrarAviso('Atenção', 'Informe o nome do aluno.', '⚠️');
                 return;
@@ -952,6 +958,24 @@
             const obs = document.getElementById('observacao').value;
             const arquivoInput = document.getElementById('arquivoComprovante');
             
+            // Validação do limite de R$ 175,00 por aluno
+            const valorNovoLancamento = extrairValorOpcao(tipo);
+            const dadosArmazenados = obterDadosArmazenados();
+
+            const totalJaPagoAluno = dadosArmazenados
+                .filter(item => item.aluno.toLowerCase() === nome.toLowerCase() && item.id !== registroEmEdicaoId)
+                .reduce((soma, item) => soma + extrairValorOpcao(item.tipoPagamento), 0);
+
+            if ((totalJaPagoAluno + valorNovoLancamento) > 175.00) {
+                const disponivel = 175.00 - totalJaPagoAluno;
+                mostrarAviso(
+                    'Limite Ultrapassado', 
+                    `Este aluno já possui R$ ${totalJaPagoAluno.toFixed(2).replace('.', ',')} lançados. O valor restante para atingir o teto de R$ 175,00 é de R$ ${disponivel.toFixed(2).replace('.', ',')}. Não é permitido ultrapassar o valor total da formatura.`, 
+                    '❌'
+                );
+                return;
+            }
+
             if (arquivoInput.files.length > 0) {
                 const arquivo = arquivoInput.files[0];
                 const leitor = new FileReader();
@@ -963,7 +987,7 @@
                 leitor.readAsDataURL(arquivo);
             } else {
                 if (registroEmEdicaoId !== null) {
-                    const itemAntigo = obterDadosArmazenados().find(i => i.id === registroEmEdicaoId);
+                    const itemAntigo = dadosArmazenados.find(i => i.id === registroEmEdicaoId);
                     salvarLancamentoFinal(nome, tipo, obs, itemAntigo.arquivo, itemAntigo.arquivoData);
                 } else {
                     salvarLancamentoFinal(nome, tipo, obs, 'Sem anexo (Dinheiro)', null);
