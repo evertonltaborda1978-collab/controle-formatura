@@ -76,7 +76,7 @@
 
                 <div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">CPF de Acesso</label>
-                    <input type="text" id="loginCpf" placeholder="000.000.000-00" required autocomplete="off"
+                    <input type="text" id="loginCpf" oninput="preencherSenhaAoDigitarCpf(this.value)" placeholder="000.000.000-00" required autocomplete="off"
                         class="w-full border rounded-lg p-2.5 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
 
@@ -476,12 +476,25 @@
             } else {
                 document.getElementById('containerSeletorProfessoras').classList.add('hidden');
             }
+
+            // Carregar CPF memorizado anteriormente, se houver
+            const cpfSalvoMemoria = localStorage.getItem('cpf_memorizado_login');
+            if (cpfSalvoMemoria && !modoCadastro) {
+                document.getElementById('loginCpf').value = cpfSalvoMemoria;
+                preencherSenhaAoDigitarCpf(cpfSalvoMemoria);
+            }
         }
 
         function selecionarProfessoraRapida(cpf) {
             if (!cpf) return;
             document.getElementById('loginCpf').value = cpf;
-            const sufixo = `_user_${cpf}`;
+            preencherSenhaAoDigitarCpf(cpf);
+        }
+
+        function preencherSenhaAoDigitarCpf(cpf) {
+            const cpfLimpo = cpf.trim();
+            if (!cpfLimpo) return;
+            const sufixo = `_user_${cpfLimpo}`;
             const senhaSalva = localStorage.getItem(`cadastro_senha${sufixo}`) || '';
             document.getElementById('loginSenha').value = senhaSalva;
         }
@@ -632,6 +645,7 @@
                 inputNome.setAttribute('required', 'true');
                 inputTurma.setAttribute('required', 'true');
                 inputConfirma.setAttribute('required', 'true');
+                document.getElementById('loginSenha').value = '';
             } else {
                 titulo.innerText = "Acesse com seu CPF para gerenciar sua turma";
                 link.innerText = "Ainda não tem conta? Cadastrar";
@@ -643,6 +657,12 @@
                 inputNome.removeAttribute('required');
                 inputTurma.removeAttribute('required');
                 inputConfirma.removeAttribute('required');
+
+                const cpfSalvoMemoria = localStorage.getItem('cpf_memorizado_login');
+                if (cpfSalvoMemoria) {
+                    document.getElementById('loginCpf').value = cpfSalvoMemoria;
+                    preencherSenhaAoDigitarCpf(cpfSalvoMemoria);
+                }
             }
         }
 
@@ -651,6 +671,8 @@
             const cpf = document.getElementById('loginCpf').value.trim();
             const senha = document.getElementById('loginSenha').value.trim();
             const sufixo = `_user_${cpf}`;
+
+            const senhaSalva = localStorage.getItem(`cadastro_senha${sufixo}`);
 
             const alunosIniciaisTurmaEsposa = [
                 "David Desplanches de Miranda", "Isadora Martins Bueno",
@@ -670,6 +692,11 @@
             const listaPadrao = alunosAntigos.length > 0 ? alunosAntigos : alunosIniciaisTurmaEsposa;
 
             if (modoCadastro) {
+                if (senhaSalva) {
+                    mostrarAviso('Erro', 'Este CPF já possui uma conta cadastrada. Faça login.', '❌');
+                    return;
+                }
+
                 const senhaConfirma = document.getElementById('loginSenhaConfirma').value.trim();
                 if (senha !== senhaConfirma) {
                     mostrarAviso('Erro', 'As senhas não coincidem. Verifique por favor.', '❌');
@@ -679,10 +706,16 @@
                 const nomeProf = document.getElementById('cadastroNome').value.trim();
                 const turmaProf = document.getElementById('cadastroTurma').value.trim();
 
+                if (!nomeProf || !turmaProf) {
+                    mostrarAviso('Atenção', 'Preencha o nome e a turma para o cadastro.', '⚠️');
+                    return;
+                }
+
                 localStorage.setItem(`nome_professora${sufixo}`, nomeProf);
                 localStorage.setItem(`turma_professora${sufixo}`, turmaProf);
                 localStorage.setItem(`cadastro_senha${sufixo}`, senha);
                 localStorage.setItem('usuario_logado_cpf', cpf);
+                localStorage.setItem('cpf_memorizado_login', cpf);
 
                 localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(listaPadrao));
 
@@ -691,10 +724,14 @@
                 mostrarAviso('Sucesso', 'Cadastro realizado com sucesso!', '🎉');
                 verificarSessao();
             } else {
-                const senhaSalva = localStorage.getItem(`cadastro_senha${sufixo}`);
+                if (!senhaSalva) {
+                    mostrarAviso('Atenção', 'Este CPF não está cadastrado. Clique em "Ainda não tem conta? Cadastrar".', '⚠️');
+                    return;
+                }
 
-                if (!senhaSalva || senha === senhaSalva) {
+                if (senha === senhaSalva) {
                     localStorage.setItem('usuario_logado_cpf', cpf);
+                    localStorage.setItem('cpf_memorizado_login', cpf);
                     
                     let alunosAtuais = JSON.parse(localStorage.getItem(`alunos_turma${sufixo}`)) || [];
                     
@@ -709,7 +746,7 @@
                     atualizarPlanilhaGeral();
                     atualizarLista();
                 } else {
-                    mostrarAviso('Erro', 'CPF ou senha incorretos.', '❌');
+                    mostrarAviso('Erro', 'Senha incorreta. Verifique os dados.', '❌');
                 }
             }
         }
@@ -730,6 +767,7 @@
             localStorage.removeItem('usuario_logado_cpf');
             verificarSessao();
             verificarSeTemBiometriaSalva();
+            carregarListaProfessorasNoLogin();
         }
 
         function abrirModalExcluirConta() {
@@ -777,6 +815,7 @@
                 localStorage.removeItem(`caixa_formatura${sufixo}`);
                 localStorage.removeItem(`alunos_turma${sufixo}`);
                 localStorage.removeItem('usuario_logado_cpf');
+                localStorage.removeItem('cpf_memorizado_login');
             }
             fecharModalExcluirConta();
             mostrarAviso('Excluído', 'Conta removida com sucesso.', '🗑️');
