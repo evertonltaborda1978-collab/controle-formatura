@@ -693,9 +693,7 @@
                     return;
                 }
 
-                // Se for o CPF da Ângela, garante que a lista oficial seja preservada se já existir, senão inicia vazia ou padrão
-                const alunosExistentes = JSON.parse(localStorage.getItem(`alunos_turma${sufixo}`)) || [];
-                const listaFinalAlunos = alunosExistentes.length > 0 ? alunosExistentes : [];
+                const listaAlunosNovaConta = [];
 
                 localStorage.setItem(`nome_professora${sufixo}`, nomeProf);
                 localStorage.setItem(`turma_professora${sufixo}`, turmaProf);
@@ -703,7 +701,7 @@
                 localStorage.setItem('usuario_logado_cpf', cpf);
                 localStorage.setItem('cpf_memorizado_login', cpf);
 
-                localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(listaFinalAlunos));
+                localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(listaAlunosNovaConta));
 
                 await cadastrarBiometriaSePossivel(cpf);
                 fazerBackupAutomaticoSilencioso();
@@ -804,7 +802,17 @@
 
         function obterAlunosTurma() {
             const sufixo = obterChaveUsuario();
-            return JSON.parse(localStorage.getItem(`alunos_turma${sufixo}`)) || [];
+            let lista = JSON.parse(localStorage.getItem(`alunos_turma${sufixo}`)) || [];
+            
+            // Resgata automaticamente a lista geral antiga caso a conta específica esteja vazia
+            if (lista.length === 0) {
+                const listaAntigaGeral = JSON.parse(localStorage.getItem('alunos_turma')) || JSON.parse(localStorage.getItem('alunos_turma_padrao')) || [];
+                if (listaAntigaGeral.length > 0) {
+                    lista = listaAntigaGeral;
+                    localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(lista));
+                }
+            }
+            return lista;
         }
 
         function salvarAlunosTurma(lista) {
@@ -977,7 +985,6 @@
             const obs = document.getElementById('observacao').value;
             const arquivoInput = document.getElementById('arquivoComprovante');
             
-            // Validação do limite de R$ 175,00 por aluno
             const valorNovoLancamento = extrairValorOpcao(tipo);
             const dadosArmazenados = obterDadosArmazenados();
 
