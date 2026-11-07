@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controle de Formatura - Escola 31 de Março</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Biblioteca correta do QR Code -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         @media print {
@@ -82,7 +83,7 @@
                 <div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">Senha</label>
                     <div class="relative">
-                        <input type="password" id="loginSenha" placeholder="••••••••" required autocomplete="new-password"
+                        <input type="password" id="loginSenha" placeholder="••••••••" required autocomplete="off" readonly onfocus="this.removeAttribute('readonly');"
                             class="w-full border rounded-lg p-2.5 pr-8 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
                         <button type="button" onclick="alternarVisibilidadeSenha('loginSenha', 'iconeOlho1')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs" title="Mostrar/Ocultar">
                             <span id="iconeOlho1">👁️</span>
@@ -93,7 +94,7 @@
                 <div id="grupoConfirmaSenha" class="hidden">
                     <label class="block text-xs font-medium text-slate-600 mb-1">Confirmar Senha</label>
                     <div class="relative">
-                        <input type="password" id="loginSenhaConfirma" placeholder="••••••••" autocomplete="new-password"
+                        <input type="password" id="loginSenhaConfirma" placeholder="••••••••" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');"
                             class="w-full border rounded-lg p-2.5 pr-8 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
                         <button type="button" onclick="alternarVisibilidadeSenha('loginSenhaConfirma', 'iconeOlho2')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs" title="Mostrar/Ocultar">
                             <span id="iconeOlho2">👁️</span>
@@ -184,7 +185,7 @@
                             <label class="text-xs font-medium text-slate-600">Opção de Pagamento</label>
                             <button type="button" onclick="abrirModalGerenciarOpcoes()" class="text-[10px] text-indigo-600 font-bold hover:underline">⚙️ Gerenciar Opções</button>
                         </div>
-                        <s<select id="tipoPagamento" class="w-full border border-emerald-300 rounded-lg p-2.5 text-sm outline-none bg-emerald-50/70 text-emerald-900 font-medium"></select>
+                        <select id="tipoPagamento" class="w-full border border-emerald-300 rounded-lg p-2.5 text-sm outline-none bg-emerald-50/70 text-emerald-900 font-medium"></select>
                     </div>
 
                     <div>
@@ -331,15 +332,20 @@
     </div>
 
     <div id="modalExcluirConta" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto text-center">
-            <div class="text-3xl">⚠️</div>
-            <h3 class="font-bold text-sm text-slate-800">Gerenciamento de Conta</h3>
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto text-center relative">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2"><span class="text-lg">⚠️</span> Gerenciamento de Conta</h3>
+                <button onclick="fecharModalExcluirConta()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
+            </div>
+            
             <div class="space-y-2 text-left">
                 <label class="block text-xs font-medium text-slate-600">Digite o CPF da conta que deseja gerenciar:</label>
-                <input type="text" id="inputCpfGerenciarConta" placeholder="000.000.000-00" class="w-full border rounded-lg p-2 text-xs outline-none">
-                <button onclick="buscarContaParaGerenciar()" class="w-full bg-indigo-600 text-white py-2 rounded-lg text-xs font-medium">Localizar Conta</button>
+                <input type="text" id="inputCpfGerenciarConta" placeholder="000.000.000-00" class="w-full border rounded-lg p-2 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                <button onclick="buscarContaParaGerenciar()" class="w-full bg-indigo-600 hover:bg-indigo-700 transition text-white py-2 rounded-lg text-xs font-medium">Localizar Conta</button>
             </div>
+            
             <div id="detalhesContaExcluir" class="text-xs bg-slate-50 p-3 rounded-lg text-left space-y-1"></div>
+            
             <div id="containerBotoesExclusao" class="hidden grid grid-cols-2 gap-2 pt-2">
                 <button onclick="fecharModalExcluirConta()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2.5 rounded-xl transition text-xs">Cancelar</button>
                 <button onclick="confirmarExclusaoConta()" class="bg-rose-600 hover:bg-rose-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">Sim, Excluir</button>
@@ -347,11 +353,15 @@
         </div>
     </div>
 
+    <!-- MODAL CONFIRMAÇÃO COM BOTÃO DE FECHAR -->
     <div id="modalConfirmacao" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
-            <div class="flex items-center space-x-2 text-indigo-600 border-b pb-2">
-                <span class="text-lg">⚠️</span>
-                <h3 id="tituloModalConfirmacao" class="font-bold text-sm">Confirmação</h3>
+            <div class="flex justify-between items-center text-indigo-600 border-b pb-2">
+                <div class="flex items-center space-x-2">
+                    <span class="text-lg">⚠️</span>
+                    <h3 id="tituloModalConfirmacao" class="font-bold text-sm text-slate-800">Confirmação</h3>
+                </div>
+                <button onclick="fecharModalConfirmacao(false)" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
             </div>
             <div id="conteudoResumoModal" class="text-xs space-y-1 text-slate-600 bg-slate-50 p-3 rounded-lg"></div>
             <div class="grid grid-cols-2 gap-2 pt-2">
@@ -382,11 +392,13 @@
         </div>
     </div>
 
+    <!-- MODAL AVISO COM BOTÃO DE FECHAR -->
     <div id="modalAviso" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl text-center my-auto">
-            <div id="avisoIcone" class="text-3xl">✨</div>
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl text-center my-auto relative">
+            <button onclick="fecharModalAviso()" class="absolute top-3 right-4 text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
+            <div id="avisoIcone" class="text-3xl pt-2">✨</div>
             <h3 id="avisoTitulo" class="font-bold text-sm text-slate-800">Aviso</h3>
-            <p id="avisoTexto" class="text-xs text-slate-600"></p>
+            <p id="avisoTexto" class="text-xs text-slate-600 pb-2"></p>
             <button onclick="fecharModalAviso()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">OK</button>
         </div>
     </div>
