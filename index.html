@@ -10,7 +10,7 @@
     <style>
         @media print {
             body { background: white; color: black; }
-            header, button, #secaoFormulario { display: none !important; }
+            header, button, #secaoFormulario, #controlesFonte { display: none !important; }
             #secaoPlanilha { display: block !important; }
             .shadow-sm, .shadow-2xl { box-shadow: none !important; }
         }
@@ -282,6 +282,12 @@
         </main>
     </div>
 
+    <!-- CONTROLES DE TAMANHO DA LETRA -->
+    <div id="controlesFonte" class="hidden fixed bottom-4 left-4 z-50 flex bg-white border border-slate-200 shadow-lg rounded-full overflow-hidden print:hidden">
+        <button onclick="alterarTamanhoFonte(-10)" class="px-3 py-2 text-slate-700 hover:bg-slate-100 font-bold text-sm border-r border-slate-200" title="Diminuir Letra">A-</button>
+        <button onclick="alterarTamanhoFonte(10)" class="px-3 py-2 text-slate-700 hover:bg-slate-100 font-bold text-sm" title="Aumentar Letra">A+</button>
+    </div>
+
     <!-- MODAIS DO SISTEMA -->
     <div id="modalPerfil" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
@@ -410,8 +416,10 @@
     <script>
         let modoCadastro = false;
         let registroEmEdicaoId = null;
+        let tamanhoFonteAtual = 100;
 
         window.addEventListener('DOMContentLoaded', () => {
+            carregarTamanhoFonte();
             verificarSessao();
             gerarQRCodeLogin();
             carregarListaProfessorasNoLogin();
@@ -426,6 +434,24 @@
         window.addEventListener('beforeunload', () => {
             fazerBackupAutomaticoSilencioso();
         });
+
+        // ---------------- CONTROLES DE FONTE ----------------
+        function alterarTamanhoFonte(variacao) {
+            tamanhoFonteAtual += variacao;
+            if (tamanhoFonteAtual < 80) tamanhoFonteAtual = 80;
+            if (tamanhoFonteAtual > 150) tamanhoFonteAtual = 150;
+            document.documentElement.style.fontSize = tamanhoFonteAtual + '%';
+            localStorage.setItem('tamanho_fonte_app', tamanhoFonteAtual);
+        }
+
+        function carregarTamanhoFonte() {
+            const fonteSalva = localStorage.getItem('tamanho_fonte_app');
+            if (fonteSalva) {
+                tamanhoFonteAtual = parseInt(fonteSalva);
+                document.documentElement.style.fontSize = tamanhoFonteAtual + '%';
+            }
+        }
+        // ----------------------------------------------------
 
         function gerarQRCodeLogin() {
             const container = document.getElementById('qrcodeLogin');
@@ -503,10 +529,12 @@
             if (usuarioLogado) {
                 document.getElementById('telaLogin').classList.add('hidden');
                 document.getElementById('appPrincipal').classList.remove('hidden');
+                document.getElementById('controlesFonte').classList.remove('hidden');
                 atualizarDadosTopoPerfil();
             } else {
                 document.getElementById('telaLogin').classList.remove('hidden');
                 document.getElementById('appPrincipal').classList.add('hidden');
+                document.getElementById('controlesFonte').classList.add('hidden');
                 gerarQRCodeLogin();
                 carregarListaProfessorasNoLogin();
             }
@@ -800,27 +828,27 @@
             setTimeout(() => location.reload(), 1500);
         }
 
+        // ----------- SINCRONIZAÇÃO DE ALUNOS CORRIGIDA -----------
         function obterAlunosTurma() {
             const sufixo = obterChaveUsuario();
             let lista = JSON.parse(localStorage.getItem(`alunos_turma${sufixo}`)) || [];
             
-            // Resgata automaticamente a lista geral antiga caso a conta específica esteja vazia
+            // Se estiver vazio, pega da lista padrão geral para nunca ficar em branco
             if (lista.length === 0) {
-                const listaAntigaGeral = JSON.parse(localStorage.getItem('alunos_turma')) || JSON.parse(localStorage.getItem('alunos_turma_padrao')) || [];
-                if (listaAntigaGeral.length > 0) {
-                    lista = listaAntigaGeral;
-                    localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(lista));
-                }
+                lista = JSON.parse(localStorage.getItem('alunos_turma')) || [];
             }
             return lista;
         }
 
         function salvarAlunosTurma(lista) {
             const sufixo = obterChaveUsuario();
+            // Salva na chave da usuária atual e também na chave geral para sincronizar
             localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(lista));
+            localStorage.setItem('alunos_turma', JSON.stringify(lista));
             atualizarListaAlunosDinamica();
             atualizarPlanilhaGeral();
         }
+        // ---------------------------------------------------------
 
         function abrirModalGerenciarAlunos() {
             renderizarListaAlunosGerenciar();
