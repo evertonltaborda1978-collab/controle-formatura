@@ -648,7 +648,6 @@
             const senha = document.getElementById('loginSenha').value.trim();
             const sufixo = `_user_${cpf}`;
 
-            // Lista base garantida para sempre que não houver alunos
             const alunosIniciaisTurmaEsposa = [
                 "David Desplanches de Miranda", "Isadora Martins Bueno",
                 "Yuri Matheus dos Santos Lessi", "José Henrique Montevechio Cristo",
@@ -663,7 +662,6 @@
                 "Gustavo Henrique Marcondes Galvão"
             ];
 
-            // Tenta recuperar qualquer lista antiga sem CPF salvo anteriormente
             const alunosAntigos = JSON.parse(localStorage.getItem('alunos_turma')) || JSON.parse(localStorage.getItem('alunos_turma_padrao')) || [];
             const listaPadrao = alunosAntigos.length > 0 ? alunosAntigos : alunosIniciaisTurmaEsposa;
 
@@ -682,7 +680,6 @@
                 localStorage.setItem(`cadastro_senha${sufixo}`, senha);
                 localStorage.setItem('usuario_logado_cpf', cpf);
 
-                // Cadastra sempre com a lista base
                 localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(listaPadrao));
 
                 await cadastrarBiometriaSePossivel(cpf);
@@ -697,7 +694,6 @@
                     
                     let alunosAtuais = JSON.parse(localStorage.getItem(`alunos_turma${sufixo}`)) || [];
                     
-                    // Se a lista estiver vazia ao fazer login, injeta a lista base para não perder
                     if (alunosAtuais.length === 0) {
                         localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(listaPadrao));
                     }
@@ -876,14 +872,14 @@
 
         function atualizarTextoPadrao() {
             const nome = document.getElementById('nomeAluno').value || '[Nome Aluno]';
-            let tipo = document.getElementById('tipoPagamento').value;
+            const selectTipo = document.getElementById('tipoPagamento');
+            let tipo = selectTipo && selectTipo.value ? selectTipo.value : (opcoesPagamento[0] || 'Pagamento');
             const dataHoje = new Date().toLocaleDateString('pt-BR');
             document.getElementById('observacao').value = `Pago ${tipo} em ${dataHoje} - Aluno: ${nome}`;
         }
 
         function obterDadosArmazenados() {
             const sufixo = obterChaveUsuario();
-            // Também tenta resgatar lançamentos antigos que estavam sem CPF
             const lançamentosNovos = JSON.parse(localStorage.getItem(`caixa_formatura${sufixo}`)) || [];
             if (lançamentosNovos.length === 0) {
                 const lançamentosAntigos = JSON.parse(localStorage.getItem('caixa_formatura')) || [];
