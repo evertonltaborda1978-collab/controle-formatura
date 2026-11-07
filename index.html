@@ -229,7 +229,11 @@
                 <div class="bg-white p-5 rounded-2xl shadow-sm space-y-4 border border-slate-200">
                     
                     <div class="text-center border-b pb-4 space-y-2 relative">
-                        <div class="absolute right-0 top-0">
+                        <!-- BOTÃO DE FECHAR (X) E BAIXAR PDF -->
+                        <div class="absolute right-0 top-0 flex gap-1.5">
+                            <button onclick="alternarTela()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold py-1.5 px-2.5 rounded-lg transition shadow flex items-center justify-center" title="Fechar e Voltar">
+                                ✕
+                            </button>
                             <button onclick="gerarPDF()" class="bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-medium py-1.5 px-2.5 rounded-lg transition shadow flex items-center gap-1">
                                 📄 Baixar PDF
                             </button>
