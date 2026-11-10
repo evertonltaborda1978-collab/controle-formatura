@@ -1,460 +1,4 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <!-- Trava o zoom forçado para a tela não cortar no Poco/Android -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>Controle de Formatura - Escola 31 de Março</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <style>
-        /* Impede zoom automático ao tocar nos campos */
-        input, select, textarea { font-size: 16px !important; }
-        
-        @media print {
-            body { background: white; color: black; }
-            header, button, #secaoFormulario, #controlesFonte { display: none !important; }
-            #secaoPlanilha { display: block !important; }
-            .shadow-sm, .shadow-2xl { box-shadow: none !important; }
-        }
-    </style>
-</head>
-<body class="bg-slate-100 text-slate-800 font-sans pb-12">
-
-    <div id="telaLogin" class="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl text-center my-auto">
-            <div class="space-y-1">
-                <span class="text-3xl">🎓</span>
-                <h1 class="font-bold text-sm text-slate-900">Secretária Virtual - Formatura</h1>
-                <p id="subtituloLogin" class="text-xs text-slate-500">Acesse com seu CPF para gerenciar sua turma</p>
-            </div>
-
-            <div class="bg-slate-50 p-3 rounded-xl border space-y-1">
-                <p class="text-[11px] font-medium text-slate-600">Aceder ao App via Telemóvel:</p>
-                <div id="qrcodeLogin" class="flex justify-center py-1"></div>
-                <p class="text-[10px] text-slate-400">Aponte a câmara para ler o QR Code</p>
-            </div>
-
-            <div id="containerSeletorProfessoras" class="space-y-1 text-left bg-slate-50 p-2.5 rounded-xl border">
-                <label class="block text-[11px] font-medium text-slate-600">Selecionar Professora / Turma Cadastrada:</label>
-                <select id="selectProfessoraRapido" onchange="selecionarProfessoraRapida(this.value)" class="w-full border rounded-lg p-2 text-xs outline-none bg-white">
-                    <option value="">-- Escolher da lista --</option>
-                </select>
-            </div>
-
-            <div id="divBotaoBiometria" class="hidden">
-                <button type="button" onclick="entrarComBiometria()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium p-3 rounded-xl transition text-xs shadow flex items-center justify-center gap-2">
-                    <span>🧬</span> Entrar com Biometria
-                </button>
-                <div class="relative flex py-1 items-center">
-                    <div class="flex-grow border-t border-slate-200"></div>
-                    <span class="flex-shrink mx-4 text-[10px] text-slate-400">ou use o CPF</span>
-                    <div class="flex-grow border-t border-slate-200"></div>
-                </div>
-            </div>
-
-            <form id="formLoginApp" onsubmit="realizarLogin(event)" class="space-y-3 text-left" autocomplete="off">
-                <div id="grupoCamposCadastro" class="hidden space-y-3">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Nome Completo da Professora</label>
-                        <input type="text" id="cadastroNome" placeholder="Ex: Ângela Horkaten" autocomplete="off"
-                            class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Turma (Digite ou selecione)</label>
-                        <input type="text" id="cadastroTurma" list="listaTurmasSugestao" placeholder="Ex: 5º Ano C - 2026" autocomplete="off"
-                            class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
-                        <datalist id="listaTurmasSugestao">
-                            <option value="5º Ano A - 2026">
-                            <option value="5º Ano B - 2026">
-                            <option value="5º Ano C - 2026">
-                            <option value="5º Ano D - 2026">
-                            <option value="5º Ano E - 2026">
-                        </datalist>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">CPF de Acesso</label>
-                    <input type="number" pattern="[0-9]*" id="loginCpf" oninput="preencherSenhaAoDigitarCpf(this.value)" placeholder="Somente números" required autocomplete="off"
-                        class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Senha</label>
-                    <div class="relative">
-                        <input type="password" id="loginSenha" placeholder="••••••••" required autocomplete="off" readonly onfocus="this.removeAttribute('readonly');"
-                            class="w-full border rounded-lg p-2.5 pr-8 outline-none focus:ring-2 focus:ring-indigo-500">
-                        <button type="button" onclick="alternarVisibilidadeSenha('loginSenha', 'iconeOlho1')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs" title="Mostrar/Ocultar">
-                            <span id="iconeOlho1">👁️</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div id="grupoConfirmaSenha" class="hidden">
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Confirmar Senha</label>
-                    <div class="relative">
-                        <input type="password" id="loginSenhaConfirma" placeholder="••••••••" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');"
-                            class="w-full border rounded-lg p-2.5 pr-8 outline-none focus:ring-2 focus:ring-indigo-500">
-                        <button type="button" onclick="alternarVisibilidadeSenha('loginSenhaConfirma', 'iconeOlho2')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs" title="Mostrar/Ocultar">
-                            <span id="iconeOlho2">👁️</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="flex justify-between items-center text-[11px] select-none pt-1">
-                    <button type="button" onclick="alternarModoCadastro()" id="linkModoCadastro" class="text-indigo-600 font-medium hover:underline focus:outline-none bg-transparent border-none p-0 cursor-pointer">
-                        Ainda não tem conta? Cadastrar
-                    </button>
-                    <button type="button" onclick="esqueciSenha()" class="text-slate-500 hover:underline focus:outline-none bg-transparent border-none p-0 cursor-pointer">
-                        Esqueceu a senha?
-                    </button>
-                </div>
-
-                <button type="submit" id="btnAcaoLogin" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition text-xs shadow mt-2">
-                    Entrar
-                </button>
-            </form>
-
-            <div id="divLinkExcluirConta" class="pt-2 text-center select-none">
-                <button type="button" onclick="abrirModalExcluirConta()" class="text-[11px] text-rose-600 hover:underline font-medium focus:outline-none bg-transparent border-none p-0 cursor-pointer">
-                    🗑️ Gerenciar ou Excluir Conta
-                </button>
-            </div>
-
-            <div class="pt-2 border-t text-[11px] text-slate-400">
-                Desenvolvido por Everton Taborda
-            </div>
-        </div>
-    </div>
-
-    <!-- APLICATIVO PRINCIPAL -->
-    <div id="appPrincipal" class="hidden">
-        <header class="bg-indigo-700 text-white p-3 shadow-md sticky top-0 z-40">
-            <div class="max-w-md mx-auto flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <div onclick="abrirModalPerfil()" class="bg-indigo-800 hover:bg-indigo-900 px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-1.5 text-[11px] font-medium whitespace-nowrap" title="Editar Perfil e Turma">
-                        <span>👩‍🏫</span>
-                        <span id="labelNomeProfessora" class="font-medium">Professora</span>
-                    </div>
-                    <div>
-                        <h1 class="font-bold text-xs">Escola 31 de Março</h1>
-                        <p id="labelTurmaTopo" class="text-[10px] text-indigo-200">Turma - 2026</p>
-                    </div>
-                </div>
-                <div class="flex gap-1">
-                    <button onclick="enviarRelatorioDiretora()" class="text-[10px] bg-emerald-700 hover:bg-emerald-800 px-2 py-1.5 rounded-lg font-medium transition" title="Enviar Relatório WhatsApp">
-                        Diretora
-                    </button>
-                    <button onclick="alternarTela()" id="btnAlternar" class="text-[10px] bg-indigo-800 hover:bg-indigo-900 px-2 py-1.5 rounded-lg font-medium transition">
-                        📊 Tabela
-                    </button>
-                    <button onclick="sairConta()" class="text-[10px] bg-rose-700 hover:bg-rose-800 px-2 py-1.5 rounded-lg font-medium transition" title="Sair">
-                        🔒 Sair
-                    </button>
-                </div>
-            </div>
-        </header>
-
-        <main class="max-w-md mx-auto p-4 space-y-4 min-h-screen">
-            
-            <div id="secaoFormulario" class="space-y-4">
-                <form id="formPagamento" class="bg-white p-4 rounded-xl shadow-sm space-y-3">
-                    <div class="flex justify-between items-center border-b pb-2">
-                        <h2 class="font-semibold text-slate-700 text-sm">Novo Registro de Comprovante</h2>
-                        <button type="button" onclick="abrirModalGerenciarAlunos()" class="text-[10px] text-indigo-600 font-bold hover:underline">👥 Gerenciar Alunos</button>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Nome do Aluno (Pendentes)</label>
-                        <select id="nomeAluno" required class="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500 bg-white shadow-sm text-sm">
-                            <option value="">Selecione o aluno...</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Comprovante (Imagem/PDF)</label>
-                        <input type="file" id="arquivoComprovante" accept="image/*,application/pdf"
-                            class="w-full border rounded-lg p-2 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 text-sm">
-                        <p class="text-[10px] text-slate-400 mt-1">Se for dinheiro, deixe em branco.</p>
-                    </div>
-
-                    <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="text-xs font-medium text-slate-600">Opção de Pagamento</label>
-                            <button type="button" onclick="abrirModalGerenciarOpcoes()" class="text-[10px] text-indigo-600 font-bold hover:underline">⚙️ Gerenciar Opções</button>
-                        </div>
-                        <select id="tipoPagamento" class="w-full border border-emerald-300 rounded-lg p-3 outline-none bg-emerald-50/70 text-emerald-900 font-medium shadow-sm text-sm"></select>
-                    </div>
-
-                    <!-- PAINEL DINÂMICO DE LANÇAMENTO PERSONALIZADO -->
-                    <div id="painelCustomizado" class="hidden bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 mt-2">
-                        <p class="font-bold text-xs text-indigo-700">✏️ Lançamento Personalizado / Parcial</p>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-[11px] font-medium text-slate-600">Referência</label>
-                                <select id="refParcelaCustom" class="w-full border rounded-lg p-2 text-xs bg-white outline-none">
-                                    <option value="1a_parcela">1ª Parcela (Meta R$ 87,50)</option>
-                                    <option value="2a_parcela">2ª Parcela (Meta R$ 87,50)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-medium text-slate-600">Forma</label>
-                                <select id="formaCustomizada" class="w-full border rounded-lg p-2 text-xs bg-white outline-none">
-                                    <option value="Pix/Transf">Pix / Transferência</option>
-                                    <option value="Dinheiro">Dinheiro</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-medium text-slate-600">Valor Pago Agora (R$)</label>
-                            <input type="number" id="valorCustomizado" step="0.01" placeholder="Ex: 50.00" class="w-full border rounded-lg p-2 text-xs bg-white outline-none">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Status / Observação (Editável)</label>
-                        <textarea id="observacao" rows="2" class="w-full border rounded-lg p-3 outline-none bg-amber-50/50 shadow-sm text-sm"></textarea>
-                    </div>
-                    
-                    <button type="button" onclick="prepararSalvamento()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition shadow mt-2">
-                        Salvar Lançamento
-                    </button>
-                    <button type="button" id="btnCancelarEdicao" onclick="resetarFormularioAposEdicao()" class="hidden w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium p-3 rounded-xl transition shadow mt-2">
-                        Cancelar Edição
-                    </button>
-                </form>
-
-                <div class="bg-white p-4 rounded-xl shadow-sm space-y-2">
-                    <h3 class="font-semibold text-slate-700 text-xs uppercase tracking-wider">Exportar & Relatórios</h3>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="exportarWord()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
-                            📄 Baixar Word Oficial
-                        </button>
-                        <button onclick="fazerBackup()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
-                            💾 Backup JSON
-                        </button>
-                    </div>
-                </div>
-
-                <div class="bg-white p-4 rounded-xl shadow-sm space-y-3">
-                    <div class="flex justify-between items-center mb-1">
-                        <h3 class="font-semibold text-slate-700 text-sm">Registros Salvos</h3>
-                        <span id="contadorRegistros" class="text-xs text-slate-400">0 itens</span>
-                    </div>
-                    <div id="tabelaLancamentos" class="space-y-2 max-h-72 overflow-y-auto text-xs pr-1">
-                        <p class="text-slate-400 text-center py-4">Nenhum lançamento registrado ainda.</p>
-                    </div>
-
-                    <!-- SEÇÃO DE ALUNOS QUITADOS -->
-                    <div class="border-t pt-3 mt-2">
-                        <button onclick="alternarSecaoQuitados()" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 p-2.5 rounded-xl text-xs font-bold flex justify-between items-center transition">
-                            <span>✅ Alunos com Quitação Completa (R$ 175)</span>
-                            <span id="setaQuitados">▼</span>
-                        </button>
-                        <div id="containerAlunosQuitados" class="hidden mt-2 space-y-2 max-h-48 overflow-y-auto text-xs pr-1"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="secaoPlanilha" class="hidden space-y-4">
-                <div class="bg-white p-5 rounded-2xl shadow-sm space-y-4 border border-slate-200">
-                    <div class="text-center border-b pb-4 space-y-2 relative">
-                        <div class="absolute right-0 top-0 flex gap-1.5">
-                            <button onclick="alternarTela()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold py-1.5 px-2.5 rounded-lg transition shadow flex items-center justify-center" title="Fechar e Voltar">✕</button>
-                            <button onclick="gerarPDF()" class="bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-medium py-1.5 px-2.5 rounded-lg transition shadow flex items-center gap-1">📄 Baixar PDF</button>
-                        </div>
-                        <div class="text-2xl pt-1">🏛️</div>
-                        <h2 class="font-bold text-sm text-slate-900 uppercase">Escola Municipal 31 de Março</h2>
-                        <p id="relatorioTurmaSub" class="text-xs font-semibold text-indigo-600">Controle de Pagamentos - Formatura</p>
-                        <p class="text-[10px] text-slate-400">1ª Parcela: R$ 87,50 (07/11/2026) | 2ª Parcela: R$ 87,50 (06/12/2026)</p>
-                    </div>
-
-                    <div class="overflow-x-auto border rounded-xl">
-                        <table class="w-full text-left text-xs border-collapse">
-                            <thead>
-                                <tr class="bg-slate-800 text-white">
-                                    <th class="p-2 border-r border-slate-700 text-center w-10">Nº</th>
-                                    <th class="p-2 border-r border-slate-700 min-w-[120px]">Nome do Formando</th>
-                                    <th class="p-2 text-center border-r border-slate-700 w-16">1ª Parc</th>
-                                    <th class="p-2 text-center border-r border-slate-700 w-16">2ª Parc</th>
-                                    <th class="p-2 min-w-[100px]">Forma / Obs</th>
-                                </tr>
-                            </thead>
-                            <tbody id="corpoTabelaPlanilha"></tbody>
-                        </table>
-                    </div>
-
-                    <div class="pt-6 space-y-4 text-xs text-slate-700 border-t">
-                        <div class="grid grid-cols-2 gap-2 font-semibold">
-                            <p id="labelTotalPrevisto">Total Previsto: R$ 0,00</p>
-                            <p id="labelTotalRecebido">Total Recebido: R$ 0,00</p>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4 text-center pt-2">
-                            <div class="space-y-1">
-                                <div class="border-b border-slate-400 pb-1"></div>
-                                <p id="assinaturaProfessora" class="font-bold text-[11px]">Professora Responsável</p>
-                            </div>
-                            <div class="space-y-1">
-                                <div class="border-b border-slate-400 pb-1"></div>
-                                <p class="font-bold text-[11px]">Direção / Secretaria</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- CONTROLES DE TAMANHO DA LETRA -->
-    <div id="controlesFonte" class="hidden fixed bottom-4 left-4 z-50 flex bg-white border border-slate-200 shadow-lg rounded-full overflow-hidden print:hidden">
-        <button onclick="alterarTamanhoFonte(-10)" class="px-3 py-2 text-slate-700 hover:bg-slate-100 font-bold text-sm border-r border-slate-200" title="Diminuir Letra">A-</button>
-        <button onclick="alterarTamanhoFonte(10)" class="px-3 py-2 text-slate-700 hover:bg-slate-100 font-bold text-sm" title="Aumentar Letra">A+</button>
-    </div>
-
-    <!-- MODAIS DO SISTEMA -->
-    <div id="modalPerfil" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
-            <div class="flex justify-between items-center border-b pb-2">
-                <h3 class="font-bold text-sm text-slate-800">Editar Perfil e Turma</h3>
-                <button onclick="fecharModalPerfil()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
-            </div>
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Nome Completo da Professora</label>
-                    <input type="text" id="inputModalNomeProf" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Nome da Turma</label>
-                    <input type="text" id="inputModalTurmaProf" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                </div>
-            </div>
-            <button onclick="salvarPerfilModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">Salvar Alterações</button>
-        </div>
-    </div>
-
-    <!-- MODAL GERENCIAR ALUNOS -->
-    <div id="modalAlunos" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
-            <div class="flex justify-between items-center border-b pb-2">
-                <h3 class="font-bold text-sm text-slate-800">Gerenciar Alunos da Turma</h3>
-                <button onclick="fecharModalGerenciarAlunos()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
-            </div>
-
-            <button onclick="abrirModalImportar()" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
-                📋 Colar Lista em Bloco (Word/WhatsApp)
-            </button>
-
-            <div class="space-y-2 border-t pt-2">
-                <label class="block text-xs font-medium text-slate-600">Adicionar Único Aluno</label>
-                <div class="flex gap-2">
-                    <input type="text" id="novoAlunoInput" placeholder="Nome completo" class="w-full border rounded-lg p-2 outline-none text-sm">
-                    <button onclick="adicionarAlunoTurma()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-medium">Adicionar</button>
-                </div>
-            </div>
-            <div class="space-y-1">
-                <label class="block text-xs font-medium text-slate-600">Alunos Cadastrados (A-Z)</label>
-                <div id="listaAlunosGerenciar" class="max-h-48 overflow-y-auto space-y-1 text-xs border p-2 rounded-lg bg-slate-50 pr-1"></div>
-            </div>
-            <button onclick="fecharModalGerenciarAlunos()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2 rounded-xl transition text-xs">Concluir</button>
-        </div>
-    </div>
-
-    <!-- MODAL IMPORTAR EM BLOCO (WORD / WHATSAPP) -->
-    <div id="modalImportarLista" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-3 shadow-2xl my-auto">
-            <div class="flex justify-between items-center border-b pb-2">
-                <h3 class="font-bold text-sm text-slate-800">📋 Importar Vários Alunos</h3>
-                <button onclick="fecharModalImportar()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
-            </div>
-            <p class="text-xs text-slate-500">Cole a lista abaixo (copiada do Word ou WhatsApp). O sistema limpa os números e organiza em ordem alfabética:</p>
-            <textarea id="textoListaAlunos" rows="8" placeholder="Exemplo:&#10;1. Arthur Carneiro&#10;2. Davi de Goes..." class="w-full border rounded-lg p-2.5 outline-none text-xs font-sans bg-slate-50 border-slate-300"></textarea>
-            <div class="flex gap-2 pt-1">
-                <button onclick="fecharModalImportar()" class="w-1/2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2 rounded-xl text-xs">Cancelar</button>
-                <button onclick="processarListaColada()" class="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-xl text-xs shadow">Salvar Alunos</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modalVisualizador" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 shadow-2xl text-center">
-            <div class="flex justify-between items-center border-b pb-2">
-                <h3 id="tituloVisualizador" class="font-bold text-xs text-slate-800">Comprovante</h3>
-                <button onclick="fecharVisualizador()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
-            </div>
-            <div id="conteudoVisualizador" class="max-h-80 overflow-y-auto flex items-center justify-center bg-slate-100 p-2 rounded-lg"></div>
-            <button onclick="fecharVisualizador()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2 rounded-xl transition text-xs">Fechar</button>
-        </div>
-    </div>
-
-    <div id="modalExcluirConta" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto text-center relative">
-            <div class="flex justify-between items-center border-b pb-2">
-                <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2"><span class="text-lg">⚠️</span> Gerenciamento de Conta</h3>
-                <button onclick="fecharModalExcluirConta()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
-            </div>
-            <div class="space-y-2 text-left">
-                <label class="block text-xs font-medium text-slate-600">Digite o CPF da conta que deseja gerenciar:</label>
-                <input type="number" pattern="[0-9]*" id="inputCpfGerenciarConta" placeholder="Somente números" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                <button onclick="buscarContaParaGerenciar()" class="w-full bg-indigo-600 hover:bg-indigo-700 transition text-white py-2 rounded-lg text-xs font-medium mt-2">Localizar Conta</button>
-            </div>
-            <div id="detalhesContaExcluir" class="text-xs bg-slate-50 p-3 rounded-lg text-left space-y-1"></div>
-            <div id="containerBotoesExclusao" class="hidden grid grid-cols-2 gap-2 pt-2">
-                <button onclick="fecharModalExcluirConta()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2.5 rounded-xl transition text-xs">Cancelar</button>
-                <button onclick="confirmarExclusaoConta()" class="bg-rose-600 hover:bg-rose-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">Sim, Excluir</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modalConfirmacao" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
-            <div class="flex justify-between items-center text-indigo-600 border-b pb-2">
-                <div class="flex items-center space-x-2">
-                    <span class="text-lg">⚠️</span>
-                    <h3 id="tituloModalConfirmacao" class="font-bold text-sm text-slate-800">Confirmação</h3>
-                </div>
-                <button onclick="fecharModalConfirmacao(false)" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
-            </div>
-            <div id="conteudoResumoModal" class="text-xs space-y-1 text-slate-600 bg-slate-50 p-3 rounded-lg"></div>
-            <div class="grid grid-cols-2 gap-2 pt-2">
-                <button onclick="fecharModalConfirmacao(false)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2.5 rounded-xl transition text-xs">Cancelar</button>
-                <button onclick="fecharModalConfirmacao(true)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">Confirmar</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modalGerenciar" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
-            <div class="flex justify-between items-center border-b pb-2">
-                <h3 class="font-bold text-sm text-slate-800">Gerenciar Formas de Pagamento</h3>
-                <button onclick="fecharModalGerenciar()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
-            </div>
-            <div class="space-y-2">
-                <label class="block text-xs font-medium text-slate-600">Adicionar Nova Opção</label>
-                <div class="flex gap-2">
-                    <input type="text" id="novaOpcaoInput" placeholder="Ex: Parcela Extra Pix" class="w-full border rounded-lg p-2 outline-none text-sm">
-                    <button onclick="adicionarOpcaoPagamento()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-medium">Adicionar</button>
-                </div>
-            </div>
-            <div class="space-y-1">
-                <label class="block text-xs font-medium text-slate-600">Opções Existentes (Clique para excluir)</label>
-                <div id="listaOpcoesGerenciar" class="max-h-40 overflow-y-auto space-y-1 text-xs border p-2 rounded-lg bg-slate-50 pr-1"></div>
-            </div>
-            <button onclick="fecharModalGerenciar()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2 rounded-xl transition text-xs">Concluir</button>
-        </div>
-    </div>
-
-    <div id="modalAviso" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl text-center my-auto relative">
-            <button onclick="fecharModalAviso()" class="absolute top-3 right-4 text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
-            <div id="avisoIcone" class="text-3xl pt-2">✨</div>
-            <h3 id="avisoTitulo" class="font-bold text-sm text-slate-800">Aviso</h3>
-            <p id="avisoTexto" class="text-xs text-slate-600 pb-2"></p>
-            <button onclick="fecharModalAviso()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">OK</button>
-        </div>
-    </div>
-
-    <script>
+<script>
         let modoCadastro = false;
         let registroEmEdicaoId = null;
         let tamanhoFonteAtual = 100;
@@ -785,7 +329,6 @@
                 localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(lista)); 
                 localStorage.setItem('alunos_turma', JSON.stringify(lista));
             }
-            // Retorna sempre ordenado em ordem alfabética A-Z
             return lista.sort((a, b) => a.localeCompare(b, 'pt-BR'));
         }
 
@@ -821,7 +364,6 @@
 
             linhas.forEach(linha => {
                 let nomeLimpo = linha.trim();
-                // Remove numeração, bolinhas, traços e marcadores do início da linha
                 nomeLimpo = nomeLimpo.replace(/^[•*\-\d\s.\)]+/, '').trim();
                 if (nomeLimpo.length > 0) {
                     const jaExiste = alunos.some(a => a.toLowerCase() === nomeLimpo.toLowerCase());
@@ -862,7 +404,6 @@
             renderizarListaAlunosGerenciar(); mostrarAviso('Removido', 'Aluno retirado da turma.', '🗑️');
         }
 
-        // CÁLCULO DE STATUS INTEGRADO DO ALUNO
         function calcularStatusAluno(alunoNome, todosLancamentos) {
             const META_PARCELA = 87.50;
             const lancamentos = todosLancamentos.filter(item => item.aluno ? item.aluno.toLowerCase() === alunoNome.toLowerCase() : false);
@@ -932,7 +473,6 @@
             return info.grupo === 1;
         }
 
-        // ATUALIZA A LISTA DE ALUNOS PENDENTES NO MENU <SELECT> (A-Z)
         function atualizarListaAlunosDinamica() {
             const alunos = obterAlunosTurma();
             const selectAluno = document.getElementById('nomeAluno');
@@ -954,6 +494,12 @@
             "Dinheiro - À Vista (R$ 175,00)", "Dinheiro - 1ª Parcela (R$ 87,50)", "Dinheiro - 2ª Parcela (R$ 87,50)",
             "✏️ Valor Livre / Parcial (Personalizado)"
         ];
+
+        // FORÇA INSERÇÃO DA OPÇÃO PERSONALIZADA SE NÃO EXISTIR NA MEMÓRIA
+        if (!opcoesPagamento.some(op => op.includes('Personalizado') || op.includes('Valor Livre'))) {
+            opcoesPagamento.push("✏️ Valor Livre / Parcial (Personalizado)");
+            localStorage.setItem('opcoes_pagamento_v1', JSON.stringify(opcoesPagamento));
+        }
 
         function salvarOpcoesStorage() {
             localStorage.setItem('opcoes_pagamento_v1', JSON.stringify(opcoesPagamento));
@@ -1321,6 +867,7 @@
             document.getElementById('labelTotalRecebido').innerText = `Total Recebido: R$ ${totalRecebido.toFixed(2).replace('.', ',')}`;
         }
 
+        // ENVIAR RELATÓRIO DO WHATSAPP COM NUMERAÇÃO CONTÍNUA DE 1 A 21
         function enviarRelatorioDiretora() {
             const alunos = obterAlunosTurma(); 
             const dadosArmazenados = obterDadosArmazenados();
@@ -1333,13 +880,13 @@
                 return { nome, ...info };
             });
 
-            // 4 Grupos ordenados A-Z
+            // Separa em 4 grupos e aplica a ordem alfabética A-Z em cada um
             const quitados = alunosProcessados.filter(a => a.grupo === 1).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
             const p1Quitada = alunosProcessados.filter(a => a.grupo === 2).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
             const pendentes = alunosProcessados.filter(a => a.grupo === 3).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
             const parciais  = alunosProcessados.filter(a => a.grupo === 4).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
-            let contador = 1;
+            let contador = 1; // MANTÉM A NUMERAÇÃO CONTÍNUA DO INÍCIO AO FIM DO RELATÓRIO
             let corpoRelatorio = "";
 
             if (quitados.length > 0) {
@@ -1427,5 +974,3 @@ Relatório gerado digitalmente pela Secretária Virtual`;
             const a = document.createElement('a'); a.href = dataStr; a.download = `backup_${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(a); a.click(); a.remove();
         }
     </script>
-</body>
-</html>
