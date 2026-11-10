@@ -209,21 +209,7 @@
                         </div>
                         <div>
                             <label class="block text-[11px] font-medium text-slate-600 mb-1">Valor Pago Agora (R$)</label>
-                            <input type="text" inputmode="decimal" id="valorCustomizado" placeholder="Ex: 20,30" class="w-full border rounded-lg p-2.5 text-sm font-bold text-slate-800 bg-white outline-none border-indigo-200 focus:ring-2 focus:ring-indigo-500">
-                            
-                            <!-- BOTÕES RÁPIDOS DE ATALHO DE VALORES E CENTAVOS -->
-                            <div class="flex flex-wrap gap-1 mt-2">
-                                <button type="button" onclick="adicionarValorRapido(0.30)" class="bg-amber-100 hover:bg-amber-200 text-amber-900 text-[10px] font-bold px-2 py-1 rounded-md transition">+ R$ 0,30</button>
-                                <button type="button" onclick="adicionarValorRapido(0.50)" class="bg-amber-100 hover:bg-amber-200 text-amber-900 text-[10px] font-bold px-2 py-1 rounded-md transition">+ R$ 0,50</button>
-                                <button type="button" onclick="adicionarValorRapido(1.00)" class="bg-amber-100 hover:bg-amber-200 text-amber-900 text-[10px] font-bold px-2 py-1 rounded-md transition">+ R$ 1,00</button>
-                                <button type="button" onclick="adicionarValorRapido(5.00)" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-800 text-[10px] font-bold px-2 py-1 rounded-md transition">+ R$ 5,00</button>
-                                <button type="button" onclick="adicionarValorRapido(10.00)" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-800 text-[10px] font-bold px-2 py-1 rounded-md transition">+ R$ 10,00</button>
-                                <button type="button" onclick="adicionarValorRapido(20.00)" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-800 text-[10px] font-bold px-2 py-1 rounded-md transition">+ R$ 20,00</button>
-                                <button type="button" onclick="adicionarValorRapido(50.00)" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-800 text-[10px] font-bold px-2 py-1 rounded-md transition">+ R$ 50,00</button>
-                                <button type="button" onclick="definirValorDireto(87.50)" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-[10px] font-bold px-2 py-1 rounded-md transition">R$ 87,50 (Meta)</button>
-                                <button type="button" onclick="definirValorDireto(175.00)" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-2 py-1 rounded-md transition">R$ 175 (Total)</button>
-                                <button type="button" onclick="limparValorCustomizado()" class="bg-rose-100 hover:bg-rose-200 text-rose-700 text-[10px] font-bold px-2 py-1 rounded-md transition">Limpar</button>
-                            </div>
+                            <input type="text" inputmode="decimal" id="valorCustomizado" placeholder="Ex: 35,21" class="w-full border rounded-lg p-2.5 text-sm font-bold text-slate-800 bg-white outline-none border-indigo-200 focus:ring-2 focus:ring-indigo-500">
                         </div>
                     </div>
 
@@ -495,30 +481,13 @@
             fazerBackupAutomaticoSilencioso();
         });
 
-        // CONVERSÃO INTELIGENTE DE CENTAVOS (ACEITA VÍRGULA E PONTO)
+        // CONVERSÃO DIRETA E FLEXÍVEL DE CENTAVOS E VALORES DIGITADOS (EX: 35,21 OU 35.21)
         function obterValorCustomizadoDigitado() {
             const input = document.getElementById('valorCustomizado');
             if (!input || !input.value) return 0;
             let str = input.value.trim().replace(',', '.');
             let val = parseFloat(str);
             return isNaN(val) ? 0 : val;
-        }
-
-        function adicionarValorRapido(adicional) {
-            let atual = obterValorCustomizadoDigitado();
-            let novoTotal = (atual + adicional).toFixed(2);
-            document.getElementById('valorCustomizado').value = novoTotal.replace('.', ',');
-            atualizarTextoPadrao();
-        }
-
-        function definirValorDireto(val) {
-            document.getElementById('valorCustomizado').value = val.toFixed(2).replace('.', ',');
-            atualizarTextoPadrao();
-        }
-
-        function limparValorCustomizado() {
-            document.getElementById('valorCustomizado').value = '';
-            atualizarTextoPadrao();
         }
 
         function alterarTamanhoFonte(variacao) {
