@@ -187,6 +187,31 @@
                         <select id="tipoPagamento" class="w-full border border-emerald-300 rounded-lg p-3 outline-none bg-emerald-50/70 text-emerald-900 font-medium shadow-sm text-sm"></select>
                     </div>
 
+                    <!-- PAINEL DINÂMICO DE LANÇAMENTO PERSONALIZADO -->
+                    <div id="painelCustomizado" class="hidden bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 mt-2">
+                        <p class="font-bold text-xs text-indigo-700">✏️ Lançamento Personalizado / Parcial</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-medium text-slate-600">Referência</label>
+                                <select id="refParcelaCustom" class="w-full border rounded-lg p-2 text-xs bg-white outline-none">
+                                    <option value="1a_parcela">1ª Parcela (Meta R$ 87,50)</option>
+                                    <option value="2a_parcela">2ª Parcela (Meta R$ 87,50)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-medium text-slate-600">Forma</label>
+                                <select id="formaCustomizada" class="w-full border rounded-lg p-2 text-xs bg-white outline-none">
+                                    <option value="Pix/Transf">Pix / Transferência</option>
+                                    <option value="Dinheiro">Dinheiro</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-600">Valor Pago Agora (R$)</label>
+                            <input type="number" id="valorCustomizado" step="0.01" placeholder="Ex: 50.00" class="w-full border rounded-lg p-2 text-xs bg-white outline-none">
+                        </div>
+                    </div>
+
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Status / Observação (Editável)</label>
                         <textarea id="observacao" rows="2" class="w-full border rounded-lg p-3 outline-none bg-amber-50/50 shadow-sm text-sm"></textarea>
@@ -221,15 +246,13 @@
                         <p class="text-slate-400 text-center py-4">Nenhum lançamento registrado ainda.</p>
                     </div>
 
-                    <!-- SEÇÃO DE ALUNOS QUITADOS (recolhível/expansível) -->
+                    <!-- SEÇÃO DE ALUNOS QUITADOS -->
                     <div class="border-t pt-3 mt-2">
                         <button onclick="alternarSecaoQuitados()" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 p-2.5 rounded-xl text-xs font-bold flex justify-between items-center transition">
                             <span>✅ Alunos com Quitação Completa (R$ 175)</span>
                             <span id="setaQuitados">▼</span>
                         </button>
-                        <div id="containerAlunosQuitados" class="hidden mt-2 space-y-2 max-h-48 overflow-y-auto text-xs pr-1">
-                            <!-- Preenchido via JS -->
-                        </div>
+                        <div id="containerAlunosQuitados" class="hidden mt-2 space-y-2 max-h-48 overflow-y-auto text-xs pr-1"></div>
                     </div>
                 </div>
             </div>
@@ -310,24 +333,46 @@
         </div>
     </div>
 
+    <!-- MODAL GERENCIAR ALUNOS -->
     <div id="modalAlunos" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
             <div class="flex justify-between items-center border-b pb-2">
                 <h3 class="font-bold text-sm text-slate-800">Gerenciar Alunos da Turma</h3>
                 <button onclick="fecharModalGerenciarAlunos()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
             </div>
-            <div class="space-y-2">
-                <label class="block text-xs font-medium text-slate-600">Adicionar Novo Aluno</label>
+
+            <button onclick="abrirModalImportar()" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
+                📋 Colar Lista em Bloco (Word/WhatsApp)
+            </button>
+
+            <div class="space-y-2 border-t pt-2">
+                <label class="block text-xs font-medium text-slate-600">Adicionar Único Aluno</label>
                 <div class="flex gap-2">
                     <input type="text" id="novoAlunoInput" placeholder="Nome completo" class="w-full border rounded-lg p-2 outline-none text-sm">
                     <button onclick="adicionarAlunoTurma()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-medium">Adicionar</button>
                 </div>
             </div>
             <div class="space-y-1">
-                <label class="block text-xs font-medium text-slate-600">Alunos Cadastrados (Clique para excluir)</label>
+                <label class="block text-xs font-medium text-slate-600">Alunos Cadastrados (A-Z)</label>
                 <div id="listaAlunosGerenciar" class="max-h-48 overflow-y-auto space-y-1 text-xs border p-2 rounded-lg bg-slate-50 pr-1"></div>
             </div>
             <button onclick="fecharModalGerenciarAlunos()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2 rounded-xl transition text-xs">Concluir</button>
+        </div>
+    </div>
+
+    <!-- MODAL IMPORTAR EM BLOCO (WORD / WHATSAPP) -->
+    <div id="modalImportarLista" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-3 shadow-2xl my-auto">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="font-bold text-sm text-slate-800">📋 Importar Vários Alunos</h3>
+                <button onclick="fecharModalImportar()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
+            </div>
+            <p class="text-xs text-slate-500">Cole a lista abaixo (copiada do Word ou WhatsApp). O sistema limpa os números e organiza em ordem alfabética:</p>
+            <textarea id="textoListaAlunos" rows="8" placeholder="Exemplo:&#10;1. Arthur Carneiro&#10;2. Davi de Goes..." class="w-full border rounded-lg p-2.5 outline-none text-xs font-sans bg-slate-50 border-slate-300"></textarea>
+            <div class="flex gap-2 pt-1">
+                <button onclick="fecharModalImportar()" class="w-1/2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2 rounded-xl text-xs">Cancelar</button>
+                <button onclick="processarListaColada()" class="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-xl text-xs shadow">Salvar Alunos</button>
+            </div>
         </div>
     </div>
 
@@ -727,27 +772,71 @@
             const sufixo = obterChaveUsuario();
             let lista = JSON.parse(localStorage.getItem(`alunos_turma${sufixo}`)) || [];
             const listaFixaDeAlunos = [
-                "David Desplanches de Miranda", "Isadora Martins Bueno", "Yuri Matheus dos Santos Lessi", "José Henrique Montevechio Cristo",
-                "Gustavo Henrique Ferreira Faria", "Heloisy Vitória dos Santos Freitas", "Sabrina de Oliveira Mendes", "Arthur Carneiro Ferraz",
-                "Letícia Vitória de Oliveira Betim", "João Lucas Cardoso dos Santos", "Lorrany Marcelle Rocha de Camargo", "Luiza Lemes Faustino",
-                "Lucas Ronaldo Jacumasso Ribas", "Matheus da Silva Santos", "Steffiny Eduarda Pedroso dos Santos", "Luiza Vitória de Proença Miranda",
-                "Ingridy Silva Lernes", "Maria Júlia Borges de Melo", "Davi de Goes Carneiro", "Emanuelle Vitória de Oliveira", "Gustavo Henrique Marcondes Galvão"
+                "Arthur Carneiro Ferraz", "Davi de Goes Carneiro", "David Desplanches de Miranda",
+                "Emanuelle Vitória de Oliveira", "Gustavo Henrique Ferreira Faria", "Gustavo Henrique Marcondes Galvão",
+                "Heloisy Vitória dos Santos Freitas", "Ingridy Silva Lemes", "Isadora Martins Bueno",
+                "João Lucas Cardoso dos Santos", "José Henrique Montevechio Cristo", "Letícia Vitória de Oliveira Betim",
+                "Lorrany Marcelle Rocha de Camargo", "Lucas Ronaldo Jacumasso Ribas", "Luiza Lemes Faustino",
+                "Luiza Vitória de Proença Miranda", "Maria Júlia Borges de Melo", "Matheus da Silva Santos",
+                "Sabrina de Oliveira Mendes", "Steffiny Eduarda Pedroso dos Santos", "Yuri Matheus dos Santos Lessi"
             ];
             if (lista.length === 0) {
                 lista = listaFixaDeAlunos;
-                localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(lista)); localStorage.setItem('alunos_turma', JSON.stringify(lista));
+                localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(lista)); 
+                localStorage.setItem('alunos_turma', JSON.stringify(lista));
             }
-            return lista;
+            // Retorna sempre ordenado em ordem alfabética A-Z
+            return lista.sort((a, b) => a.localeCompare(b, 'pt-BR'));
         }
 
         function salvarAlunosTurma(lista) {
             const sufixo = obterChaveUsuario();
-            localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(lista)); localStorage.setItem('alunos_turma', JSON.stringify(lista));
-            atualizarListaAlunosDinamica(); atualizarPlanilhaGeral();
+            lista.sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(lista)); 
+            localStorage.setItem('alunos_turma', JSON.stringify(lista));
+            atualizarListaAlunosDinamica(); 
+            atualizarPlanilhaGeral();
         }
 
         function abrirModalGerenciarAlunos() { renderizarListaAlunosGerenciar(); document.getElementById('modalAlunos').classList.remove('hidden'); }
         function fecharModalGerenciarAlunos() { document.getElementById('modalAlunos').classList.add('hidden'); }
+
+        function abrirModalImportar() {
+            document.getElementById('textoListaAlunos').value = '';
+            document.getElementById('modalImportarLista').classList.remove('hidden');
+        }
+        function fecharModalImportar() {
+            document.getElementById('modalImportarLista').classList.add('hidden');
+        }
+
+        function processarListaColada() {
+            const texto = document.getElementById('textoListaAlunos').value;
+            if (!texto || !texto.trim()) {
+                mostrarAviso('Atenção', 'Cole ao menos um nome na caixa de texto.', '⚠️');
+                return;
+            }
+            let alunos = obterAlunosTurma();
+            const linhas = texto.split('\n');
+            let adicionados = 0;
+
+            linhas.forEach(linha => {
+                let nomeLimpo = linha.trim();
+                // Remove numeração, bolinhas, traços e marcadores do início da linha
+                nomeLimpo = nomeLimpo.replace(/^[•*\-\d\s.\)]+/, '').trim();
+                if (nomeLimpo.length > 0) {
+                    const jaExiste = alunos.some(a => a.toLowerCase() === nomeLimpo.toLowerCase());
+                    if (!jaExiste) {
+                        alunos.push(nomeLimpo);
+                        adicionados++;
+                    }
+                }
+            });
+
+            salvarAlunosTurma(alunos);
+            fecharModalImportar();
+            renderizarListaAlunosGerenciar();
+            mostrarAviso('Sucesso', `${adicionados} aluno(s) adicionado(s) em ordem alfabética!`, '✅');
+        }
 
         function renderizarListaAlunosGerenciar() {
             const alunos = obterAlunosTurma();
@@ -763,7 +852,7 @@
             const input = document.getElementById('novoAlunoInput'); const nome = input.value.trim();
             if (!nome) { mostrarAviso('Atenção', 'Digite o nome do aluno.', '⚠️'); return; }
             let alunos = obterAlunosTurma();
-            if (alunos.includes(nome)) { mostrarAviso('Atenção', 'Este aluno já está na lista.', '⚠️'); return; }
+            if (alunos.some(a => a.toLowerCase() === nome.toLowerCase())) { mostrarAviso('Atenção', 'Este aluno já está na lista.', '⚠️'); return; }
             alunos.push(nome); salvarAlunosTurma(alunos); input.value = '';
             renderizarListaAlunosGerenciar(); mostrarAviso('Sucesso', 'Aluno adicionado à turma!', '✅');
         }
@@ -773,22 +862,84 @@
             renderizarListaAlunosGerenciar(); mostrarAviso('Removido', 'Aluno retirado da turma.', '🗑️');
         }
 
-        // VERIFICA SE O ALUNO JÁ QUITOU OS R$ 175,00
-        function alunoEstaQuitado(nomeAluno) {
-            const dadosArmazenados = obterDadosArmazenados();
-            const totalPago = dadosArmazenados
-                .filter(item => item.aluno.toLowerCase() === nomeAluno.toLowerCase())
-                .reduce((soma, item) => soma + extrairValorOpcao(item.tipoPagamento), 0);
-            return totalPago >= 175.00;
+        // CÁLCULO DE STATUS INTEGRADO DO ALUNO
+        function calcularStatusAluno(alunoNome, todosLancamentos) {
+            const META_PARCELA = 87.50;
+            const lancamentos = todosLancamentos.filter(item => item.aluno ? item.aluno.toLowerCase() === alunoNome.toLowerCase() : false);
+            
+            let pagoP1 = 0;
+            let pagoP2 = 0;
+
+            lancamentos.forEach(item => {
+                let val = 0;
+                if (item.valor !== undefined && item.valor !== null && !isNaN(parseFloat(item.valor))) {
+                    val = parseFloat(item.valor);
+                } else {
+                    val = extrairValorOpcao(item.tipoPagamento);
+                }
+
+                const opc = (item.tipoPagamento || '').toLowerCase();
+                const ref = (item.ref || '').toLowerCase();
+
+                if (opc.includes('à vista') || opc.includes('a vista') || opc.includes('175')) {
+                    pagoP1 += META_PARCELA;
+                    pagoP2 += META_PARCELA;
+                } else if (ref === '1a_parcela' || opc.includes('1ª parcela')) {
+                    pagoP1 += val;
+                } else if (ref === '2a_parcela' || opc.includes('2ª parcela')) {
+                    pagoP2 += val;
+                } else {
+                    if (pagoP1 < META_PARCELA) {
+                        pagoP1 += val;
+                    } else {
+                        pagoP2 += val;
+                    }
+                }
+            });
+
+            const totalPago = pagoP1 + pagoP2;
+
+            if (pagoP1 >= META_PARCELA && pagoP2 >= META_PARCELA) {
+                return { grupo: 1, texto: "Quitado", totalPago, pagoP1, pagoP2 };
+            }
+            if (pagoP1 >= META_PARCELA && pagoP2 < META_PARCELA && pagoP2 === 0) {
+                return { grupo: 2, texto: "1ª PAGA | 2ª Pendente", totalPago, pagoP1, pagoP2 };
+            }
+            if (pagoP1 > 0 && pagoP1 < META_PARCELA) {
+                const faltaP1 = (META_PARCELA - pagoP1).toFixed(2).replace('.', ',');
+                const pagoP1Fmt = pagoP1.toFixed(2).replace('.', ',');
+                return { 
+                    grupo: 4, 
+                    texto: `🟡 PARCIAL (Pago R$ ${pagoP1Fmt} | Falta R$ ${faltaP1} da 1ª Parcela)`, 
+                    totalPago, pagoP1, pagoP2 
+                };
+            }
+            if (pagoP1 >= META_PARCELA && pagoP2 > 0 && pagoP2 < META_PARCELA) {
+                const faltaP2 = (META_PARCELA - pagoP2).toFixed(2).replace('.', ',');
+                const pagoP2Fmt = pagoP2.toFixed(2).replace('.', ',');
+                return { 
+                    grupo: 4, 
+                    texto: `🟡 PARCIAL (1ª Paga | 2ª Parcial: Pago R$ ${pagoP2Fmt} | Falta R$ ${faltaP2})`, 
+                    totalPago, pagoP1, pagoP2 
+                };
+            }
+
+            return { grupo: 3, texto: "Pendente", totalPago: 0, pagoP1: 0, pagoP2: 0 };
         }
 
-        // ATUALIZA A LISTA DE ALUNOS PENDENTES NO MENU <SELECT> (Exclui os quitados)
+        function alunoEstaQuitado(nomeAluno) {
+            const info = calcularStatusAluno(nomeAluno, obterDadosArmazenados());
+            return info.grupo === 1;
+        }
+
+        // ATUALIZA A LISTA DE ALUNOS PENDENTES NO MENU <SELECT> (A-Z)
         function atualizarListaAlunosDinamica() {
             const alunos = obterAlunosTurma();
             const selectAluno = document.getElementById('nomeAluno');
             
-            // Filtra apenas alunos que NÃO estão quitados
-            const alunosPendentes = alunos.filter(aluno => !alunoEstaQuitado(aluno));
+            const alunosPendentes = alunos
+                .filter(aluno => !alunoEstaQuitado(aluno))
+                .sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
             if (alunosPendentes.length === 0) {
                 selectAluno.innerHTML = `<option value="">Todos os alunos quitaram a formatura! 🎉</option>`;
@@ -800,7 +951,8 @@
 
         let opcoesPagamento = JSON.parse(localStorage.getItem('opcoes_pagamento_v1')) || [
             "À Vista (Pix/Transf) - R$ 175,00", "1ª Parcela (Pix/Transf) - R$ 87,50", "2ª Parcela (Pix/Transf) - R$ 87,50",
-            "Dinheiro - À Vista (R$ 175,00)", "Dinheiro - 1ª Parcela (R$ 87,50)", "Dinheiro - 2ª Parcela (R$ 87,50)"
+            "Dinheiro - À Vista (R$ 175,00)", "Dinheiro - 1ª Parcela (R$ 87,50)", "Dinheiro - 2ª Parcela (R$ 87,50)",
+            "✏️ Valor Livre / Parcial (Personalizado)"
         ];
 
         function salvarOpcoesStorage() {
@@ -810,18 +962,46 @@
 
         function atualizarSelectOpcoes() {
             const select = document.getElementById('tipoPagamento');
-            if(select) { select.innerHTML = opcoesPagamento.map(op => `<option value="${op}">${op}</option>`).join(''); atualizarTextoPadrao(); }
+            if(select) { 
+                select.innerHTML = opcoesPagamento.map(op => `<option value="${op}">${op}</option>`).join(''); 
+                atualizarTextoPadrao(); 
+            }
         }
 
         document.getElementById('nomeAluno').addEventListener('change', atualizarTextoPadrao);
-        document.getElementById('tipoPagamento').addEventListener('change', atualizarTextoPadrao);
+        document.getElementById('tipoPagamento').addEventListener('change', function() {
+            const painel = document.getElementById('painelCustomizado');
+            if (this.value.includes('Personalizado') || this.value.includes('Valor Livre') || this.value.includes('customizado')) {
+                painel.classList.remove('hidden');
+            } else {
+                painel.classList.add('hidden');
+            }
+            atualizarTextoPadrao();
+        });
+
+        ['valorCustomizado', 'formaCustomizada', 'refParcelaCustom'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', atualizarTextoPadrao);
+                el.addEventListener('change', atualizarTextoPadrao);
+            }
+        });
 
         function atualizarTextoPadrao() {
             const nome = document.getElementById('nomeAluno').value || '[Nome Aluno]';
             const selectTipo = document.getElementById('tipoPagamento');
             let tipo = selectTipo && selectTipo.value ? selectTipo.value : (opcoesPagamento[0] || 'Pagamento');
             const dataHoje = new Date().toLocaleDateString('pt-BR');
-            document.getElementById('observacao').value = `Pago ${tipo} em ${dataHoje} - Aluno: ${nome}`;
+
+            if (tipo.includes('Personalizado') || tipo.includes('Valor Livre') || tipo.includes('customizado')) {
+                const valInput = parseFloat(document.getElementById('valorCustomizado').value) || 0;
+                const forma = document.getElementById('formaCustomizada').value;
+                const refSelect = document.getElementById('refParcelaCustom');
+                const refText = refSelect.options[refSelect.selectedIndex].text;
+                document.getElementById('observacao').value = `Pago Parcial (${forma}) - R$ ${valInput.toFixed(2).replace('.', ',')} em ${dataHoje} - Ref: ${refText}`;
+            } else {
+                document.getElementById('observacao').value = `Pago ${tipo} em ${dataHoje} - Aluno: ${nome}`;
+            }
         }
 
         function obterDadosArmazenados() {
@@ -845,7 +1025,6 @@
         function editarRegistro(id) {
             const dadosArmazenados = obterDadosArmazenados(); const item = dadosArmazenados.find(i => i.id === id); if (!item) return;
             
-            // Garante que o aluno apareça no select mesmo se estiver temporariamente quitado ao editar
             const selectAluno = document.getElementById('nomeAluno');
             if (![...selectAluno.options].some(opt => opt.value === item.aluno)) {
                 selectAluno.innerHTML += `<option value="${item.aluno}">${item.aluno}</option>`;
@@ -854,6 +1033,13 @@
             document.getElementById('nomeAluno').value = item.aluno; 
             document.getElementById('tipoPagamento').value = item.tipoPagamento;
             document.getElementById('observacao').value = item.observacao; 
+            
+            if (item.valorCustom !== undefined) {
+                document.getElementById('valorCustomizado').value = item.valorCustom;
+                document.getElementById('refParcelaCustom').value = item.refParcela || '1a_parcela';
+            }
+
+            document.getElementById('tipoPagamento').dispatchEvent(new Event('change'));
             registroEmEdicaoId = id;
 
             const btnSalvar = document.querySelector('#formPagamento button[onclick="prepararSalvamento()"]');
@@ -867,6 +1053,7 @@
         function resetarFormularioAposEdicao() {
             registroEmEdicaoId = null; 
             document.getElementById('formPagamento').reset(); 
+            document.getElementById('painelCustomizado').classList.add('hidden');
             atualizarListaAlunosDinamica();
             atualizarTextoPadrao();
             
@@ -878,36 +1065,73 @@
         }
 
         function extrairValorOpcao(tipoPagamentoStr) {
-            if (tipoPagamentoStr.includes('175')) return 175.00; 
-            if (tipoPagamentoStr.includes('87,50')) return 87.50; 
+            if (typeof tipoPagamentoStr === 'object' && tipoPagamentoStr !== null) {
+                if (tipoPagamentoStr.valor !== undefined && !isNaN(parseFloat(tipoPagamentoStr.valor))) {
+                    return parseFloat(tipoPagamentoStr.valor);
+                }
+                tipoPagamentoStr = tipoPagamentoStr.tipoPagamento || '';
+            }
+            const str = String(tipoPagamentoStr || '');
+            if (str.includes('175')) return 175.00; 
+            if (str.includes('87,50')) return 87.50; 
+            const match = str.match(/R\$\s*([\d.,]+)/);
+            if (match) {
+                const val = parseFloat(match[1].replace('.', '').replace(',', '.'));
+                if (!isNaN(val)) return val;
+            }
             return 0.00;
         }
 
         function prepararSalvamento() {
             const nome = document.getElementById('nomeAluno').value.trim();
             if(!nome) { mostrarAviso('Atenção', 'Selecione o nome do aluno na lista.', '⚠️'); return; }
-            let tipo = document.getElementById('tipoPagamento').value; const obs = document.getElementById('observacao').value;
-            const arquivoInput = document.getElementById('arquivoComprovante'); const valorNovoLancamento = extrairValorOpcao(tipo);
+            let tipo = document.getElementById('tipoPagamento').value; 
+            const obs = document.getElementById('observacao').value;
+            const arquivoInput = document.getElementById('arquivoComprovante'); 
             const dadosArmazenados = obterDadosArmazenados();
 
-            const totalJaPagoAluno = dadosArmazenados.filter(item => item.aluno.toLowerCase() === nome.toLowerCase() && item.id !== registroEmEdicaoId).reduce((soma, item) => soma + extrairValorOpcao(item.tipoPagamento), 0);
+            let valorNovoLancamento = 0;
+            let refParcela = '';
+
+            if (tipo.includes('Personalizado') || tipo.includes('Valor Livre') || tipo.includes('customizado')) {
+                valorNovoLancamento = parseFloat(document.getElementById('valorCustomizado').value) || 0;
+                refParcela = document.getElementById('refParcelaCustom').value;
+                if (valorNovoLancamento <= 0) {
+                    mostrarAviso('Atenção', 'Digite o valor pago no lançamento personalizado.', '⚠️');
+                    return;
+                }
+            } else {
+                valorNovoLancamento = extrairValorOpcao(tipo);
+            }
+
+            const totalJaPagoAluno = dadosArmazenados
+                .filter(item => item.aluno.toLowerCase() === nome.toLowerCase() && item.id !== registroEmEdicaoId)
+                .reduce((soma, item) => soma + (item.valor !== undefined ? item.valor : extrairValorOpcao(item.tipoPagamento)), 0);
+
             if ((totalJaPagoAluno + valorNovoLancamento) > 175.00) {
-                mostrarAviso('Limite Ultrapassado', `Este aluno já possui R$ ${totalJaPagoAluno.toFixed(2).replace('.', ',')} lançados. Limite máximo é R$ 175,00.`, '❌'); return;
+                mostrarAviso('Limite Ultrapassado', `Este aluno já possui R$ ${totalJaPagoAluno.toFixed(2).replace('.', ',')} lançados. Limite máximo é R$ 175,00.`, '❌'); 
+                return;
             }
 
             if (arquivoInput.files.length > 0) {
                 const arquivo = arquivoInput.files[0]; const leitor = new FileReader();
-                leitor.onload = function(e) { salvarLancamentoFinal(nome, tipo, obs, gerarNomePadronizado(nome, tipo), e.target.result); };
+                leitor.onload = function(e) { 
+                    salvarLancamentoFinal(nome, tipo, obs, gerarNomePadronizado(nome, tipo), e.target.result, valorNovoLancamento, refParcela); 
+                };
                 leitor.readAsDataURL(arquivo);
             } else {
-                if (registroEmEdicaoId !== null) { const itemAntigo = dadosArmazenados.find(i => i.id === registroEmEdicaoId); salvarLancamentoFinal(nome, tipo, obs, itemAntigo.arquivo, itemAntigo.arquivoData); } 
-                else { salvarLancamentoFinal(nome, tipo, obs, 'Sem anexo (Dinheiro)', null); }
+                if (registroEmEdicaoId !== null) { 
+                    const itemAntigo = dadosArmazenados.find(i => i.id === registroEmEdicaoId); 
+                    salvarLancamentoFinal(nome, tipo, obs, itemAntigo.arquivo, itemAntigo.arquivoData, valorNovoLancamento, refParcela); 
+                } else { 
+                    salvarLancamentoFinal(nome, tipo, obs, 'Sem anexo (Dinheiro)', null, valorNovoLancamento, refParcela); 
+                }
             }
         }
 
-        function salvarLancamentoFinal(nome, tipo, obs, nomeArquivoGerado, dadosArquivoBase64) {
+        function salvarLancamentoFinal(nome, tipo, obs, nomeArquivoGerado, dadosArquivoBase64, valorNumerico, refParcela) {
             document.getElementById('tituloModalConfirmacao').innerText = registroEmEdicaoId ? "Confirmar Edição" : "Confirmação de Lançamento";
-            document.getElementById('conteudoResumoModal').innerHTML = `<p><strong>Aluno:</strong> ${nome}</p><p><strong>Forma:</strong> ${tipo}</p><p><strong>Status:</strong> ${obs}</p>`;
+            document.getElementById('conteudoResumoModal').innerHTML = `<p><strong>Aluno:</strong> ${nome}</p><p><strong>Forma:</strong> ${tipo}</p><p><strong>Valor:</strong> R$ ${valorNumerico.toFixed(2).replace('.', ',')}</p><p><strong>Status:</strong> ${obs}</p>`;
             document.getElementById('modalConfirmacao').classList.remove('hidden');
 
             funcaoCallbackConfirmacao = (confirmado) => {
@@ -915,9 +1139,21 @@
                     let dadosArmazenados = obterDadosArmazenados();
                     if (registroEmEdicaoId !== null) {
                         const index = dadosArmazenados.findIndex(i => i.id === registroEmEdicaoId);
-                        if (index !== -1) { dadosArmazenados[index] = { ...dadosArmazenados[index], aluno: nome, tipoPagamento: tipo, observacao: obs, arquivo: nomeArquivoGerado, arquivoData: dadosArquivoBase64 }; }
+                        if (index !== -1) { 
+                            dadosArmazenados[index] = { 
+                                ...dadosArmazenados[index], 
+                                aluno: nome, tipoPagamento: tipo, observacao: obs, 
+                                arquivo: nomeArquivoGerado, arquivoData: dadosArquivoBase64,
+                                valor: valorNumerico, ref: refParcela 
+                            }; 
+                        }
                     } else {
-                        dadosArmazenados.push({ id: Date.now(), aluno: nome, tipoPagamento: tipo, observacao: obs, arquivo: nomeArquivoGerado, arquivoData: dadosArquivoBase64, dataRegistro: new Date().toLocaleString('pt-BR') });
+                        dadosArmazenados.push({ 
+                            id: Date.now(), aluno: nome, tipoPagamento: tipo, observacao: obs, 
+                            arquivo: nomeArquivoGerado, arquivoData: dadosArquivoBase64, 
+                            valor: valorNumerico, ref: refParcela,
+                            dataRegistro: new Date().toLocaleString('pt-BR') 
+                        });
                     }
                     localStorage.setItem(`caixa_formatura${obterChaveUsuario()}`, JSON.stringify(dadosArmazenados)); 
                     fazerBackupAutomaticoSilencioso();
@@ -1009,21 +1245,21 @@
                 return;
             }
 
-            // Separa os registros por alunos pendentes x quitados
             let htmlPendentes = '';
             let htmlQuitadosMap = {};
 
             alunos.forEach(aluno => {
                 const pagamentosAluno = dadosArmazenados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
                 if (pagamentosAluno.length > 0) {
-                    const quitado = alunoEstaQuitado(aluno);
+                    const statusInfo = calcularStatusAluno(aluno, dadosArmazenados);
+                    const quitado = statusInfo.grupo === 1;
                     
                     const blocoHtml = pagamentosAluno.map(item => `
                         <div class="border rounded-lg p-2.5 bg-slate-50 space-y-2 mb-2">
                             <div class="flex justify-between items-start">
                                 <div>
                                     <p class="font-bold text-slate-800">${item.aluno}</p>
-                                    <p class="text-indigo-600 font-medium">${item.tipoPagamento} — <span class="${quitado ? 'text-emerald-700 font-bold' : 'text-amber-600 font-bold'}">${quitado ? 'QUITADO (R$ 175)' : 'Pendente'}</span></p>
+                                    <p class="text-indigo-600 font-medium">${item.tipoPagamento} — <span class="${quitado ? 'text-emerald-700 font-bold' : 'text-amber-600 font-bold'}">${quitado ? 'QUITADO (R$ 175)' : 'Em aberto'}</span></p>
                                     <p class="text-slate-500 text-[10px]">${item.observacao}</p>
                                 </div>
                                 <div class="flex gap-3">
@@ -1048,7 +1284,7 @@
 
             containerPendentes.innerHTML = htmlPendentes || `<p class="text-slate-400 text-center py-4">Nenhum lançamento pendente no momento.</p>`;
             
-            const chavesQuitadas = Object.keys(htmlQuitadosMap);
+            const chavesQuitadas = Object.keys(htmlQuitadosMap).sort((a, b) => a.localeCompare(b, 'pt-BR'));
             if (chavesQuitadas.length > 0) {
                 containerQuitados.innerHTML = chavesQuitadas.map(a => htmlQuitadosMap[a]).join('');
             } else {
@@ -1059,29 +1295,104 @@
         }
 
         function atualizarPlanilhaGeral() {
-            const alunos = obterAlunosTurma(); const dadosArmazenados = obterDadosArmazenados();
-            let totalPrevisto = alunos.length * 175.00; let totalRecebido = 0;
+            const alunos = obterAlunosTurma(); 
+            const dadosArmazenados = obterDadosArmazenados();
+            let totalPrevisto = alunos.length * 175.00; 
+            let totalRecebido = 0;
+
             document.getElementById('corpoTabelaPlanilha').innerHTML = alunos.map((aluno, index) => {
+                const info = calcularStatusAluno(aluno, dadosArmazenados);
+                totalRecebido += info.totalPago;
+
+                const pagou1 = info.pagoP1 >= 87.50;
+                const pagou2 = info.pagoP2 >= 87.50;
                 const pagamentosAluno = dadosArmazenados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
-                const pagou1 = pagamentosAluno.some(i => i.tipoPagamento.includes('1ª Parcela') || i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
-                const pagou2 = pagamentosAluno.some(i => i.tipoPagamento.includes('2ª Parcela') || i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
-                if(pagou1) totalRecebido += 87.50; if(pagou2) totalRecebido += 87.50;
-                return `<tr class="border-b hover:bg-slate-50"><td class="p-2 border-r font-medium text-slate-500 text-center">${index + 1}</td><td class="p-2 border-r font-semibold text-slate-800">${aluno}</td><td class="p-2 text-center border-r">${pagou1 ? '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">PAGO</span>' : '<span class="text-slate-300">-</span>'}</td><td class="p-2 text-center border-r">${pagou2 ? '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">PAGO</span>' : '<span class="text-slate-300">-</span>'}</td><td class="p-2 text-[11px] text-slate-600">${pagamentosAluno.map(i => i.tipoPagamento).join(' | ') || "-"}</td></tr>`;
+
+                return `<tr class="border-b hover:bg-slate-50">
+                    <td class="p-2 border-r font-medium text-slate-500 text-center">${index + 1}</td>
+                    <td class="p-2 border-r font-semibold text-slate-800">${aluno}</td>
+                    <td class="p-2 text-center border-r">${pagou1 ? '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">PAGO</span>' : info.pagoP1 > 0 ? `<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px]">R$ ${info.pagoP1.toFixed(2)}</span>` : '<span class="text-slate-300">-</span>'}</td>
+                    <td class="p-2 text-center border-r">${pagou2 ? '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">PAGO</span>' : info.pagoP2 > 0 ? `<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px]">R$ ${info.pagoP2.toFixed(2)}</span>` : '<span class="text-slate-300">-</span>'}</td>
+                    <td class="p-2 text-[11px] text-slate-600">${pagamentosAluno.map(i => i.tipoPagamento).join(' | ') || "-"}</td>
+                </tr>`;
             }).join('');
-            document.getElementById('labelTotalPrevisto').innerText = `Total Previsto: R$ ${totalPrevisto.toFixed(2).replace('.', ',')}`; document.getElementById('labelTotalRecebido').innerText = `Total Recebido: R$ ${totalRecebido.toFixed(2).replace('.', ',')}`;
+
+            document.getElementById('labelTotalPrevisto').innerText = `Total Previsto: R$ ${totalPrevisto.toFixed(2).replace('.', ',')}`; 
+            document.getElementById('labelTotalRecebido').innerText = `Total Recebido: R$ ${totalRecebido.toFixed(2).replace('.', ',')}`;
         }
 
         function enviarRelatorioDiretora() {
-            const alunos = obterAlunosTurma(); const dadosArmazenados = obterDadosArmazenados(); let totalRecebido = 0;
-            let relatorio = `       ESCOLA MUNICIPAL 31 DE MARÇO - E.I.E.F.\n       CONTROLE DE PAGAMENTOS - FORMATURA\n\n----------------------------------------\nTURMA: ${localStorage.getItem(`turma_professora${obterChaveUsuario()}`) || '5º C'}\nProfessora: ${localStorage.getItem(`nome_professora${obterChaveUsuario()}`) || 'Professora'}\nTotal de Formandos: ${alunos.length}\nValor por Estudante: R$ 175,00\n----------------------------------------\n\nSTATUS DOS ALUNOS:\n\n`;
-            alunos.forEach((aluno, index) => {
-                const pag = dadosArmazenados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
-                const p1 = pag.some(i => i.tipoPagamento.includes('1ª Parcela') || i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
-                const p2 = pag.some(i => i.tipoPagamento.includes('2ª Parcela') || i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
-                if(p1) totalRecebido += 87.50; if(p2) totalRecebido += 87.50;
-                relatorio += `${index + 1}. ${aluno} -> ${p1 && p2 ? "Quitado" : p1 ? "1ª PAGA | 2ª Pendente" : p2 ? "1ª Pendente | 2ª PAGA" : "Pendente"}\n`;
+            const alunos = obterAlunosTurma(); 
+            const dadosArmazenados = obterDadosArmazenados();
+            const sufixo = obterChaveUsuario();
+            const turma = localStorage.getItem(`turma_professora${sufixo}`) || '5º C - 2026';
+            const prof = localStorage.getItem(`nome_professora${sufixo}`) || 'ANGELA';
+
+            const alunosProcessados = alunos.map(nome => {
+                const info = calcularStatusAluno(nome, dadosArmazenados);
+                return { nome, ...info };
             });
-            relatorio += `\n----------------------------------------\nRESUMO FINANCEIRO:\n• Total Previsto: R$ ${(alunos.length * 175).toFixed(2).replace('.', ',')}\n• Total Recebido: R$ ${totalRecebido.toFixed(2).replace('.', ',')}\n• Valor Pendente: R$ ${((alunos.length * 175) - totalRecebido).toFixed(2).replace('.', ',')}\n----------------------------------------\n\n_Relatório gerado digitalmente pela Secretária Virtual_`;
+
+            // 4 Grupos ordenados A-Z
+            const quitados = alunosProcessados.filter(a => a.grupo === 1).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+            const p1Quitada = alunosProcessados.filter(a => a.grupo === 2).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+            const pendentes = alunosProcessados.filter(a => a.grupo === 3).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+            const parciais  = alunosProcessados.filter(a => a.grupo === 4).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+
+            let contador = 1;
+            let corpoRelatorio = "";
+
+            if (quitados.length > 0) {
+                corpoRelatorio += "--- 🟢 QUITADOS ---\n";
+                quitados.forEach(a => { corpoRelatorio += `${contador++}. ${a.nome} -> ${a.texto}\n`; });
+                corpoRelatorio += "\n";
+            }
+
+            if (p1Quitada.length > 0) {
+                corpoRelatorio += "--- 🟡 1ª PARCELA QUITADA ---\n";
+                p1Quitada.forEach(a => { corpoRelatorio += `${contador++}. ${a.nome} -> ${a.texto}\n`; });
+                corpoRelatorio += "\n";
+            }
+
+            if (pendentes.length > 0) {
+                corpoRelatorio += "--- 🔴 PENDENTES ---\n";
+                pendentes.forEach(a => { corpoRelatorio += `${contador++}. ${a.nome} -> ${a.texto}\n`; });
+                corpoRelatorio += "\n";
+            }
+
+            if (parciais.length > 0) {
+                corpoRelatorio += "--- 🟡 PAGAMENTOS PARCIAIS ---\n";
+                parciais.forEach(a => { corpoRelatorio += `${contador++}. ${a.nome} -> ${a.texto}\n`; });
+                corpoRelatorio += "\n";
+            }
+
+            const totalPrevisto = alunos.length * 175.00;
+            const totalRecebido = alunosProcessados.reduce((acc, cur) => acc + cur.totalPago, 0);
+            const valorPendente = totalPrevisto - totalRecebido;
+
+            let relatorio = `       ESCOLA MUNICIPAL 31 DE MARÇO - E.I.E.F.
+       CONTROLE DE PAGAMENTOS - FORMATURA
+
+----------------------------------------
+TURMA: ${turma}
+Professora: ${prof}
+Total de Formandos: ${alunos.length}
+Valor por Estudante: R$ 175,00
+----------------------------------------
+
+STATUS DOS ALUNOS:
+
+${corpoRelatorio.trim()}
+
+----------------------------------------
+RESUMO FINANCEIRO:
+• Total Previsto: R$ ${totalPrevisto.toFixed(2).replace('.', ',')}
+• Total Recebido: R$ ${totalRecebido.toFixed(2).replace('.', ',')}
+• Valor Pendente: R$ ${valorPendente.toFixed(2).replace('.', ',')}
+----------------------------------------
+
+Relatório gerado digitalmente pela Secretária Virtual`;
+
             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(relatorio)}`, '_blank');
         }
 
@@ -1100,11 +1411,12 @@
             const alunos = obterAlunosTurma(); const dados = obterDadosArmazenados(); let total = 0; const turma = localStorage.getItem(`turma_professora${obterChaveUsuario()}`) || '5º C';
             let linhas = '';
             alunos.forEach((aluno, index) => {
+                const info = calcularStatusAluno(aluno, dados);
+                total += info.totalPago;
+                const p1 = info.pagoP1 >= 87.50;
+                const p2 = info.pagoP2 >= 87.50;
                 const pag = dados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
-                const p1 = pag.some(i => i.tipoPagamento.includes('1ª Parcela') || i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
-                const p2 = pag.some(i => i.tipoPagamento.includes('2ª Parcela') || i.tipoPagamento.includes('À Vista') || i.tipoPagamento.includes('175'));
-                if(p1) total += 87.50; if(p2) total += 87.50;
-                linhas += `<tr style="height: 14pt;"><td style="border: 1px solid #000; text-align: center; font-size: 9.5pt;">${index + 1}</td><td style="border: 1px solid #000; font-size: 9.5pt;">${aluno}</td><td style="border: 1px solid #000; text-align: center; font-weight: bold; font-size: 9.5pt;">${p1 ? "PAGO" : ""}</td><td style="border: 1px solid #000; text-align: center; font-weight: bold; font-size: 9.5pt;">${p2 ? "PAGO" : ""}</td><td style="border: 1px solid #000; font-size: 9pt;">${pag.map(i => i.tipoPagamento).join(' | ') || "-"}</td></tr>`;
+                linhas += `<tr style="height: 14pt;"><td style="border: 1px solid #000; text-align: center; font-size: 9.5pt;">${index + 1}</td><td style="border: 1px solid #000; font-size: 9.5pt;">${aluno}</td><td style="border: 1px solid #000; text-align: center; font-weight: bold; font-size: 9.5pt;">${p1 ? "PAGO" : info.pagoP1 > 0 ? "PARCIAL" : ""}</td><td style="border: 1px solid #000; text-align: center; font-weight: bold; font-size: 9.5pt;">${p2 ? "PAGO" : info.pagoP2 > 0 ? "PARCIAL" : ""}</td><td style="border: 1px solid #000; font-size: 9pt;">${pag.map(i => i.tipoPagamento).join(' | ') || "-"}</td></tr>`;
             });
             const blob = new Blob(['\ufeff' + `<html xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><style>@page Section1{size:841.7pt 595.3pt;mso-page-orientation:landscape;margin:1cm;}div.Section1{page:Section1;}body{font-family:Arial;font-size:9.5pt;line-height:1;}table{width:100%;border-collapse:collapse;}th{background-color:#f2f2f2;border:1px solid #000;font-size:9pt;font-weight:bold;}td{padding:1px 3px;}</style></head><body><div class="Section1"><h3 align="center">ESCOLA MUNICIPAL 31 DE MARÇO</h3><h4 align="center">CONTROLE DE PAGAMENTOS</h4><p align="center"><b>TURMA: ${turma} | FORMANDOS: ${alunos.length}</b></p><table><thead><tr><th style="width:5%;">Nº</th><th style="width:40%;">NOME</th><th style="width:12%;">1ª PARC</th><th style="width:12%;">2ª PARC</th><th style="width:31%;">FORMA / OBS</th></tr></thead><tbody>${linhas}</tbody></table><p><b>Total recebido:</b> R$ ${total.toFixed(2).replace('.', ',')}</p></div></body></html>`], { type: 'application/msword' });
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Controle_${turma.replace(/[^a-zA-Z0-9]/g, '_')}.doc`; document.body.appendChild(a); a.click(); a.remove();
