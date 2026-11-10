@@ -194,6 +194,7 @@
                             <div>
                                 <label class="block text-[11px] font-medium text-slate-600">Referência</label>
                                 <select id="refParcelaCustom" class="w-full border rounded-lg p-2 text-xs bg-white outline-none">
+                                    <option value="auto_abater">✨ Abate Automático / Quitação Geral</option>
                                     <option value="1a_parcela">1ª Parcela (Meta R$ 87,50)</option>
                                     <option value="2a_parcela">2ª Parcela (Meta R$ 87,50)</option>
                                 </select>
@@ -201,14 +202,28 @@
                             <div>
                                 <label class="block text-[11px] font-medium text-slate-600">Forma</label>
                                 <select id="formaCustomizada" class="w-full border rounded-lg p-2 text-xs bg-white outline-none">
-                                    <option value="Pix/Transf">Pix / Transferência</option>
                                     <option value="Dinheiro">Dinheiro</option>
+                                    <option value="Pix/Transf">Pix / Transferência</option>
                                 </select>
                             </div>
                         </div>
                         <div>
-                            <label class="block text-[11px] font-medium text-slate-600">Valor Pago Agora (R$)</label>
-                            <input type="number" id="valorCustomizado" step="0.01" placeholder="Ex: 50.00" class="w-full border rounded-lg p-2 text-xs bg-white outline-none">
+                            <label class="block text-[11px] font-medium text-slate-600 mb-1">Valor Pago Agora (R$)</label>
+                            <input type="text" inputmode="decimal" id="valorCustomizado" placeholder="Ex: 20,30" class="w-full border rounded-lg p-2.5 text-sm font-bold text-slate-800 bg-white outline-none border-indigo-200 focus:ring-2 focus:ring-indigo-500">
+                            
+                            <!-- BOTÕES RÁPIDOS DE ATALHO DE VALORES E CENTAVOS -->
+                            <div class="flex flex-wrap gap-1 mt-2">
+                                <button type="button" onclick="adicionarValorRapido(0.30)" class="bg-amber-100 hover:bg-amber-200 text-amber-900 text-[10px] font-bold px-2 py-1 rounded-md transition">+ R$ 0,30</button>
+                                <button type="button" onclick="adicionarValorRapido(0.50)" class="bg-amber-100 hover:bg-amber-200 text-amber-900 text-[10px] font-bold px-2 py-1 rounded-md transition">+ R$ 0,50</button>
+                                <button type="button" onclick="adicionarValorRapido(1.00)" class="bg-amber-100 hover:bg-amber-200 text-amber-900 text-[10px] font-bold px-2 py-1 rounded-md transition">+ R$ 1,00</button>
+                                <button type="button" onclick="adicionarValorRapido(5.00)" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-800 text-[10px] font-bold px-2 py-1 rounded-md transition">+ R$ 5,00</button>
+                                <button type="button" onclick="adicionarValorRapido(10.00)" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-800 text-[10px] font-bold px-2 py-1 rounded-md transition">+ R$ 10,00</button>
+                                <button type="button" onclick="adicionarValorRapido(20.00)" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-800 text-[10px] font-bold px-2 py-1 rounded-md transition">+ R$ 20,00</button>
+                                <button type="button" onclick="adicionarValorRapido(50.00)" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-800 text-[10px] font-bold px-2 py-1 rounded-md transition">+ R$ 50,00</button>
+                                <button type="button" onclick="definirValorDireto(87.50)" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-[10px] font-bold px-2 py-1 rounded-md transition">R$ 87,50 (Meta)</button>
+                                <button type="button" onclick="definirValorDireto(175.00)" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-2 py-1 rounded-md transition">R$ 175 (Total)</button>
+                                <button type="button" onclick="limparValorCustomizado()" class="bg-rose-100 hover:bg-rose-200 text-rose-700 text-[10px] font-bold px-2 py-1 rounded-md transition">Limpar</button>
+                            </div>
                         </div>
                     </div>
 
@@ -238,17 +253,21 @@
                 </div>
 
                 <div class="bg-white p-4 rounded-xl shadow-sm space-y-3">
-                    <div class="flex justify-between items-center mb-1">
-                        <h3 class="font-semibold text-slate-700 text-sm">Registros Salvos</h3>
-                        <span id="contadorRegistros" class="text-xs text-slate-400">0 itens</span>
-                    </div>
-                    <div id="tabelaLancamentos" class="space-y-2 max-h-72 overflow-y-auto text-xs pr-1">
-                        <p class="text-slate-400 text-center py-4">Nenhum lançamento registrado ainda.</p>
+                    <!-- SEÇÃO DE REGISTROS SALVOS PENDENTES (MINIMIZADA POR PADRÃO) -->
+                    <button type="button" onclick="alternarSecaoPendentes()" class="w-full bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 p-2.5 rounded-xl text-xs font-bold flex justify-between items-center transition">
+                        <div class="flex items-center gap-2">
+                            <span>⏳ Registros Salvos Pendentes</span>
+                            <span id="contadorRegistros" class="text-[10px] bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded-full font-semibold">0 lançamentos</span>
+                        </div>
+                        <span id="setaPendentes">▼</span>
+                    </button>
+                    <div id="tabelaLancamentos" class="hidden mt-2 space-y-2 max-h-72 overflow-y-auto text-xs pr-1">
+                        <p class="text-slate-400 text-center py-4">Nenhum lançamento pendente no momento.</p>
                     </div>
 
-                    <!-- SEÇÃO DE ALUNOS QUITADOS -->
+                    <!-- SEÇÃO DE ALUNOS QUITADOS (MINIMIZADA POR PADRÃO) -->
                     <div class="border-t pt-3 mt-2">
-                        <button onclick="alternarSecaoQuitados()" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 p-2.5 rounded-xl text-xs font-bold flex justify-between items-center transition">
+                        <button type="button" onclick="alternarSecaoQuitados()" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 p-2.5 rounded-xl text-xs font-bold flex justify-between items-center transition">
                             <span>✅ Alunos com Quitação Completa (R$ 175)</span>
                             <span id="setaQuitados">▼</span>
                         </button>
@@ -465,8 +484,8 @@
             gerarQRCodeLogin();
             carregarListaProfessorasNoLogin();
             verificarSeTemBiometriaSalva();
-            atualizarSelectOpcoes();
             atualizarListaAlunosDinamica();
+            atualizarSelectOpcoes();
             atualizarPlanilhaGeral();
             atualizarDadosTopoPerfil();
             atualizarLista();
@@ -475,6 +494,32 @@
         window.addEventListener('beforeunload', () => {
             fazerBackupAutomaticoSilencioso();
         });
+
+        // CONVERSÃO INTELIGENTE DE CENTAVOS (ACEITA VÍRGULA E PONTO)
+        function obterValorCustomizadoDigitado() {
+            const input = document.getElementById('valorCustomizado');
+            if (!input || !input.value) return 0;
+            let str = input.value.trim().replace(',', '.');
+            let val = parseFloat(str);
+            return isNaN(val) ? 0 : val;
+        }
+
+        function adicionarValorRapido(adicional) {
+            let atual = obterValorCustomizadoDigitado();
+            let novoTotal = (atual + adicional).toFixed(2);
+            document.getElementById('valorCustomizado').value = novoTotal.replace('.', ',');
+            atualizarTextoPadrao();
+        }
+
+        function definirValorDireto(val) {
+            document.getElementById('valorCustomizado').value = val.toFixed(2).replace('.', ',');
+            atualizarTextoPadrao();
+        }
+
+        function limparValorCustomizado() {
+            document.getElementById('valorCustomizado').value = '';
+            atualizarTextoPadrao();
+        }
 
         function alterarTamanhoFonte(variacao) {
             tamanhoFonteAtual += variacao;
@@ -886,8 +931,15 @@
                 } else if (ref === '2a_parcela' || opc.includes('2ª parcela')) {
                     pagoP2 += val;
                 } else {
+                    // ABATE AUTOMÁTICO (ABATE 1ª PARCELA ATÉ R$ 87,50 E SOBRA VAI PRA 2ª)
                     if (pagoP1 < META_PARCELA) {
-                        pagoP1 += val;
+                        const faltaP1 = META_PARCELA - pagoP1;
+                        if (val <= faltaP1) {
+                            pagoP1 += val;
+                        } else {
+                            pagoP1 = META_PARCELA;
+                            pagoP2 += (val - faltaP1);
+                        }
                     } else {
                         pagoP2 += val;
                     }
@@ -943,6 +995,7 @@
                 selectAluno.innerHTML = `<option value="">Selecione o aluno pendente...</option>` + 
                     alunosPendentes.map(aluno => `<option value="${aluno}">${aluno}</option>`).join('');
             }
+            atualizarSelectOpcoes();
         }
 
         let opcoesPagamento = JSON.parse(localStorage.getItem('opcoes_pagamento_v1')) || [
@@ -962,15 +1015,60 @@
             fazerBackupAutomaticoSilencioso(); atualizarSelectOpcoes();
         }
 
+        // ATUALIZA AS OPÇÕES DE PAGAMENTO FILTRANDO DINAMICAMENTE DE ACORDO COM O ALUNO SELECIONADO
         function atualizarSelectOpcoes() {
+            const selectAluno = document.getElementById('nomeAluno');
+            const nomeAluno = selectAluno ? selectAluno.value.trim() : '';
             const select = document.getElementById('tipoPagamento');
-            if(select) { 
-                select.innerHTML = opcoesPagamento.map(op => `<option value="${op}">${op}</option>`).join(''); 
-                atualizarTextoPadrao(); 
+            const refSelect = document.getElementById('refParcelaCustom');
+            
+            if (!select) return;
+
+            let opcoesParaExibir = [...opcoesPagamento];
+            let pagoP1Quitado = false;
+
+            if (nomeAluno) {
+                const dadosArmazenados = obterDadosArmazenados().filter(i => i.id !== registroEmEdicaoId);
+                const info = calcularStatusAluno(nomeAluno, dadosArmazenados);
+
+                if (info.pagoP1 >= 87.50) {
+                    pagoP1Quitado = true;
+                    // Oculta opções de 1ª Parcela e À Vista (175)
+                    opcoesParaExibir = opcoesParaExibir.filter(op => {
+                        const opLower = op.toLowerCase();
+                        return !opLower.includes('1ª') && !opLower.includes('à vista') && !opLower.includes('a vista') && !opLower.includes('175');
+                    });
+                }
             }
+
+            select.innerHTML = opcoesParaExibir.map(op => `<option value="${op}">${op}</option>`).join('');
+
+            if (refSelect) {
+                if (pagoP1Quitado) {
+                    refSelect.innerHTML = `
+                        <option value="auto_abater">✨ Abate Automático / Quitação Geral</option>
+                        <option value="2a_parcela">2ª Parcela (Meta R$ 87,50)</option>
+                    `;
+                } else {
+                    refSelect.innerHTML = `
+                        <option value="auto_abater">✨ Abate Automático / Quitação Geral</option>
+                        <option value="1a_parcela">1ª Parcela (Meta R$ 87,50)</option>
+                        <option value="2a_parcela">2ª Parcela (Meta R$ 87,50)</option>
+                    `;
+                }
+            }
+
+            const painel = document.getElementById('painelCustomizado');
+            if (select.value && (select.value.includes('Personalizado') || select.value.includes('Valor Livre') || select.value.includes('customizado'))) {
+                painel.classList.remove('hidden');
+            } else {
+                painel.classList.add('hidden');
+            }
+
+            atualizarTextoPadrao();
         }
 
-        document.getElementById('nomeAluno').addEventListener('change', atualizarTextoPadrao);
+        document.getElementById('nomeAluno').addEventListener('change', atualizarSelectOpcoes);
         document.getElementById('tipoPagamento').addEventListener('change', function() {
             const painel = document.getElementById('painelCustomizado');
             if (this.value.includes('Personalizado') || this.value.includes('Valor Livre') || this.value.includes('customizado')) {
@@ -996,10 +1094,10 @@
             const dataHoje = new Date().toLocaleDateString('pt-BR');
 
             if (tipo.includes('Personalizado') || tipo.includes('Valor Livre') || tipo.includes('customizado')) {
-                const valInput = parseFloat(document.getElementById('valorCustomizado').value) || 0;
+                const valInput = obterValorCustomizadoDigitado();
                 const forma = document.getElementById('formaCustomizada').value;
                 const refSelect = document.getElementById('refParcelaCustom');
-                const refText = refSelect.options[refSelect.selectedIndex].text;
+                const refText = refSelect && refSelect.selectedIndex >= 0 ? refSelect.options[refSelect.selectedIndex].text : '';
                 document.getElementById('observacao').value = `Pago Parcial (${forma}) - R$ ${valInput.toFixed(2).replace('.', ',')} em ${dataHoje} - Ref: ${refText}`;
             } else {
                 document.getElementById('observacao').value = `Pago ${tipo} em ${dataHoje} - Aluno: ${nome}`;
@@ -1033,16 +1131,20 @@
             }
 
             document.getElementById('nomeAluno').value = item.aluno; 
+            registroEmEdicaoId = id;
+            
+            atualizarSelectOpcoes();
             document.getElementById('tipoPagamento').value = item.tipoPagamento;
             document.getElementById('observacao').value = item.observacao; 
             
-            if (item.valorCustom !== undefined) {
-                document.getElementById('valorCustomizado').value = item.valorCustom;
-                document.getElementById('refParcelaCustom').value = item.refParcela || '1a_parcela';
+            if (item.valor !== undefined) {
+                document.getElementById('valorCustomizado').value = item.valor.toFixed(2).replace('.', ',');
+                if (document.getElementById('refParcelaCustom')) {
+                    document.getElementById('refParcelaCustom').value = item.ref || 'auto_abater';
+                }
             }
 
             document.getElementById('tipoPagamento').dispatchEvent(new Event('change'));
-            registroEmEdicaoId = id;
 
             const btnSalvar = document.querySelector('#formPagamento button[onclick="prepararSalvamento()"]');
             btnSalvar.innerText = "Atualizar Lançamento"; 
@@ -1057,7 +1159,7 @@
             document.getElementById('formPagamento').reset(); 
             document.getElementById('painelCustomizado').classList.add('hidden');
             atualizarListaAlunosDinamica();
-            atualizarTextoPadrao();
+            atualizarSelectOpcoes();
             
             const btnSalvar = document.querySelector('#formPagamento button[onclick="prepararSalvamento()"]');
             btnSalvar.innerText = "Salvar Lançamento"; 
@@ -1092,11 +1194,25 @@
             const arquivoInput = document.getElementById('arquivoComprovante'); 
             const dadosArmazenados = obterDadosArmazenados();
 
+            const outrosLancamentos = dadosArmazenados.filter(item => item.aluno.toLowerCase() === nome.toLowerCase() && item.id !== registroEmEdicaoId);
+            const statusAtual = calcularStatusAluno(nome, outrosLancamentos);
+
+            const tipoLower = tipo.toLowerCase();
+            const refCustom = document.getElementById('refParcelaCustom') ? document.getElementById('refParcelaCustom').value : '';
+
+            // TRAVA DE SEGURANÇA: IMPEDE REGISTRO DUPLO DE 1ª PARCELA
+            if (statusAtual.pagoP1 >= 87.50) {
+                if (tipoLower.includes('1ª') || tipoLower.includes('à vista') || tipoLower.includes('a vista') || tipoLower.includes('175') || refCustom === '1a_parcela') {
+                    mostrarAviso('Pagamento Duplicado', 'Este aluno já possui a 1ª Parcela (R$ 87,50) quitada. Escolha a 2ª Parcela ou Valor Livre.', '❌');
+                    return;
+                }
+            }
+
             let valorNovoLancamento = 0;
             let refParcela = '';
 
             if (tipo.includes('Personalizado') || tipo.includes('Valor Livre') || tipo.includes('customizado')) {
-                valorNovoLancamento = parseFloat(document.getElementById('valorCustomizado').value) || 0;
+                valorNovoLancamento = obterValorCustomizadoDigitado();
                 refParcela = document.getElementById('refParcelaCustom').value;
                 if (valorNovoLancamento <= 0) {
                     mostrarAviso('Atenção', 'Digite o valor pago no lançamento personalizado.', '⚠️');
@@ -1106,12 +1222,12 @@
                 valorNovoLancamento = extrairValorOpcao(tipo);
             }
 
-            const totalJaPagoAluno = dadosArmazenados
-                .filter(item => item.aluno.toLowerCase() === nome.toLowerCase() && item.id !== registroEmEdicaoId)
-                .reduce((soma, item) => soma + (item.valor !== undefined ? item.valor : extrairValorOpcao(item.tipoPagamento)), 0);
+            const totalJaPagoAluno = statusAtual.totalPago;
+            const saldoRestante = 175.00 - totalJaPagoAluno;
 
-            if ((totalJaPagoAluno + valorNovoLancamento) > 175.00) {
-                mostrarAviso('Limite Ultrapassado', `Este aluno já possui R$ ${totalJaPagoAluno.toFixed(2).replace('.', ',')} lançados. Limite máximo é R$ 175,00.`, '❌'); 
+            // TRAVA DE SEGURANÇA: TETO MÁXIMO DE R$ 175,00 POR ALUNO
+            if ((totalJaPagoAluno + valorNovoLancamento) > 175.00 + 0.001) {
+                mostrarAviso('Limite Ultrapassado', `Este aluno já possui R$ ${totalJaPagoAluno.toFixed(2).replace('.', ',')} lançados. O saldo restante para quitar é R$ ${saldoRestante.toFixed(2).replace('.', ',')}.`, '❌'); 
                 return;
             }
 
@@ -1145,7 +1261,7 @@
                             dadosArmazenados[index] = { 
                                 ...dadosArmazenados[index], 
                                 aluno: nome, tipoPagamento: tipo, observacao: obs, 
-                                arquivo: nomeArquivoGerado, arquivoData: dadosArquivoBase64,
+                                arquivo: nomeArquivoGerado, arquivoData: dadosArquivoBase64, 
                                 valor: valorNumerico, ref: refParcela 
                             }; 
                         }
@@ -1221,6 +1337,20 @@
         function mostrarAviso(titulo, texto, icone = '✨') { document.getElementById('avisoTitulo').innerText = titulo; document.getElementById('avisoTexto').innerText = texto; document.getElementById('avisoIcone').innerText = icone; document.getElementById('modalAviso').classList.remove('hidden'); }
         function fecharModalAviso() { document.getElementById('modalAviso').classList.add('hidden'); }
 
+        // ALTERNAR SEÇÃO DE PENDENTES (EXPANDIR/MINIMIZAR)
+        function alternarSecaoPendentes() {
+            const container = document.getElementById('tabelaLancamentos');
+            const seta = document.getElementById('setaPendentes');
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                seta.innerText = "▲";
+            } else {
+                container.classList.add('hidden');
+                seta.innerText = "▼";
+            }
+        }
+
+        // ALTERNAR SEÇÃO DE QUITADOS (EXPANDIR/MINIMIZAR)
         function alternarSecaoQuitados() {
             const container = document.getElementById('containerAlunosQuitados');
             const seta = document.getElementById('setaQuitados');
@@ -1239,14 +1369,7 @@
             const containerQuitados = document.getElementById('containerAlunosQuitados');
             const alunos = obterAlunosTurma();
 
-            document.getElementById('contadorRegistros').innerText = `${dadosArmazenados.length} lançamentos`;
-
-            if(dadosArmazenados.length === 0) {
-                containerPendentes.innerHTML = `<p class="text-slate-400 text-center py-4">Nenhum lançamento registrado ainda.</p>`;
-                containerQuitados.innerHTML = `<p class="text-slate-400 text-center py-2">Nenhum aluno quitado ainda.</p>`;
-                return;
-            }
-
+            let totalLancamentosPendentes = 0;
             let htmlPendentes = '';
             let htmlQuitadosMap = {};
 
@@ -1280,9 +1403,12 @@
                         htmlQuitadosMap[aluno] = blocoHtml;
                     } else {
                         htmlPendentes += blocoHtml;
+                        totalLancamentosPendentes += pagamentosAluno.length;
                     }
                 }
             });
+
+            document.getElementById('contadorRegistros').innerText = `${totalLancamentosPendentes} lançamentos`;
 
             containerPendentes.innerHTML = htmlPendentes || `<p class="text-slate-400 text-center py-4">Nenhum lançamento pendente no momento.</p>`;
             
