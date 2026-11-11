@@ -2,7 +2,6 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <!-- CORREÇÃO DA TELA CORTADA -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Controle de Formatura - Escola 31 de Março</title>
     
@@ -14,7 +13,6 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <!-- BIBLIOTECA DO SUPABASE -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
@@ -89,7 +87,7 @@
                     Entrar
                 </button>
             </form>
-            <div class="pt-2 border-t text-[11px] text-slate-400">Desenvolvido por Everton Taborda · v1.0.2</div>
+            <div class="pt-2 border-t text-[11px] text-slate-400">Desenvolvido por Everton Taborda · v1.0.3</div>
         </div>
     </div>
 
@@ -116,8 +114,8 @@
         <main class="w-full max-w-3xl mx-auto p-3 space-y-4 min-h-screen">
             
             <div id="bannerSincronizar" class="hidden bg-amber-100 border-2 border-amber-400 p-4 rounded-xl text-center space-y-2 shadow-sm">
-                <p class="text-sm font-bold text-amber-900">📦 Encontramos dados antigos neste celular!</p>
-                <p class="text-xs text-amber-800">Deseja enviar os pagamentos que já estavam salvos aqui para a nuvem?</p>
+                <p class="text-sm font-bold text-amber-900">📦 Encontramos dados antigos neste aparelho!</p>
+                <p class="text-xs text-amber-800">Deseja enviar os pagamentos salvos localmente para a nuvem?</p>
                 <button onclick="sincronizarDadosAntigos()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-lg text-xs shadow mt-2">☁️ Sim, enviar para a Nuvem</button>
             </div>
 
@@ -139,9 +137,7 @@
                         <p class="text-[10px] text-slate-400 mt-1">Máx: 900 KB.</p>
                     </div>
                     <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="text-xs font-medium text-slate-600">Opção de Pagamento</label>
-                        </div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Opção de Pagamento</label>
                         <select id="tipoPagamento" class="w-full border border-emerald-300 rounded-lg p-3 outline-none bg-emerald-50/70 text-emerald-900 font-medium shadow-sm text-sm"></select>
                     </div>
                     
@@ -200,9 +196,6 @@
                     <button type="button" onclick="prepararSalvamento()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition shadow mt-2">
                         Salvar Lançamento na Nuvem
                     </button>
-                    <button type="button" id="btnCancelarEdicao" onclick="resetarFormularioAposEdicao()" class="hidden w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium p-3 rounded-xl transition shadow mt-2">
-                        Cancelar Edição
-                    </button>
                 </form>
 
                 <div class="bg-white p-4 rounded-xl shadow-sm space-y-2">
@@ -210,6 +203,12 @@
                     <div class="grid grid-cols-2 gap-2">
                         <button onclick="exportarWord()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">📄 Baixar Word</button>
                         <button onclick="fazerBackup()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">💾 Backup Local</button>
+                    </div>
+                    <div class="mt-2">
+                        <label class="w-full bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition text-center block cursor-pointer shadow">
+                            📂 Restaurar Backup JSON
+                            <input type="file" id="inputRestaurarBackup" accept=".json" onchange="importarBackupLocal(event)" class="hidden">
+                        </label>
                     </div>
                 </div>
 
@@ -331,14 +330,10 @@
     </div>
 
     <script>
-        // ==========================================
-        // CONEXÃO COM O SUPABASE
-        // ==========================================
         const supabaseUrl = 'https://fokhbrolgklvwtnnaift.supabase.co';
         const supabaseKey = 'sb_publishable_bnPuGJsSMscXcpYyhMw5Lw_Wehz2wwS';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // Variáveis Globais
         let modoCadastro = false;
         let todosPagamentos = []; 
         let dadosPerfil = { nome: 'Professora', turma: 'Turma' };
@@ -351,12 +346,9 @@
 
         window.addEventListener('DOMContentLoaded', async () => {
             gerarQRCodeLogin();
-            
-            // A senha NÃO é mais guardada no aparelho (o Supabase já mantém a sessão logada).
             localStorage.removeItem('senha_memorizada');
             const cpfSalvo = localStorage.getItem('login_memorizado');
             if (cpfSalvo) document.getElementById('loginCpf').value = cpfSalvo;
-            
             verificarSessao();
         });
 
@@ -381,29 +373,14 @@
             document.getElementById('modalAviso').classList.remove('hidden');
         }
 
-        // Traduz os erros mais comuns do Supabase para algo que dê para entender
         function traduzirErroAuth(msg) {
             const m = (msg || '').toLowerCase();
-            if (m.includes('invalid login credentials'))
-                return 'CPF/E-mail ou senha incorretos. Se a conta foi criada antes da migração para o Supabase, clique em "Ainda não tem conta? Cadastrar" para criar de novo.';
-            if (m.includes('email not confirmed'))
-                return 'Esta conta ainda não foi confirmada no Supabase. Desative "Confirm email" em Authentication > Sign In / Providers > Email, ou confirme o usuário manualmente.';
-            if (m.includes('already registered') || m.includes('already been registered'))
-                return 'Já existe uma conta com esse CPF/E-mail. Clique em "Já tem conta? Entrar".';
-            if (m.includes('at least 6') || m.includes('password should be'))
-                return 'A senha precisa ter pelo menos 6 caracteres.';
-            if (m.includes('invalid api key') || m.includes('apikey'))
-                return 'Chave do Supabase inválida. Confira a supabaseKey no código.';
-            if (m.includes('failed to fetch') || m.includes('network'))
-                return 'Sem conexão com o Supabase. Verifique a internet e a supabaseUrl no código.';
-            if (m.includes('rate limit') || m.includes('too many'))
-                return 'Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo.';
+            if (m.includes('invalid login credentials')) return 'CPF/E-mail ou senha incorretos.';
+            if (m.includes('email not confirmed')) return 'Esta conta ainda não foi confirmada no Supabase.';
+            if (m.includes('already registered')) return 'Já existe uma conta com esse CPF/E-mail.';
             return msg;
         }
 
-        // ==========================================
-        // AUTENTICAÇÃO (LOGIN / CADASTRO)
-        // ==========================================
         async function verificarSessao() {
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
@@ -416,7 +393,6 @@
                     document.getElementById('appPrincipal').classList.add('hidden');
                 }
             } catch (e) {
-                console.error('Erro ao verificar sessão:', e);
                 document.getElementById('telaLogin').classList.remove('hidden');
                 document.getElementById('appPrincipal').classList.add('hidden');
             }
@@ -435,17 +411,9 @@
             event.preventDefault();
             const btn = document.getElementById('btnAcaoLogin');
             let inputLogin = document.getElementById('loginCpf').value.trim();
-            
-            // Se NÃO for e-mail, limpa tudo que não for número (tira pontos e traços do CPF)
-            if (!inputLogin.includes('@')) {
-                inputLogin = inputLogin.replace(/\D/g, ''); 
-            }
-            if (!inputLogin) { mostrarAviso('Atenção', 'Digite o CPF ou o E-mail.', '⚠️'); return; }
+            if (!inputLogin.includes('@')) inputLogin = inputLogin.replace(/\D/g, ''); 
             
             const senha = document.getElementById('loginSenha').value.trim();
-            if (senha.length < 6) { mostrarAviso('Atenção', 'A senha precisa ter pelo menos 6 caracteres.', '⚠️'); return; }
-            
-            // CPF vira um e-mail interno (CPF@formatura.com)
             const emailLogin = inputLogin.includes('@') ? inputLogin : `${inputLogin}@formatura.com`;
 
             btn.disabled = true;
@@ -463,24 +431,14 @@
                     const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email: emailLogin, password: senha });
                     if (authError) { mostrarAviso('Erro no Cadastro', traduzirErroAuth(authError.message), '❌'); return; }
 
-                    // Sem sessão = o Supabase está exigindo confirmação de e-mail (ou a conta já existia)
                     if (!authData.session) {
-                        mostrarAviso(
-                            'Não foi possível entrar',
-                            'A conta não ficou ativa. Se ela já existe, clique em "Já tem conta? Entrar". Se não, desative "Confirm email" no Supabase (Authentication > Sign In / Providers > Email) e tente cadastrar de novo.',
-                            '📧'
-                        );
+                        mostrarAviso('Aviso', 'Verifique a confirmação de e-mail no Supabase.', '📧');
                         return;
                     }
 
                     const alunosFixos = ["Arthur Carneiro", "Davi de Goes", "Emanuelle Vitória", "Gustavo Henrique", "Heloisy Vitória", "João Lucas", "Maria Júlia", "Yuri Matheus"];
-                    const { error: erroPerfil } = await supabaseClient.from('perfis').insert([{ user_id: authData.user.id, nome_professora: nome, turma: turma, alunos: alunosFixos }]);
-                    if (erroPerfil) {
-                        mostrarAviso('Conta criada, mas o perfil não foi salvo', erroPerfil.message + ' — verifique as políticas RLS da tabela "perfis".', '⚠️');
-                    } else {
-                        mostrarAviso('Sucesso', 'Conta criada!', '🎉');
-                    }
-
+                    await supabaseClient.from('perfis').insert([{ user_id: authData.user.id, nome_professora: nome, turma: turma, alunos: alunosFixos }]);
+                    
                     localStorage.setItem('login_memorizado', inputLogin);
                     await verificarSessao();
                 } else {
@@ -491,8 +449,7 @@
                     await verificarSessao();
                 }
             } catch (e) {
-                console.error('Erro inesperado no login:', e);
-                mostrarAviso('Erro inesperado', traduzirErroAuth(e && e.message ? e.message : String(e)), '❌');
+                mostrarAviso('Erro', traduzirErroAuth(e.message), '❌');
             } finally {
                 btn.disabled = false;
                 btn.innerText = modoCadastro ? 'Cadastrar e Entrar' : 'Entrar';
@@ -505,31 +462,17 @@
             window.location.reload();
         }
 
-        // ==========================================
-        // BANCO DE DADOS E MIGRAÇÃO
-        // ==========================================
         async function carregarDadosDoBanco() {
             const { data: { user } } = await supabaseClient.auth.getUser();
             if (!user) return;
 
-            let perfil = null;
-            const { data: perfilData, error: erroPerfil } = await supabaseClient.from('perfis').select('*').eq('user_id', user.id).maybeSingle();
-            if (erroPerfil) {
-                mostrarAviso('Erro ao carregar perfil', erroPerfil.message + ' — verifique se a tabela "perfis" existe e se as políticas RLS permitem leitura.', '⚠️');
+            const { data: perfilData } = await supabaseClient.from('perfis').select('*').eq('user_id', user.id).maybeSingle();
+            if (perfilData) {
+                dadosPerfil = { nome: perfilData.nome_professora, turma: perfilData.turma };
+                alunosDaTurma = perfilData.alunos || [];
             } else {
-                perfil = perfilData;
-            }
-            
-            if (perfil) {
-                dadosPerfil = { nome: perfil.nome_professora, turma: perfil.turma };
-                alunosDaTurma = perfil.alunos || [];
-            } else {
-                dadosPerfil = { nome: 'Everton (Teste)', turma: 'Turma de Teste' };
-                alunosDaTurma = ["Aluno 1", "Aluno 2", "Aluno 3"];
-                if (!erroPerfil) {
-                    const { error: erroInsert } = await supabaseClient.from('perfis').insert([{ user_id: user.id, nome_professora: dadosPerfil.nome, turma: dadosPerfil.turma, alunos: alunosDaTurma }]);
-                    if (erroInsert) mostrarAviso('Erro ao criar perfil', erroInsert.message + ' — verifique as políticas RLS da tabela "perfis".', '⚠️');
-                }
+                dadosPerfil = { nome: 'Professora', turma: 'Turma' };
+                alunosDaTurma = [];
             }
 
             document.getElementById('labelNomeProfessora').innerText = dadosPerfil.nome;
@@ -537,10 +480,7 @@
             document.getElementById('relatorioTurmaSub').innerText = `Controle de Pagamentos (${dadosPerfil.turma})`;
             document.getElementById('assinaturaProfessora').innerText = `Professora: ${dadosPerfil.nome}`;
 
-            const { data: pagamentos, error: erroPag } = await supabaseClient.from('pagamentos').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-            if (erroPag) {
-                mostrarAviso('Erro ao carregar pagamentos', erroPag.message + ' — verifique a tabela "pagamentos" e as políticas RLS.', '⚠️');
-            }
+            const { data: pagamentos } = await supabaseClient.from('pagamentos').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
             todosPagamentos = pagamentos || [];
 
             const cpfLogado = user.email.split('@')[0];
@@ -563,8 +503,7 @@
             }));
 
             if (inserir.length > 0) {
-                const { error } = await supabaseClient.from('pagamentos').insert(inserir);
-                if (error) { mostrarAviso('Erro', 'Falha ao enviar: ' + error.message, '❌'); return; }
+                await supabaseClient.from('pagamentos').insert(inserir);
                 localStorage.removeItem(`caixa_formatura_user_${cpfLogado}`);
                 localStorage.removeItem('caixa_formatura');
                 mostrarAviso('Sucesso', 'Dados antigos enviados para a nuvem!', '☁️');
@@ -573,9 +512,6 @@
             }
         }
 
-        // ==========================================
-        // GESTÃO DE ALUNOS E PERFIL
-        // ==========================================
         async function salvarAlunosTurma(lista) {
             lista.sort((a, b) => a.localeCompare(b, 'pt-BR'));
             alunosDaTurma = lista;
@@ -639,9 +575,6 @@
             mostrarAviso('Sucesso', 'Perfil atualizado!', '✅');
         }
 
-        // ==========================================
-        // LÓGICA DE PAGAMENTOS
-        // ==========================================
         function atualizarTudoNaTela() {
             const selectAluno = document.getElementById('nomeAluno');
             const pendentes = alunosDaTurma.filter(a => calcularStatusAluno(a, todosPagamentos).grupo !== 1);
@@ -693,11 +626,6 @@
             const nome = document.getElementById('nomeAluno').value;
             if(!nome) { mostrarAviso('Atenção', 'Selecione um aluno.', '⚠️'); return; }
             
-            const arquivoInput = document.getElementById('arquivoComprovante');
-            if (arquivoInput.files.length > 0 && arquivoInput.files[0].size > 900 * 1024) {
-                mostrarAviso('Arquivo grande', 'O comprovante deve ter menos de 900 KB.', '📦'); return;
-            }
-
             const tipo = document.getElementById('tipoPagamento').value;
             let valor1 = extrairValorOpcao(tipo);
             let ref1 = '';
@@ -723,7 +651,7 @@
         async function salvarLancamentoFinal(nome, tipo, obs, valor1, ref1, valor2, forma2) {
             const { data: { user } } = await supabaseClient.auth.getUser();
             const hoje = new Date().toLocaleDateString('pt-BR');
-            let inserir = [{ user_id: user.id, aluno: nome, tipo_pagamento: tipo, valor: valor1, observacao: obs, referencia_parcela: ref1, data_registro: hoje, arquivo_nome: document.getElementById('arquivoComprovante').files[0]?.name || 'Sem anexo' }];
+            let inserir = [{ user_id: user.id, aluno: nome, tipo_pagamento: tipo, valor: valor1, observacao: obs, referencia_parcela: ref1, data_registro: hoje, arquivo_nome: 'Sem anexo' }];
 
             if (valor2 > 0) {
                 inserir.push({ user_id: user.id, aluno: nome, tipo_pagamento: `✏️ Valor Livre (${forma2})`, valor: valor2, observacao: `Parte mista (${forma2})`, referencia_parcela: 'auto_abater', data_registro: hoje, arquivo_nome: 'Sem anexo' });
@@ -745,9 +673,6 @@
             atualizarTudoNaTela();
         }
 
-        // ==========================================
-        // RENDERIZAÇÃO
-        // ==========================================
         function atualizarLista() {
             let htmlPendentes = '', htmlQuitados = '', count = 0;
             alunosDaTurma.forEach(aluno => {
@@ -793,9 +718,6 @@
             carregarDadosDoBanco();
         }
 
-        // ==========================================
-        // INTERFACE E EXTRAS
-        // ==========================================
         function atualizarTextoPadrao() {
             const nome = document.getElementById('nomeAluno').value || '[Aluno]';
             const tipo = document.getElementById('tipoPagamento').value;
@@ -829,13 +751,65 @@
         function gerarPDF() { window.print(); }
         
         function exportarWord() {
-            alert("Função Word foi temporariamente desativada na versão em nuvem. Use o PDF ou faça um Backup.");
+            alert("Função Word temporariamente desativada. Utilize o PDF ou o Backup.");
         }
         
         function fazerBackup() {
             const pacote = { perfil: dadosPerfil, alunos: alunosDaTurma, pagamentos: todosPagamentos };
             const blob = new Blob([JSON.stringify(pacote)], { type: 'application/json' });
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `backup_nuvem.json`; a.click();
+        }
+
+        async function importarBackupLocal(event) {
+            const arquivo = event.target.files[0];
+            if (!arquivo) return;
+
+            const leitor = new FileReader();
+            leitor.onload = async function(e) {
+                try {
+                    const conteudo = JSON.parse(e.target.result);
+                    if (!conteudo.alunos || !conteudo.pagamentos) {
+                        mostrarAviso('Erro', 'O arquivo de backup selecionado é inválido.', '❌');
+                        return;
+                    }
+
+                    if (confirm(`Deseja carregar o backup da turma "${conteudo.perfil?.turma || 'Turma'}" com ${conteudo.alunos.length} alunos e ${conteudo.pagamentos.length} pagamentos?`)) {
+                        alunosDaTurma = conteudo.alunos;
+                        todosPagamentos = conteudo.pagamentos;
+                        if (conteudo.perfil) dadosPerfil = conteudo.perfil;
+
+                        const { data: { user } } = await supabaseClient.auth.getUser();
+                        if (user) {
+                            await supabaseClient.from('perfis').update({ 
+                                alunos: alunosDaTurma,
+                                nome_professora: dadosPerfil.nome,
+                                turma: dadosPerfil.turma
+                            }).eq('user_id', user.id);
+
+                            const inserir = todosPagamentos.map(p => ({
+                                user_id: user.id,
+                                aluno: p.aluno,
+                                tipo_pagamento: p.tipo_pagamento,
+                                valor: p.valor,
+                                observacao: p.observacao,
+                                referencia_parcela: p.referencia_parcela || '',
+                                data_registro: p.data_registro || new Date().toLocaleDateString('pt-BR'),
+                                arquivo_nome: p.arquivo_nome || 'Sem anexo'
+                            }));
+
+                            if (inserir.length > 0) {
+                                await supabaseClient.from('pagamentos').insert(inserir);
+                            }
+                        }
+
+                        atualizarTudoNaTela();
+                        mostrarAviso('Sucesso', 'Backup restaurado com sucesso!', '✅');
+                    }
+                } catch (err) {
+                    mostrarAviso('Erro', 'Não foi possível ler o arquivo JSON.', '❌');
+                }
+            };
+            leitor.readAsText(arquivo);
         }
         
         function enviarRelatorioDiretora() {
