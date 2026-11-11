@@ -5,6 +5,14 @@
     <!-- Trava o zoom forçado para a tela não cortar no Poco/Android -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>Controle de Formatura - Escola 31 de Março</title>
+    
+    <!-- Links essenciais para o PWA (Instalação no Celular) -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Formatura 5C">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
@@ -1523,6 +1531,17 @@ Relatório gerado digitalmente pela Secretária Virtual`;
         function fazerBackup() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(obterDadosArmazenados()));
             const a = document.createElement('a'); a.href = dataStr; a.download = `backup_${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(a); a.click(); a.remove();
+        }
+    </script>
+
+    <!-- Script essencial para registrar o Service Worker exigido pelo PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(() => console.log('Service Worker registrado com sucesso!'))
+                    .catch((err) => console.log('Falha ao registrar o Service Worker:', err));
+            });
         }
     </script>
 </body>
