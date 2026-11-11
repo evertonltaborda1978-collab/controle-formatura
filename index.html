@@ -2,7 +2,8 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <!-- CORREÇÃO DA TELA CORTADA: viewport-fit=cover e sem travas de zoom -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Controle de Formatura - Escola 31 de Março</title>
     
     <link rel="manifest" href="./manifest.json">
@@ -17,7 +18,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
+        /* CORREÇÃO DO ROLAMENTO E ÁREA SEGURA */
+        html, body { width: 100%; max-width: 100%; overflow-x: hidden; padding-bottom: env(safe-area-inset-bottom); }
         input, select, textarea { font-size: 16px !important; }
         
         @media print {
@@ -36,7 +38,7 @@
             <div class="space-y-1">
                 <span class="text-3xl">🎓</span>
                 <h1 class="font-bold text-sm text-slate-900">Secretária Virtual - Formatura</h1>
-                <p id="subtituloLogin" class="text-xs text-slate-500">Acesse com seu CPF para gerenciar sua turma</p>
+                <p id="subtituloLogin" class="text-xs text-slate-500">Acesse com seu CPF ou E-mail</p>
             </div>
 
             <div class="bg-slate-50 p-3 rounded-xl border space-y-1">
@@ -116,7 +118,7 @@
 
         <main class="w-full max-w-3xl mx-auto p-3 space-y-4 min-h-screen">
             
-            <!-- BANNER DE SINCRONIZAÇÃO (MIGRAÇÃO DO LOCALSTORAGE PARA NUVEM) -->
+            <!-- BANNER DE SINCRONIZAÇÃO -->
             <div id="bannerSincronizar" class="hidden bg-amber-100 border-2 border-amber-400 p-4 rounded-xl text-center space-y-2 shadow-sm">
                 <p class="text-sm font-bold text-amber-900">📦 Encontramos dados antigos neste celular!</p>
                 <p class="text-xs text-amber-800">Deseja enviar os pagamentos que já estavam salvos aqui para a nuvem?</p>
@@ -394,7 +396,7 @@
 
         function alternarModoCadastro() {
             modoCadastro = !modoCadastro;
-            document.getElementById('subtituloLogin').innerText = modoCadastro ? "Cadastre seus dados" : "Acesse com seu CPF";
+            document.getElementById('subtituloLogin').innerText = modoCadastro ? "Cadastre seus dados" : "Acesse com seu CPF ou E-mail";
             document.getElementById('linkModoCadastro').innerText = modoCadastro ? "Já tem conta? Entrar" : "Ainda não tem conta? Cadastrar";
             document.getElementById('btnAcaoLogin').innerText = modoCadastro ? "Cadastrar e Entrar" : "Entrar";
             document.getElementById('grupoCamposCadastro').classList.toggle('hidden', !modoCadastro);
@@ -412,7 +414,7 @@
                 if (senha !== senhaConfirma) { mostrarAviso('Erro', 'As senhas não coincidem.', '❌'); return; }
                 
                 const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email: emailLogin, password: senha });
-                if (authError) { mostrarAviso('Erro', 'Erro ao criar conta.', '❌'); return; }
+                if (authError) { mostrarAviso('Erro', 'Erro ao criar conta. Verifique os dados.', '❌'); return; }
 
                 const nome = document.getElementById('cadastroNome').value.trim();
                 const turma = document.getElementById('cadastroTurma').value.trim();
@@ -502,6 +504,7 @@
         }
 
         function abrirModalGerenciarAlunos() { renderizarListaAlunosGerenciar(); document.getElementById('modalAlunos').classList.remove('hidden'); }
+        
         function renderizarListaAlunosGerenciar() {
             document.getElementById('listaAlunosGerenciar').innerHTML = alunosDaTurma.map((a, i) => `
                 <div class="flex justify-between items-center bg-white p-2 rounded border mb-1">
@@ -510,6 +513,7 @@
                 </div>
             `).join('');
         }
+        
         function adicionarAlunoTurma() {
             const nome = document.getElementById('novoAlunoInput').value.trim();
             if (!nome) return;
@@ -517,10 +521,12 @@
             salvarAlunosTurma(lista);
             document.getElementById('novoAlunoInput').value = '';
         }
+        
         function removerAlunoTurma(index) {
             let lista = [...alunosDaTurma]; lista.splice(index, 1);
             salvarAlunosTurma(lista);
         }
+        
         function processarListaColada() {
             const texto = document.getElementById('textoListaAlunos').value;
             let lista = [...alunosDaTurma];
@@ -538,6 +544,7 @@
             document.getElementById('inputModalTurmaProf').value = dadosPerfil.turma;
             document.getElementById('modalPerfil').classList.remove('hidden');
         }
+        
         async function salvarPerfilModal() {
             const novoNome = document.getElementById('inputModalNomeProf').value.trim();
             const novaTurma = document.getElementById('inputModalTurmaProf').value.trim();
@@ -712,11 +719,13 @@
             const tipo = document.getElementById('tipoPagamento').value;
             document.getElementById('observacao').value = `Pago ${tipo} em ${new Date().toLocaleDateString('pt-BR')} - Aluno: ${nome}`;
         }
+        
         document.getElementById('tipoPagamento')?.addEventListener('change', function() {
             document.getElementById('painelCustomizado').classList.toggle('hidden', !this.value.includes('Personalizado'));
             atualizarTextoPadrao();
         });
         document.getElementById('nomeAluno')?.addEventListener('change', atualizarTextoPadrao);
+        
         function togglePagamentoMisto() { document.getElementById('blocoDetalhesMisto').classList.toggle('hidden', !document.getElementById('checkPagamentoMisto').checked); }
 
         function alternarTela() {
@@ -724,17 +733,23 @@
             document.getElementById('secaoPlanilha').classList.toggle('hidden');
             document.getElementById('btnAlternar').innerText = document.getElementById('secaoFormulario').classList.contains('hidden') ? "📝 Novo Registro" : "📊 Tabela";
         }
+        
         function alternarSecaoPendentes() {
             document.getElementById('tabelaLancamentos').classList.toggle('hidden');
             document.getElementById('setaPendentes').innerText = document.getElementById('tabelaLancamentos').classList.contains('hidden') ? "▼" : "▲";
         }
+        
         function alternarSecaoQuitados() {
             document.getElementById('containerAlunosQuitados').classList.toggle('hidden');
             document.getElementById('setaQuitados').innerText = document.getElementById('containerAlunosQuitados').classList.contains('hidden') ? "▼" : "▲";
         }
 
         function gerarPDF() { window.print(); }
-        function exportarWord() { alert("Função Word será reativada em breve. Use o PDF ou Backup!"); }
+        
+        function exportarWord() {
+            alert("Função Word foi temporariamente desativada na versão em nuvem. Use o PDF ou faça um Backup.");
+        }
+        
         function fazerBackup() {
             const pacote = { perfil: dadosPerfil, alunos: alunosDaTurma, pagamentos: todosPagamentos };
             const blob = new Blob([JSON.stringify(pacote)], { type: 'application/json' });
