@@ -2,11 +2,9 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <!-- Trava o zoom forçado para a tela não cortar no Poco/Android -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>Controle de Formatura - Escola 31 de Março</title>
     
-    <!-- Links essenciais para o PWA (Instalação no Celular) -->
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#4f46e5">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,14 +13,16 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- BIBLIOTECA DO SUPABASE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
-        /* Impede zoom automático ao tocar nos campos e força layout 100% */
         html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
         input, select, textarea { font-size: 16px !important; }
         
         @media print {
             body { background: white; color: black; }
-            header, button, #secaoFormulario, #controlesFonte { display: none !important; }
+            header, button, #secaoFormulario, #controlesFonte, #bannerSincronizar { display: none !important; }
             #secaoPlanilha { display: block !important; }
             .shadow-sm, .shadow-2xl { box-shadow: none !important; }
         }
@@ -30,6 +30,7 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans pb-12">
 
+    <!-- TELA DE LOGIN -->
     <div id="telaLogin" class="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl text-center my-auto">
             <div class="space-y-1">
@@ -41,60 +42,33 @@
             <div class="bg-slate-50 p-3 rounded-xl border space-y-1">
                 <p class="text-[11px] font-medium text-slate-600">Aceder ao App via Telemóvel:</p>
                 <div id="qrcodeLogin" class="flex justify-center py-1"></div>
-                <p class="text-[10px] text-slate-400">Aponte a câmara para ler o QR Code</p>
-            </div>
-
-            <div id="containerSeletorProfessoras" class="space-y-1 text-left bg-slate-50 p-2.5 rounded-xl border">
-                <label class="block text-[11px] font-medium text-slate-600">Selecionar Professora / Turma Cadastrada:</label>
-                <select id="selectProfessoraRapido" onchange="selecionarProfessoraRapida(this.value)" class="w-full border rounded-lg p-2 text-xs outline-none bg-white">
-                    <option value="">-- Escolher da lista --</option>
-                </select>
-            </div>
-
-            <div id="divBotaoBiometria" class="hidden">
-                <button type="button" onclick="entrarComBiometria()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium p-3 rounded-xl transition text-xs shadow flex items-center justify-center gap-2">
-                    <span>🧬</span> Entrar com Biometria
-                </button>
-                <div class="relative flex py-1 items-center">
-                    <div class="flex-grow border-t border-slate-200"></div>
-                    <span class="flex-shrink mx-4 text-[10px] text-slate-400">ou use o CPF</span>
-                    <div class="flex-grow border-t border-slate-200"></div>
-                </div>
             </div>
 
             <form id="formLoginApp" onsubmit="realizarLogin(event)" class="space-y-3 text-left" autocomplete="off">
                 <div id="grupoCamposCadastro" class="hidden space-y-3">
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Nome Completo da Professora</label>
-                        <input type="text" id="cadastroNome" placeholder="Ex: Ângela Horkaten" autocomplete="off"
-                            class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
+                        <input type="text" id="cadastroNome" placeholder="Ex: Ângela Horkaten" autocomplete="off" class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Turma (Digite ou selecione)</label>
-                        <input type="text" id="cadastroTurma" list="listaTurmasSugestao" placeholder="Ex: 5º Ano C - 2026" autocomplete="off"
-                            class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
+                        <input type="text" id="cadastroTurma" list="listaTurmasSugestao" placeholder="Ex: 5º Ano C - 2026" autocomplete="off" class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
                         <datalist id="listaTurmasSugestao">
-                            <option value="5º Ano A - 2026">
-                            <option value="5º Ano B - 2026">
-                            <option value="5º Ano C - 2026">
-                            <option value="5º Ano D - 2026">
-                            <option value="5º Ano E - 2026">
+                            <option value="5º Ano A - 2026"><option value="5º Ano B - 2026"><option value="5º Ano C - 2026"><option value="5º Ano D - 2026"><option value="5º Ano E - 2026">
                         </datalist>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">CPF de Acesso</label>
-                    <input type="number" pattern="[0-9]*" id="loginCpf" oninput="preencherSenhaAoDigitarCpf(this.value)" placeholder="Somente números" required autocomplete="off"
-                        class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
+                    <label class="block text-xs font-medium text-slate-600 mb-1">CPF ou E-mail de Acesso</label>
+                    <input type="text" id="loginCpf" placeholder="Digite seu CPF ou E-mail" required autocomplete="off" class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
 
                 <div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">Senha</label>
                     <div class="relative">
-                        <input type="password" id="loginSenha" placeholder="••••••••" required autocomplete="off" readonly onfocus="this.removeAttribute('readonly');"
-                            class="w-full border rounded-lg p-2.5 pr-8 outline-none focus:ring-2 focus:ring-indigo-500">
-                        <button type="button" onclick="alternarVisibilidadeSenha('loginSenha', 'iconeOlho1')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs" title="Mostrar/Ocultar">
+                        <input type="password" id="loginSenha" placeholder="••••••••" required autocomplete="new-password" class="w-full border rounded-lg p-2.5 pr-8 outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button type="button" onclick="alternarVisibilidadeSenha('loginSenha', 'iconeOlho1')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs">
                             <span id="iconeOlho1">👁️</span>
                         </button>
                     </div>
@@ -102,21 +76,12 @@
 
                 <div id="grupoConfirmaSenha" class="hidden">
                     <label class="block text-xs font-medium text-slate-600 mb-1">Confirmar Senha</label>
-                    <div class="relative">
-                        <input type="password" id="loginSenhaConfirma" placeholder="••••••••" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');"
-                            class="w-full border rounded-lg p-2.5 pr-8 outline-none focus:ring-2 focus:ring-indigo-500">
-                        <button type="button" onclick="alternarVisibilidadeSenha('loginSenhaConfirma', 'iconeOlho2')" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs" title="Mostrar/Ocultar">
-                            <span id="iconeOlho2">👁️</span>
-                        </button>
-                    </div>
+                    <input type="password" id="loginSenhaConfirma" placeholder="••••••••" autocomplete="new-password" class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
 
                 <div class="flex justify-between items-center text-[11px] select-none pt-1">
                     <button type="button" onclick="alternarModoCadastro()" id="linkModoCadastro" class="text-indigo-600 font-medium hover:underline focus:outline-none bg-transparent border-none p-0 cursor-pointer">
                         Ainda não tem conta? Cadastrar
-                    </button>
-                    <button type="button" onclick="esqueciSenha()" class="text-slate-500 hover:underline focus:outline-none bg-transparent border-none p-0 cursor-pointer">
-                        Esqueceu a senha?
                     </button>
                 </div>
 
@@ -124,113 +89,95 @@
                     Entrar
                 </button>
             </form>
-
-            <div id="divLinkExcluirConta" class="pt-2 text-center select-none">
-                <button type="button" onclick="abrirModalExcluirConta()" class="text-[11px] text-rose-600 hover:underline font-medium focus:outline-none bg-transparent border-none p-0 cursor-pointer">
-                    🗑️ Gerenciar ou Excluir Conta
-                </button>
-            </div>
-
-            <div class="pt-2 border-t text-[11px] text-slate-400">
-                Desenvolvido por Everton Taborda
-            </div>
+            <div class="pt-2 border-t text-[11px] text-slate-400">Desenvolvido por Everton Taborda</div>
         </div>
     </div>
 
     <!-- APLICATIVO PRINCIPAL -->
     <div id="appPrincipal" class="hidden">
         <header class="bg-indigo-700 text-white p-3 shadow-md sticky top-0 z-40">
-            <!-- TELA CHEIA: w-full e max-w-3xl para ocupar as bordas -->
             <div class="w-full max-w-3xl mx-auto flex justify-between items-center">
                 <div class="flex items-center gap-2">
-                    <div onclick="abrirModalPerfil()" class="bg-indigo-800 hover:bg-indigo-900 px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-1.5 text-[11px] font-medium whitespace-nowrap" title="Editar Perfil e Turma">
-                        <span>👩‍🏫</span>
-                        <span id="labelNomeProfessora" class="font-medium">Professora</span>
+                    <div onclick="abrirModalPerfil()" class="bg-indigo-800 hover:bg-indigo-900 px-2.5 py-1.5 rounded-lg cursor-pointer flex items-center gap-1.5 text-[11px] font-medium whitespace-nowrap">
+                        <span>👩‍🏫</span><span id="labelNomeProfessora" class="font-medium">...</span>
                     </div>
                     <div>
                         <h1 class="font-bold text-xs">Escola 31 de Março</h1>
-                        <p id="labelTurmaTopo" class="text-[10px] text-indigo-200">Turma - 2026</p>
+                        <p id="labelTurmaTopo" class="text-[10px] text-indigo-200">Turma...</p>
                     </div>
                 </div>
                 <div class="flex gap-1">
-                    <button onclick="enviarRelatorioDiretora()" class="text-[10px] bg-emerald-700 hover:bg-emerald-800 px-2 py-1.5 rounded-lg font-medium transition" title="Enviar Relatório WhatsApp">
-                        Diretora
-                    </button>
-                    <button onclick="alternarTela()" id="btnAlternar" class="text-[10px] bg-indigo-800 hover:bg-indigo-900 px-2 py-1.5 rounded-lg font-medium transition">
-                        📊 Tabela
-                    </button>
-                    <button onclick="sairConta()" class="text-[10px] bg-rose-700 hover:bg-rose-800 px-2 py-1.5 rounded-lg font-medium transition" title="Sair">
-                        🔒 Sair
-                    </button>
+                    <button onclick="enviarRelatorioDiretora()" class="text-[10px] bg-emerald-700 hover:bg-emerald-800 px-2 py-1.5 rounded-lg font-medium transition">Diretora</button>
+                    <button onclick="alternarTela()" id="btnAlternar" class="text-[10px] bg-indigo-800 hover:bg-indigo-900 px-2 py-1.5 rounded-lg font-medium transition">📊 Tabela</button>
+                    <button onclick="sairConta()" class="text-[10px] bg-rose-700 hover:bg-rose-800 px-2 py-1.5 rounded-lg font-medium transition">🔒 Sair</button>
                 </div>
             </div>
         </header>
 
-        <!-- TELA CHEIA: w-full e max-w-3xl -->
         <main class="w-full max-w-3xl mx-auto p-3 space-y-4 min-h-screen">
             
+            <!-- BANNER DE SINCRONIZAÇÃO (MIGRAÇÃO DO LOCALSTORAGE PARA NUVEM) -->
+            <div id="bannerSincronizar" class="hidden bg-amber-100 border-2 border-amber-400 p-4 rounded-xl text-center space-y-2 shadow-sm">
+                <p class="text-sm font-bold text-amber-900">📦 Encontramos dados antigos neste celular!</p>
+                <p class="text-xs text-amber-800">Deseja enviar os pagamentos que já estavam salvos aqui para a nuvem?</p>
+                <button onclick="sincronizarDadosAntigos()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-lg text-xs shadow mt-2">☁️ Sim, enviar para a Nuvem</button>
+            </div>
+
             <div id="secaoFormulario" class="space-y-4">
                 <form id="formPagamento" class="bg-white p-4 rounded-xl shadow-sm space-y-3">
                     <div class="flex justify-between items-center border-b pb-2">
                         <h2 class="font-semibold text-slate-700 text-sm">Novo Registro de Comprovante</h2>
                         <button type="button" onclick="abrirModalGerenciarAlunos()" class="text-[10px] text-indigo-600 font-bold hover:underline">👥 Gerenciar Alunos</button>
                     </div>
-
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Nome do Aluno (Pendentes)</label>
                         <select id="nomeAluno" required class="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500 bg-white shadow-sm text-sm">
                             <option value="">Selecione o aluno...</option>
                         </select>
                     </div>
-
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Comprovante (Imagem/PDF)</label>
-                        <input type="file" id="arquivoComprovante" accept="image/*,application/pdf"
-                            class="w-full border rounded-lg p-2 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 text-sm">
-                        <p class="text-[10px] text-slate-400 mt-1">Se for dinheiro, deixe em branco.</p>
+                        <input type="file" id="arquivoComprovante" accept="image/*,application/pdf" class="w-full border rounded-lg p-2 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 text-sm">
+                        <p class="text-[10px] text-slate-400 mt-1">Máx: 900 KB (para não travar o banco).</p>
                     </div>
-
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <label class="text-xs font-medium text-slate-600">Opção de Pagamento</label>
-                            <button type="button" onclick="abrirModalGerenciarOpcoes()" class="text-[10px] text-indigo-600 font-bold hover:underline">⚙️ Gerenciar Opções</button>
                         </div>
                         <select id="tipoPagamento" class="w-full border border-emerald-300 rounded-lg p-3 outline-none bg-emerald-50/70 text-emerald-900 font-medium shadow-sm text-sm"></select>
                     </div>
-
-                    <!-- BLOCO DE PAGAMENTO MISTO ADICIONADO -->
+                    
                     <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 mt-2">
                         <div class="flex items-center gap-2 mb-1">
                             <input type="checkbox" id="checkPagamentoMisto" onchange="togglePagamentoMisto()" class="w-4 h-4 text-indigo-600 rounded border-slate-300">
-                            <label for="checkPagamentoMisto" class="text-[11px] font-bold text-slate-700 cursor-pointer">✨ Dividir pagamento (Dinheiro + Pix)</label>
+                            <label for="checkPagamentoMisto" class="text-[11px] font-bold text-slate-700 cursor-pointer">✨ Dividir pagamento (ex: parte em Dinheiro, parte em Pix)</label>
                         </div>
                         <div id="blocoDetalhesMisto" class="hidden border-t border-slate-200 pt-2 mt-2">
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
                                     <label class="block text-[11px] font-medium text-slate-600">2ª Forma</label>
-                                    <select id="segundaForma" class="w-full border rounded-lg p-2 text-xs bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <select id="segundaForma" class="w-full border rounded-lg p-2 text-xs bg-white outline-none">
                                         <option value="Pix/Transf">Pix / Transferência</option>
                                         <option value="Dinheiro">Dinheiro</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-medium text-slate-600">Valor 2ª Forma (R$)</label>
-                                    <input type="text" inputmode="decimal" id="valorSegundaForma" placeholder="Ex: 7,50" class="w-full border rounded-lg p-2 text-xs bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <input type="text" inputmode="decimal" id="valorSegundaForma" placeholder="Ex: 47,50" class="w-full border rounded-lg p-2 text-xs bg-white outline-none">
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- PAINEL DINÂMICO DE LANÇAMENTO PERSONALIZADO -->
                     <div id="painelCustomizado" class="hidden bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 mt-2">
                         <p class="font-bold text-xs text-indigo-700">✏️ Lançamento Personalizado / Parcial</p>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label class="block text-[11px] font-medium text-slate-600">Referência</label>
                                 <select id="refParcelaCustom" class="w-full border rounded-lg p-2 text-xs bg-white outline-none">
-                                    <option value="auto_abater">✨ Abate Automático / Quitação Geral</option>
-                                    <option value="1a_parcela">1ª Parcela (Meta R$ 87,50)</option>
-                                    <option value="2a_parcela">2ª Parcela (Meta R$ 87,50)</option>
+                                    <option value="auto_abater">✨ Abate Automático</option>
+                                    <option value="1a_parcela">1ª Parcela</option>
+                                    <option value="2a_parcela">2ª Parcela</option>
                                 </select>
                             </div>
                             <div>
@@ -243,17 +190,17 @@
                         </div>
                         <div>
                             <label class="block text-[11px] font-medium text-slate-600 mb-1">Valor Pago Agora (R$)</label>
-                            <input type="text" inputmode="decimal" id="valorCustomizado" placeholder="Ex: 35,21" class="w-full border rounded-lg p-2.5 text-sm font-bold text-slate-800 bg-white outline-none border-indigo-200 focus:ring-2 focus:ring-indigo-500">
+                            <input type="text" inputmode="decimal" id="valorCustomizado" placeholder="Ex: 35,21" class="w-full border rounded-lg p-2.5 text-sm font-bold text-slate-800 bg-white outline-none">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Status / Observação (Editável)</label>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Status / Observação</label>
                         <textarea id="observacao" rows="2" class="w-full border rounded-lg p-3 outline-none bg-amber-50/50 shadow-sm text-sm"></textarea>
                     </div>
                     
                     <button type="button" onclick="prepararSalvamento()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition shadow mt-2">
-                        Salvar Lançamento
+                        Salvar Lançamento na Nuvem
                     </button>
                     <button type="button" id="btnCancelarEdicao" onclick="resetarFormularioAposEdicao()" class="hidden w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium p-3 rounded-xl transition shadow mt-2">
                         Cancelar Edição
@@ -261,34 +208,26 @@
                 </form>
 
                 <div class="bg-white p-4 rounded-xl shadow-sm space-y-2">
-                    <h3 class="font-semibold text-slate-700 text-xs uppercase tracking-wider">Exportar & Relatórios</h3>
+                    <h3 class="font-semibold text-slate-700 text-xs uppercase tracking-wider">Relatórios & Backup</h3>
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="exportarWord()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
-                            📄 Baixar Word Oficial
-                        </button>
-                        <button onclick="fazerBackup()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">
-                            💾 Backup JSON
-                        </button>
+                        <button onclick="exportarWord()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">📄 Baixar Word</button>
+                        <button onclick="fazerBackup()" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-medium py-2.5 px-3 rounded-lg transition">💾 Backup Local</button>
                     </div>
                 </div>
 
                 <div class="bg-white p-4 rounded-xl shadow-sm space-y-3">
-                    <!-- SEÇÃO DE REGISTROS SALVOS PENDENTES (MINIMIZADA POR PADRÃO) -->
                     <button type="button" onclick="alternarSecaoPendentes()" class="w-full bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 p-2.5 rounded-xl text-xs font-bold flex justify-between items-center transition">
                         <div class="flex items-center gap-2">
-                            <span>⏳ Registros Salvos Pendentes</span>
-                            <span id="contadorRegistros" class="text-[10px] bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded-full font-semibold">0 lançamentos</span>
+                            <span>⏳ Registros Pendentes</span>
+                            <span id="contadorRegistros" class="text-[10px] bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded-full font-semibold">0</span>
                         </div>
                         <span id="setaPendentes">▼</span>
                     </button>
-                    <div id="tabelaLancamentos" class="hidden mt-2 space-y-2 max-h-72 overflow-y-auto text-xs pr-1">
-                        <p class="text-slate-400 text-center py-4">Nenhum lançamento pendente no momento.</p>
-                    </div>
+                    <div id="tabelaLancamentos" class="hidden mt-2 space-y-2 max-h-72 overflow-y-auto text-xs pr-1"></div>
 
-                    <!-- SEÇÃO DE ALUNOS QUITADOS (MINIMIZADA POR PADRÃO) -->
                     <div class="border-t pt-3 mt-2">
                         <button type="button" onclick="alternarSecaoQuitados()" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 p-2.5 rounded-xl text-xs font-bold flex justify-between items-center transition">
-                            <span>✅ Alunos com Quitação Completa (R$ 175)</span>
+                            <span>✅ Alunos Quitados</span>
                             <span id="setaQuitados">▼</span>
                         </button>
                         <div id="containerAlunosQuitados" class="hidden mt-2 space-y-2 max-h-48 overflow-y-auto text-xs pr-1"></div>
@@ -296,53 +235,39 @@
                 </div>
             </div>
 
-            <!-- TELA DE TABELA (RELATÓRIO) -->
             <div id="secaoPlanilha" class="hidden space-y-4">
                 <div class="bg-white p-5 rounded-2xl shadow-sm space-y-4 border border-slate-200">
-                    
-                    <!-- BOTÕES INVERTIDOS (PDF ESQUERDA, FECHAR DIREITA) -->
                     <div class="flex justify-between items-center w-full mb-2 border-b pb-3">
                         <button onclick="gerarPDF()" class="bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-medium py-2 px-3 rounded-lg transition shadow flex items-center gap-1">📄 Baixar PDF</button>
-                        <button onclick="alternarTela()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold py-2 px-3 rounded-lg transition shadow flex items-center justify-center" title="Fechar e Voltar">✕</button>
+                        <button onclick="alternarTela()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold py-2 px-3 rounded-lg transition shadow flex items-center justify-center">✕</button>
                     </div>
-
                     <div class="text-center space-y-2">
                         <div class="text-2xl pt-1">🏛️</div>
                         <h2 class="font-bold text-sm text-slate-900 uppercase">Escola Municipal 31 de Março</h2>
-                        <p id="relatorioTurmaSub" class="text-xs font-semibold text-indigo-600">Controle de Pagamentos - Formatura</p>
-                        <p class="text-[10px] text-slate-400">1ª Parcela: R$ 87,50 (07/11/2026) | 2ª Parcela: R$ 87,50 (06/12/2026)</p>
+                        <p id="relatorioTurmaSub" class="text-xs font-semibold text-indigo-600">Controle de Pagamentos</p>
                     </div>
-
-                    <!-- ROLL HORIZONTAL PARA A TABELA NÃO QUEBRAR -->
-                    <div class="overflow-x-auto border rounded-xl" style="-webkit-overflow-scrolling: touch;">
+                    <div class="overflow-x-auto border rounded-xl">
                         <table class="w-full text-left text-xs border-collapse" style="min-width: 500px;">
                             <thead>
                                 <tr class="bg-slate-800 text-white">
-                                    <th class="p-2 border-r border-slate-700 text-center w-10">Nº</th>
-                                    <th class="p-2 border-r border-slate-700 min-w-[120px]">Nome do Formando</th>
-                                    <th class="p-2 text-center border-r border-slate-700 w-16">1ª Parc</th>
-                                    <th class="p-2 text-center border-r border-slate-700 w-16">2ª Parc</th>
+                                    <th class="p-2 border-r text-center w-10">Nº</th>
+                                    <th class="p-2 border-r min-w-[120px]">Nome do Formando</th>
+                                    <th class="p-2 text-center border-r w-16">1ª Parc</th>
+                                    <th class="p-2 text-center border-r w-16">2ª Parc</th>
                                     <th class="p-2 min-w-[100px]">Forma / Obs</th>
                                 </tr>
                             </thead>
                             <tbody id="corpoTabelaPlanilha"></tbody>
                         </table>
                     </div>
-
                     <div class="pt-6 space-y-4 text-xs text-slate-700 border-t">
                         <div class="grid grid-cols-2 gap-2 font-semibold">
                             <p id="labelTotalPrevisto">Total Previsto: R$ 0,00</p>
                             <p id="labelTotalRecebido">Total Recebido: R$ 0,00</p>
                         </div>
                         <div class="grid grid-cols-2 gap-4 text-center pt-2">
-                            <div class="space-y-1">
-                                <div class="border-b border-slate-400 pb-1"></div>
-                                <p id="assinaturaProfessora" class="font-bold text-[11px]">Professora Responsável</p>
-                            </div>
-                            <div class="space-y-1">
-                                <div class="border-b border-slate-400 pb-1"></div>
-                                <p class="font-bold text-[11px]">Direção / Secretaria</p>
-                            </div>
+                            <div class="space-y-1"><div class="border-b border-slate-400 pb-1"></div><p id="assinaturaProfessora" class="font-bold text-[11px]">Professora</p></div>
+                            <div class="space-y-1"><div class="border-b border-slate-400 pb-1"></div><p class="font-bold text-[11px]">Direção / Secretaria</p></div>
                         </div>
                     </div>
                 </div>
@@ -350,1286 +275,476 @@
         </main>
     </div>
 
-    <!-- CONTROLES DE TAMANHO DA LETRA -->
-    <div id="controlesFonte" class="hidden fixed bottom-4 left-4 z-50 flex bg-white border border-slate-200 shadow-lg rounded-full overflow-hidden print:hidden">
-        <button onclick="alterarTamanhoFonte(-10)" class="px-3 py-2 text-slate-700 hover:bg-slate-100 font-bold text-sm border-r border-slate-200" title="Diminuir Letra">A-</button>
-        <button onclick="alterarTamanhoFonte(10)" class="px-3 py-2 text-slate-700 hover:bg-slate-100 font-bold text-sm" title="Aumentar Letra">A+</button>
-    </div>
-
-    <!-- MODAIS DO SISTEMA -->
+    <!-- MODAIS -->
     <div id="modalPerfil" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
             <div class="flex justify-between items-center border-b pb-2">
-                <h3 class="font-bold text-sm text-slate-800">Editar Perfil e Turma</h3>
-                <button onclick="fecharModalPerfil()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
+                <h3 class="font-bold text-sm text-slate-800">Editar Perfil</h3>
+                <button onclick="document.getElementById('modalPerfil').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
             </div>
             <div class="space-y-3">
-                <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Nome Completo da Professora</label>
-                    <input type="text" id="inputModalNomeProf" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Nome da Turma</label>
-                    <input type="text" id="inputModalTurmaProf" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                </div>
+                <div><label class="block text-xs font-medium text-slate-600 mb-1">Nome da Professora</label><input type="text" id="inputModalNomeProf" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"></div>
+                <div><label class="block text-xs font-medium text-slate-600 mb-1">Turma</label><input type="text" id="inputModalTurmaProf" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm"></div>
             </div>
             <button onclick="salvarPerfilModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">Salvar Alterações</button>
         </div>
     </div>
 
-    <!-- MODAL GERENCIAR ALUNOS -->
     <div id="modalAlunos" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
             <div class="flex justify-between items-center border-b pb-2">
-                <h3 class="font-bold text-sm text-slate-800">Gerenciar Alunos da Turma</h3>
-                <button onclick="fecharModalGerenciarAlunos()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
+                <h3 class="font-bold text-sm text-slate-800">Gerenciar Alunos</h3>
+                <button onclick="document.getElementById('modalAlunos').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
             </div>
-
-            <button onclick="abrirModalImportar()" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center gap-1.5 shadow">
-                📋 Colar Lista em Bloco (Word/WhatsApp)
-            </button>
-
+            <button onclick="document.getElementById('modalImportarLista').classList.remove('hidden')" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 rounded-xl transition shadow">📋 Colar Lista em Bloco</button>
             <div class="space-y-2 border-t pt-2">
-                <label class="block text-xs font-medium text-slate-600">Adicionar Único Aluno</label>
                 <div class="flex gap-2">
                     <input type="text" id="novoAlunoInput" placeholder="Nome completo" class="w-full border rounded-lg p-2 outline-none text-sm">
                     <button onclick="adicionarAlunoTurma()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-medium">Adicionar</button>
                 </div>
             </div>
-            <div class="space-y-1">
-                <label class="block text-xs font-medium text-slate-600">Alunos Cadastrados (A-Z)</label>
-                <div id="listaAlunosGerenciar" class="max-h-48 overflow-y-auto space-y-1 text-xs border p-2 rounded-lg bg-slate-50 pr-1"></div>
-            </div>
-            <button onclick="fecharModalGerenciarAlunos()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2 rounded-xl transition text-xs">Concluir</button>
+            <div id="listaAlunosGerenciar" class="max-h-48 overflow-y-auto space-y-1 text-xs border p-2 rounded-lg bg-slate-50 pr-1"></div>
+            <button onclick="document.getElementById('modalAlunos').classList.add('hidden')" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2 rounded-xl transition text-xs">Concluir</button>
         </div>
     </div>
 
-    <!-- MODAL IMPORTAR EM BLOCO -->
     <div id="modalImportarLista" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-3 shadow-2xl my-auto">
             <div class="flex justify-between items-center border-b pb-2">
-                <h3 class="font-bold text-sm text-slate-800">📋 Importar Vários Alunos</h3>
-                <button onclick="fecharModalImportar()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
+                <h3 class="font-bold text-sm text-slate-800">📋 Importar Alunos</h3>
+                <button onclick="document.getElementById('modalImportarLista').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
             </div>
-            <p class="text-xs text-slate-500">Cole a lista abaixo (copiada do Word ou WhatsApp). O sistema limpa os números e organiza em ordem alfabética:</p>
-            <textarea id="textoListaAlunos" rows="8" placeholder="Exemplo:&#10;1. Arthur Carneiro&#10;2. Davi de Goes..." class="w-full border rounded-lg p-2.5 outline-none text-xs font-sans bg-slate-50 border-slate-300"></textarea>
+            <textarea id="textoListaAlunos" rows="8" placeholder="Cole a lista aqui..." class="w-full border rounded-lg p-2.5 outline-none text-xs bg-slate-50"></textarea>
             <div class="flex gap-2 pt-1">
-                <button onclick="fecharModalImportar()" class="w-1/2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2 rounded-xl text-xs">Cancelar</button>
-                <button onclick="processarListaColada()" class="w-1/2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-xl text-xs shadow">Salvar Alunos</button>
+                <button onclick="document.getElementById('modalImportarLista').classList.add('hidden')" class="w-1/2 bg-slate-200 text-slate-700 font-medium py-2 rounded-xl text-xs">Cancelar</button>
+                <button onclick="processarListaColada()" class="w-1/2 bg-emerald-600 text-white font-medium py-2 rounded-xl text-xs shadow">Salvar</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL VISUALIZADOR DE COMPROVANTE -->
-    <div id="modalVisualizador" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-4 space-y-3 shadow-2xl text-center">
-            <div class="flex justify-between items-center border-b pb-2">
-                <h3 id="tituloVisualizador" class="font-bold text-xs text-slate-800">Comprovante</h3>
-                <button onclick="fecharVisualizador()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
-            </div>
-            <div id="conteudoVisualizador" class="max-h-80 overflow-y-auto flex items-center justify-center bg-slate-100 p-2 rounded-lg"></div>
-            <button onclick="fecharVisualizador()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2 rounded-xl transition text-xs">Fechar</button>
-        </div>
-    </div>
-
-    <!-- MODAL EXCLUIR CONTA -->
-    <div id="modalExcluirConta" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto text-center relative">
-            <div class="flex justify-between items-center border-b pb-2">
-                <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2"><span class="text-lg">⚠️</span> Gerenciamento de Conta</h3>
-                <button onclick="fecharModalExcluirConta()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
-            </div>
-            <div class="space-y-2 text-left">
-                <label class="block text-xs font-medium text-slate-600">Digite o CPF da conta que deseja gerenciar:</label>
-                <input type="number" pattern="[0-9]*" id="inputCpfGerenciarConta" placeholder="Somente números" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                <button onclick="buscarContaParaGerenciar()" class="w-full bg-indigo-600 hover:bg-indigo-700 transition text-white py-2 rounded-lg text-xs font-medium mt-2">Localizar Conta</button>
-            </div>
-            <div id="detalhesContaExcluir" class="text-xs bg-slate-50 p-3 rounded-lg text-left space-y-1"></div>
-            <div id="containerBotoesExclusao" class="hidden grid grid-cols-2 gap-2 pt-2">
-                <button onclick="fecharModalExcluirConta()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2.5 rounded-xl transition text-xs">Cancelar</button>
-                <button onclick="confirmarExclusaoConta()" class="bg-rose-600 hover:bg-rose-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">Sim, Excluir</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL CONFIRMAÇÃO GENÉRICA -->
-    <div id="modalConfirmacao" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
-            <div class="flex justify-between items-center text-indigo-600 border-b pb-2">
-                <div class="flex items-center space-x-2">
-                    <span class="text-lg">⚠️</span>
-                    <h3 id="tituloModalConfirmacao" class="font-bold text-sm text-slate-800">Confirmação</h3>
-                </div>
-                <button onclick="fecharModalConfirmacao(false)" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
-            </div>
-            <div id="conteudoResumoModal" class="text-xs space-y-1 text-slate-600 bg-slate-50 p-3 rounded-lg"></div>
-            <div class="grid grid-cols-2 gap-2 pt-2">
-                <button onclick="fecharModalConfirmacao(false)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2.5 rounded-xl transition text-xs">Cancelar</button>
-                <button onclick="fecharModalConfirmacao(true)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">Confirmar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL GERENCIAR OPÇÕES -->
-    <div id="modalGerenciar" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl my-auto">
-            <div class="flex justify-between items-center border-b pb-2">
-                <h3 class="font-bold text-sm text-slate-800">Gerenciar Formas de Pagamento</h3>
-                <button onclick="fecharModalGerenciar()" class="text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
-            </div>
-            <div class="space-y-2">
-                <label class="block text-xs font-medium text-slate-600">Adicionar Nova Opção</label>
-                <div class="flex gap-2">
-                    <input type="text" id="novaOpcaoInput" placeholder="Ex: Parcela Extra Pix" class="w-full border rounded-lg p-2 outline-none text-sm">
-                    <button onclick="adicionarOpcaoPagamento()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-xs font-medium">Adicionar</button>
-                </div>
-            </div>
-            <div class="space-y-1">
-                <label class="block text-xs font-medium text-slate-600">Opções Existentes (Clique para excluir)</label>
-                <div id="listaOpcoesGerenciar" class="max-h-40 overflow-y-auto space-y-1 text-xs border p-2 rounded-lg bg-slate-50 pr-1"></div>
-            </div>
-            <button onclick="fecharModalGerenciar()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-medium py-2 rounded-xl transition text-xs">Concluir</button>
-        </div>
-    </div>
-
-    <!-- MODAL AVISO -->
     <div id="modalAviso" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl text-center my-auto relative">
-            <button onclick="fecharModalAviso()" class="absolute top-3 right-4 text-slate-400 hover:text-slate-600 font-bold text-xs">✕</button>
+            <button onclick="document.getElementById('modalAviso').classList.add('hidden')" class="absolute top-3 right-4 text-slate-400 font-bold text-xs">✕</button>
             <div id="avisoIcone" class="text-3xl pt-2">✨</div>
             <h3 id="avisoTitulo" class="font-bold text-sm text-slate-800">Aviso</h3>
             <p id="avisoTexto" class="text-xs text-slate-600 pb-2"></p>
-            <button onclick="fecharModalAviso()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition text-xs shadow">OK</button>
+            <button onclick="document.getElementById('modalAviso').classList.add('hidden')" class="w-full bg-indigo-600 text-white font-medium py-2.5 rounded-xl text-xs shadow">OK</button>
         </div>
     </div>
 
     <script>
+        // ==========================================
+        // CONEXÃO COM O SUPABASE
+        // ==========================================
+        const supabaseUrl = 'https://fokhbroglkvvttmtaift.supabase.co';
+        const supabaseKey = 'sb_publishable_bnPuGJsSMscXcpYyhMw5Lw_Wehz2wwS';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // Variáveis Globais
         let modoCadastro = false;
-        let registroEmEdicaoId = null;
-        let tamanhoFonteAtual = 100;
-
-        window.addEventListener('DOMContentLoaded', () => {
-            carregarTamanhoFonte();
-            verificarSessao();
-            gerarQRCodeLogin();
-            carregarListaProfessorasNoLogin();
-            verificarSeTemBiometriaSalva();
-            atualizarListaAlunosDinamica();
-            atualizarSelectOpcoes();
-            atualizarPlanilhaGeral();
-            atualizarDadosTopoPerfil();
-            atualizarLista();
-        });
-
-        window.addEventListener('beforeunload', () => {
-            fazerBackupAutomaticoSilencioso();
-        });
-
-        // Função do Checkbox Misto
-        function togglePagamentoMisto() {
-            const isChecked = document.getElementById('checkPagamentoMisto').checked;
-            const bloco = document.getElementById('blocoDetalhesMisto');
-            if (isChecked) {
-                bloco.classList.remove('hidden');
-            } else {
-                bloco.classList.add('hidden');
-            }
-        }
-
-        // CONVERSÃO DIRETA E FLEXÍVEL DE CENTAVOS E VALORES DIGITADOS (EX: 35,21 OU 35.21)
-        function obterValorCustomizadoDigitado() {
-            const input = document.getElementById('valorCustomizado');
-            if (!input || !input.value) return 0;
-            let str = input.value.trim().replace(',', '.');
-            let val = parseFloat(str);
-            return isNaN(val) ? 0 : val;
-        }
-
-        function alterarTamanhoFonte(variacao) {
-            tamanhoFonteAtual += variacao;
-            if (tamanhoFonteAtual < 80) tamanhoFonteAtual = 80;
-            if (tamanhoFonteAtual > 150) tamanhoFonteAtual = 150;
-            document.documentElement.style.fontSize = tamanhoFonteAtual + '%';
-            localStorage.setItem('tamanho_fonte_app', tamanhoFonteAtual);
-        }
-
-        function carregarTamanhoFonte() {
-            const fonteSalva = localStorage.getItem('tamanho_fonte_app');
-            if (fonteSalva) {
-                tamanhoFonteAtual = parseInt(fonteSalva);
-                document.documentElement.style.fontSize = tamanhoFonteAtual + '%';
-            }
-        }
-
-        function gerarQRCodeLogin() {
-            const container = document.getElementById('qrcodeLogin');
-            if (container && container.innerHTML.trim() === '') {
-                new QRCode(container, {
-                    text: "https://evertonltaborda1978-collab.github.io/controle-formatura/",
-                    width: 120, height: 120, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H
-                });
-            }
-        }
-
-        function obterChaveUsuario() {
-            const cpfLogado = localStorage.getItem('usuario_logado_cpf') || 'padrao';
-            return `_user_${cpfLogado}`;
-        }
-
-        function fazerBackupAutomaticoSilencioso() {
-            const sufixo = obterChaveUsuario();
-            const dados = localStorage.getItem(`caixa_formatura${sufixo}`);
-            if (dados) localStorage.setItem(`backup_seguranca${sufixo}`, dados);
-        }
-
-        function carregarListaProfessorasNoLogin() {
-            const select = document.getElementById('selectProfessoraRapido');
-            let opcoesHtml = '<option value="">-- Escolher professora cadastrada --</option>';
-            let encontrou = false;
-
-            for (let i = 0; i < localStorage.length; i++) {
-                const chave = localStorage.key(i);
-                if (chave.startsWith('_user_')) {
-                    const cpf = chave.replace('_user_', '');
-                    const nomeProf = localStorage.getItem(`nome_professora${chave}`) || 'Professora';
-                    const turmaProf = localStorage.getItem(`turma_professora${chave}`) || 'Turma';
-                    opcoesHtml += `<option value="${cpf}">${nomeProf} (${turmaProf})</option>`;
-                    encontrou = true;
-                }
-            }
-
-            if (encontrou) {
-                select.innerHTML = opcoesHtml;
-                document.getElementById('containerSeletorProfessoras').classList.remove('hidden');
-            } else {
-                document.getElementById('containerSeletorProfessoras').classList.add('hidden');
-            }
-
-            const cpfSalvoMemoria = localStorage.getItem('cpf_memorizado_login');
-            if (cpfSalvoMemoria && !modoCadastro) {
-                document.getElementById('loginCpf').value = cpfSalvoMemoria;
-                preencherSenhaAoDigitarCpf(cpfSalvoMemoria);
-            }
-        }
-
-        function selecionarProfessoraRapida(cpf) {
-            if (!cpf) return;
-            document.getElementById('loginCpf').value = cpf;
-            preencherSenhaAoDigitarCpf(cpf);
-        }
-
-        function preencherSenhaAoDigitarCpf(cpf) {
-            const cpfLimpo = cpf.trim();
-            if (!cpfLimpo) return;
-            const sufixo = `_user_${cpfLimpo}`;
-            const senhaSalva = localStorage.getItem(`cadastro_senha${sufixo}`) || '';
-            document.getElementById('loginSenha').value = senhaSalva;
-        }
-
-        function verificarSessao() {
-            const usuarioLogado = localStorage.getItem('usuario_logado_cpf');
-            if (usuarioLogado) {
-                document.getElementById('telaLogin').classList.add('hidden');
-                document.getElementById('appPrincipal').classList.remove('hidden');
-                document.getElementById('controlesFonte').classList.remove('hidden');
-                atualizarDadosTopoPerfil();
-            } else {
-                document.getElementById('telaLogin').classList.remove('hidden');
-                document.getElementById('appPrincipal').classList.add('hidden');
-                document.getElementById('controlesFonte').classList.add('hidden');
-                gerarQRCodeLogin();
-                carregarListaProfessorasNoLogin();
-            }
-        }
-
-        function atualizarDadosTopoPerfil() {
-            const sufixo = obterChaveUsuario();
-            const nomeProf = localStorage.getItem(`nome_professora${sufixo}`) || 'Professora';
-            const turmaProf = localStorage.getItem(`turma_professora${sufixo}`) || 'Turma 5º Ano';
-            document.getElementById('labelNomeProfessora').innerText = nomeProf;
-            document.getElementById('labelTurmaTopo').innerText = turmaProf;
-            document.getElementById('relatorioTurmaSub').innerText = `Controle de Pagamentos - Formatura (${turmaProf})`;
-            document.getElementById('assinaturaProfessora').innerText = `Professora: ${nomeProf}`;
-        }
-
-        function abrirModalPerfil() {
-            const sufixo = obterChaveUsuario();
-            document.getElementById('inputModalNomeProf').value = localStorage.getItem(`nome_professora${sufixo}`) || '';
-            document.getElementById('inputModalTurmaProf').value = localStorage.getItem(`turma_professora${sufixo}`) || '';
-            document.getElementById('modalPerfil').classList.remove('hidden');
-        }
-
-        function fecharModalPerfil() { document.getElementById('modalPerfil').classList.add('hidden'); }
-
-        function salvarPerfilModal() {
-            const sufixo = obterChaveUsuario();
-            const novoNome = document.getElementById('inputModalNomeProf').value.trim();
-            const novaTurma = document.getElementById('inputModalTurmaProf').value.trim();
-            if (novoNome) localStorage.setItem(`nome_professora${sufixo}`, novoNome);
-            if (novaTurma) localStorage.setItem(`turma_professora${sufixo}`, novaTurma);
-            fecharModalPerfil();
-            atualizarDadosTopoPerfil();
-            mostrarAviso('Sucesso', 'Perfil atualizado com sucesso!', '✅');
-        }
-
-        function alternarVisibilidadeSenha(idInput, idIcone) {
-            const inputSenha = document.getElementById(idInput);
-            const icone = document.getElementById(idIcone);
-            if (inputSenha.type === 'password') {
-                inputSenha.type = 'text'; icone.innerText = '🙈';
-            } else {
-                inputSenha.type = 'password'; icone.innerText = '👁️';
-            }
-        }
-
-        function verificarSeTemBiometriaSalva() {
-            const biometriaCadastrada = localStorage.getItem('biometria_ativa_formatura');
-            if (biometriaCadastrada && (window.PublicKeyCredential)) {
-                document.getElementById('divBotaoBiometria').classList.remove('hidden');
-            } else {
-                document.getElementById('divBotaoBiometria').classList.add('hidden');
-            }
-        }
-
-        async function cadastrarBiometriaSePossivel(cpf) {
-            if (window.PublicKeyCredential) {
-                try {
-                    const publicKey = {
-                        challenge: new Uint8Array(32),
-                        rp: { name: "Secretaria Virtual Formatura" },
-                        user: { id: Uint8Array.from(cpf, c => c.charCodeAt(0)), name: cpf, displayName: cpf },
-                        pubKeyCredParams: [{ alg: -7, type: "public-key" }],
-                        timeout: 60000, attestation: "direct"
-                    };
-                    const credential = await navigator.credentials.create({ publicKey });
-                    if (credential) {
-                        localStorage.setItem('biometria_ativa_formatura', 'true');
-                        localStorage.setItem('usuario_biometria_cpf', cpf);
-                    }
-                } catch (e) { console.log("Biometria não configurada:", e); }
-            }
-        }
-
-        async function entrarComBiometria() {
-            if (window.PublicKeyCredential) {
-                try {
-                    const publicKey = { challenge: new Uint8Array(32), timeout: 60000, allowCredentials: [{ type: "public-key", id: new Uint8Array(32) }] };
-                    await navigator.credentials.get({ publicKey }).catch(() => {});
-                    const cpfSalvo = localStorage.getItem('usuario_biometria_cpf');
-                    if (cpfSalvo) {
-                        localStorage.setItem('usuario_logado_cpf', cpfSalvo);
-                        verificarSessao();
-                    } else {
-                        mostrarAviso('Atenção', 'Nenhuma biometria vinculada. Entre com o CPF.', '⚠️');
-                    }
-                } catch (e) { mostrarAviso('Atenção', 'Não foi possível autenticar por biometria.', '⚠️'); }
-            }
-        }
-
-        function alternarModoCadastro() {
-            modoCadastro = !modoCadastro;
-            const titulo = document.getElementById('subtituloLogin');
-            const link = document.getElementById('linkModoCadastro');
-            const btn = document.getElementById('btnAcaoLogin');
-            const grupoCampos = document.getElementById('grupoCamposCadastro');
-            const grupoConfirma = document.getElementById('grupoConfirmaSenha');
-            const seletorRapido = document.getElementById('containerSeletorProfessoras');
-            const inputNome = document.getElementById('cadastroNome');
-            const inputTurma = document.getElementById('cadastroTurma');
-            const inputConfirma = document.getElementById('loginSenhaConfirma');
-
-            if (modoCadastro) {
-                titulo.innerText = "Cadastre seu CPF, Nome e Turma"; link.innerText = "Já tem conta? Entrar"; btn.innerText = "Cadastrar e Entrar";
-                seletorRapido.classList.add('hidden'); grupoCampos.classList.remove('hidden'); grupoConfirma.classList.remove('hidden');
-                inputNome.setAttribute('required', 'true'); inputTurma.setAttribute('required', 'true'); inputConfirma.setAttribute('required', 'true');
-                document.getElementById('loginSenha').value = '';
-            } else {
-                titulo.innerText = "Acesse com seu CPF para gerenciar sua turma"; link.innerText = "Ainda não tem conta? Cadastrar"; btn.innerText = "Entrar";
-                seletorRapido.classList.remove('hidden'); grupoCampos.classList.add('hidden'); grupoConfirma.classList.add('hidden');
-                inputNome.removeAttribute('required'); inputTurma.removeAttribute('required'); inputConfirma.removeAttribute('required');
-                const cpfSalvoMemoria = localStorage.getItem('cpf_memorizado_login');
-                if (cpfSalvoMemoria) { document.getElementById('loginCpf').value = cpfSalvoMemoria; preencherSenhaAoDigitarCpf(cpfSalvoMemoria); }
-            }
-        }
-
-        async function realizarLogin(event) {
-            event.preventDefault();
-            const cpf = document.getElementById('loginCpf').value.trim();
-            const senha = document.getElementById('loginSenha').value.trim();
-            const sufixo = `_user_${cpf}`;
-            const senhaSalva = localStorage.getItem(`cadastro_senha${sufixo}`);
-
-            if (modoCadastro) {
-                if (senhaSalva) { mostrarAviso('Erro', 'Este CPF já possui uma conta cadastrada. Faça login.', '❌'); return; }
-                const senhaConfirma = document.getElementById('loginSenhaConfirma').value.trim();
-                if (senha !== senhaConfirma) { mostrarAviso('Erro', 'As senhas não coincidem. Verifique por favor.', '❌'); return; }
-                const nomeProf = document.getElementById('cadastroNome').value.trim();
-                const turmaProf = document.getElementById('cadastroTurma').value.trim();
-                if (!nomeProf || !turmaProf) { mostrarAviso('Atenção', 'Preencha o nome e a turma para o cadastro.', '⚠️'); return; }
-
-                localStorage.setItem(`nome_professora${sufixo}`, nomeProf);
-                localStorage.setItem(`turma_professora${sufixo}`, turmaProf);
-                localStorage.setItem(`cadastro_senha${sufixo}`, senha);
-                localStorage.setItem('usuario_logado_cpf', cpf);
-                localStorage.setItem('cpf_memorizado_login', cpf);
-                localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify([]));
-
-                await cadastrarBiometriaSePossivel(cpf);
-                fazerBackupAutomaticoSilencioso();
-                mostrarAviso('Sucesso', 'Cadastro realizado com sucesso!', '🎉');
-                verificarSessao(); atualizarListaAlunosDinamica(); atualizarPlanilhaGeral();
-            } else {
-                if (!senhaSalva) { mostrarAviso('Atenção', 'Este CPF não está cadastrado. Clique em "Ainda não tem conta? Cadastrar".', '⚠️'); return; }
-                if (senha === senhaSalva) {
-                    localStorage.setItem('usuario_logado_cpf', cpf);
-                    localStorage.setItem('cpf_memorizado_login', cpf);
-                    await cadastrarBiometriaSePossivel(cpf);
-                    fazerBackupAutomaticoSilencioso();
-                    verificarSessao(); atualizarListaAlunosDinamica(); atualizarPlanilhaGeral(); atualizarLista();
-                } else { mostrarAviso('Erro', 'Senha incorreta. Verifique os dados.', '❌'); }
-            }
-        }
-
-        function esqueciSenha() {
-            const cpf = document.getElementById('loginCpf').value.trim();
-            const sufixo = `_user_${cpf}`;
-            const senhaSalva = localStorage.getItem(`cadastro_senha${sufixo}`);
-            if (!cpf || !senhaSalva) { mostrarAviso('Atenção', 'Digite um CPF válido no campo acima e clique aqui.', '⚠️'); return; }
-            mostrarAviso('Recuperação', `A senha para este CPF é: ${senhaSalva}`, '🔑');
-        }
-
-        function sairConta() {
-            fazerBackupAutomaticoSilencioso(); localStorage.removeItem('usuario_logado_cpf');
-            verificarSessao(); verificarSeTemBiometriaSalva(); carregarListaProfessorasNoLogin();
-        }
-
-        function abrirModalExcluirConta() {
-            document.getElementById('inputCpfGerenciarConta').value = ''; document.getElementById('detalhesContaExcluir').innerHTML = '';
-            document.getElementById('containerBotoesExclusao').classList.add('hidden'); document.getElementById('modalExcluirConta').classList.remove('hidden');
-        }
-
-        function fecharModalExcluirConta() { document.getElementById('modalExcluirConta').classList.add('hidden'); }
-
-        function buscarContaParaGerenciar() {
-            const cpfInput = document.getElementById('inputCpfGerenciarConta').value.trim();
-            if (!cpfInput) { mostrarAviso('Atenção', 'Digite o CPF para localizar a conta.', '⚠️'); return; }
-            const sufixo = `_user_${cpfInput}`;
-            const nome = localStorage.getItem(`nome_professora${sufixo}`);
-            const turma = localStorage.getItem(`turma_professora${sufixo}`);
-            const container = document.getElementById('detalhesContaExcluir');
-            if (!nome) {
-                container.innerHTML = `<p class="text-rose-600 font-bold">Nenhuma conta encontrada com este CPF.</p>`;
-                document.getElementById('containerBotoesExclusao').classList.add('hidden');
-            } else {
-                container.innerHTML = `<p><strong>Nome:</strong> ${nome}</p><p><strong>Turma:</strong> ${turma}</p><p><strong>CPF:</strong> ${cpfInput}</p>`;
-                localStorage.setItem('cpf_para_exclusao_temporario', sufixo);
-                document.getElementById('containerBotoesExclusao').classList.remove('hidden');
-            }
-        }
-
-        function confirmarExclusaoConta() {
-            const sufixo = localStorage.getItem('cpf_para_exclusao_temporario');
-            if (sufixo) {
-                localStorage.removeItem(`nome_professora${sufixo}`); localStorage.removeItem(`turma_professora${sufixo}`);
-                localStorage.removeItem(`cadastro_senha${sufixo}`); localStorage.removeItem(`caixa_formatura${sufixo}`);
-                localStorage.removeItem(`alunos_turma${sufixo}`); localStorage.removeItem('usuario_logado_cpf'); localStorage.removeItem('cpf_memorizado_login');
-            }
-            fecharModalExcluirConta(); mostrarAviso('Excluído', 'Conta removida com sucesso.', '🗑️'); setTimeout(() => location.reload(), 1500);
-        }
-
-        function obterAlunosTurma() {
-            const sufixo = obterChaveUsuario();
-            let lista = JSON.parse(localStorage.getItem(`alunos_turma${sufixo}`)) || [];
-            const listaFixaDeAlunos = [
-                "Arthur Carneiro Ferraz", "Davi de Goes Carneiro", "David Desplanches de Miranda",
-                "Emanuelle Vitória de Oliveira", "Gustavo Henrique Ferreira Faria", "Gustavo Henrique Marcondes Galvão",
-                "Heloisy Vitória dos Santos Freitas", "Ingridy Silva Lemes", "Isadora Martins Bueno",
-                "João Lucas Cardoso dos Santos", "José Henrique Montevechio Cristo", "Letícia Vitória de Oliveira Betim",
-                "Lorrany Marcelle Rocha de Camargo", "Lucas Ronaldo Jacumasso Ribas", "Luiza Lemes Faustino",
-                "Luiza Vitória de Proença Miranda", "Maria Júlia Borges de Melo", "Matheus da Silva Santos",
-                "Sabrina de Oliveira Mendes", "Steffiny Eduarda Pedroso dos Santos", "Yuri Matheus dos Santos Lessi"
-            ];
-            if (lista.length === 0) {
-                lista = listaFixaDeAlunos;
-                localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(lista)); 
-                localStorage.setItem('alunos_turma', JSON.stringify(lista));
-            }
-            return lista.sort((a, b) => a.localeCompare(b, 'pt-BR'));
-        }
-
-        function salvarAlunosTurma(lista) {
-            const sufixo = obterChaveUsuario();
-            lista.sort((a, b) => a.localeCompare(b, 'pt-BR'));
-            localStorage.setItem(`alunos_turma${sufixo}`, JSON.stringify(lista)); 
-            localStorage.setItem('alunos_turma', JSON.stringify(lista));
-            atualizarListaAlunosDinamica(); 
-            atualizarPlanilhaGeral();
-        }
-
-        function abrirModalGerenciarAlunos() { renderizarListaAlunosGerenciar(); document.getElementById('modalAlunos').classList.remove('hidden'); }
-        function fecharModalGerenciarAlunos() { document.getElementById('modalAlunos').classList.add('hidden'); }
-
-        function abrirModalImportar() {
-            document.getElementById('textoListaAlunos').value = '';
-            document.getElementById('modalImportarLista').classList.remove('hidden');
-        }
-        function fecharModalImportar() {
-            document.getElementById('modalImportarLista').classList.add('hidden');
-        }
-
-        function processarListaColada() {
-            const texto = document.getElementById('textoListaAlunos').value;
-            if (!texto || !texto.trim()) {
-                mostrarAviso('Atenção', 'Cole ao menos um nome na caixa de texto.', '⚠️');
-                return;
-            }
-            let alunos = obterAlunosTurma();
-            const linhas = texto.split('\n');
-            let adicionados = 0;
-
-            linhas.forEach(linha => {
-                let nomeLimpo = linha.trim();
-                nomeLimpo = nomeLimpo.replace(/^[•*\-\d\s.\)]+/, '').trim();
-                if (nomeLimpo.length > 0) {
-                    const jaExiste = alunos.some(a => a.toLowerCase() === nomeLimpo.toLowerCase());
-                    if (!jaExiste) {
-                        alunos.push(nomeLimpo);
-                        adicionados++;
-                    }
-                }
-            });
-
-            salvarAlunosTurma(alunos);
-            fecharModalImportar();
-            renderizarListaAlunosGerenciar();
-            mostrarAviso('Sucesso', `${adicionados} aluno(s) adicionado(s) em ordem alfabética!`, '✅');
-        }
-
-        function renderizarListaAlunosGerenciar() {
-            const alunos = obterAlunosTurma();
-            document.getElementById('listaAlunosGerenciar').innerHTML = alunos.map((aluno, index) => `
-                <div class="flex justify-between items-center bg-white p-2 rounded border">
-                    <span class="truncate max-w-[200px]">${aluno}</span>
-                    <button onclick="removerAlunoTurma(${index})" class="text-red-500 hover:text-red-700 font-bold px-2 py-0.5 text-xs">Excluir</button>
-                </div>
-            `).join('');
-        }
-
-        function adicionarAlunoTurma() {
-            const input = document.getElementById('novoAlunoInput'); const nome = input.value.trim();
-            if (!nome) { mostrarAviso('Atenção', 'Digite o nome do aluno.', '⚠️'); return; }
-            let alunos = obterAlunosTurma();
-            if (alunos.some(a => a.toLowerCase() === nome.toLowerCase())) { mostrarAviso('Atenção', 'Este aluno já está na lista.', '⚠️'); return; }
-            alunos.push(nome); salvarAlunosTurma(alunos); input.value = '';
-            renderizarListaAlunosGerenciar(); mostrarAviso('Sucesso', 'Aluno adicionado à turma!', '✅');
-        }
-
-        function removerAlunoTurma(index) {
-            let alunos = obterAlunosTurma(); alunos.splice(index, 1); salvarAlunosTurma(alunos);
-            renderizarListaAlunosGerenciar(); mostrarAviso('Removido', 'Aluno retirado da turma.', '🗑️');
-        }
-
-        function calcularStatusAluno(alunoNome, todosLancamentos) {
-            const META_PARCELA = 87.50;
-            const lancamentos = todosLancamentos.filter(item => item.aluno ? item.aluno.toLowerCase() === alunoNome.toLowerCase() : false);
-            
-            let pagoP1 = 0;
-            let pagoP2 = 0;
-
-            lancamentos.forEach(item => {
-                let val = 0;
-                if (item.valor !== undefined && item.valor !== null && !isNaN(parseFloat(item.valor))) {
-                    val = parseFloat(item.valor);
-                } else {
-                    val = extrairValorOpcao(item.tipoPagamento);
-                }
-
-                const opc = (item.tipoPagamento || '').toLowerCase();
-                const ref = (item.ref || '').toLowerCase();
-
-                if (opc.includes('à vista') || opc.includes('a vista') || opc.includes('175')) {
-                    pagoP1 += META_PARCELA;
-                    pagoP2 += META_PARCELA;
-                } else if (ref === '1a_parcela' || opc.includes('1ª parcela')) {
-                    pagoP1 += val;
-                } else if (ref === '2a_parcela' || opc.includes('2ª parcela')) {
-                    pagoP2 += val;
-                } else {
-                    // ABATE AUTOMÁTICO (ABATE 1ª PARCELA ATÉ R$ 87,50 E SOBRA VAI PRA 2ª)
-                    if (pagoP1 < META_PARCELA) {
-                        const faltaP1 = META_PARCELA - pagoP1;
-                        if (val <= faltaP1) {
-                            pagoP1 += val;
-                        } else {
-                            pagoP1 = META_PARCELA;
-                            pagoP2 += (val - faltaP1);
-                        }
-                    } else {
-                        pagoP2 += val;
-                    }
-                }
-            });
-
-            const totalPago = pagoP1 + pagoP2;
-
-            if (pagoP1 >= META_PARCELA && pagoP2 >= META_PARCELA) {
-                return { grupo: 1, texto: "Quitado", totalPago, pagoP1, pagoP2 };
-            }
-            if (pagoP1 >= META_PARCELA && pagoP2 < META_PARCELA && pagoP2 === 0) {
-                return { grupo: 2, texto: "1ª PAGA | 2ª Pendente", totalPago, pagoP1, pagoP2 };
-            }
-            if (pagoP1 > 0 && pagoP1 < META_PARCELA) {
-                const faltaP1 = (META_PARCELA - pagoP1).toFixed(2).replace('.', ',');
-                const pagoP1Fmt = pagoP1.toFixed(2).replace('.', ',');
-                return { 
-                    grupo: 4, 
-                    texto: `🟡 PARCIAL (Pago R$ ${pagoP1Fmt} | Falta R$ ${faltaP1} da 1ª Parcela)`, 
-                    totalPago, pagoP1, pagoP2 
-                };
-            }
-            if (pagoP1 >= META_PARCELA && pagoP2 > 0 && pagoP2 < META_PARCELA) {
-                const faltaP2 = (META_PARCELA - pagoP2).toFixed(2).replace('.', ',');
-                const pagoP2Fmt = pagoP2.toFixed(2).replace('.', ',');
-                return { 
-                    grupo: 4, 
-                    texto: `🟡 PARCIAL (1ª Paga | 2ª Parcial: Pago R$ ${pagoP2Fmt} | Falta R$ ${faltaP2})`, 
-                    totalPago, pagoP1, pagoP2 
-                };
-            }
-
-            return { grupo: 3, texto: "Pendente", totalPago: 0, pagoP1: 0, pagoP2: 0 };
-        }
-
-        function alunoEstaQuitado(nomeAluno) {
-            const info = calcularStatusAluno(nomeAluno, obterDadosArmazenados());
-            return info.grupo === 1;
-        }
-
-        function atualizarListaAlunosDinamica() {
-            const alunos = obterAlunosTurma();
-            const selectAluno = document.getElementById('nomeAluno');
-            
-            const alunosPendentes = alunos
-                .filter(aluno => !alunoEstaQuitado(aluno))
-                .sort((a, b) => a.localeCompare(b, 'pt-BR'));
-
-            if (alunosPendentes.length === 0) {
-                selectAluno.innerHTML = `<option value="">Todos os alunos quitaram a formatura! 🎉</option>`;
-            } else {
-                selectAluno.innerHTML = `<option value="">Selecione o aluno pendente...</option>` + 
-                    alunosPendentes.map(aluno => `<option value="${aluno}">${aluno}</option>`).join('');
-            }
-            atualizarSelectOpcoes();
-        }
-
-        let opcoesPagamento = JSON.parse(localStorage.getItem('opcoes_pagamento_v1')) || [
+        let todosPagamentos = []; 
+        let dadosPerfil = { nome: 'Professora', turma: 'Turma' };
+        let alunosDaTurma = [];
+        let opcoesPagamento = [
             "À Vista (Pix/Transf) - R$ 175,00", "1ª Parcela (Pix/Transf) - R$ 87,50", "2ª Parcela (Pix/Transf) - R$ 87,50",
             "Dinheiro - À Vista (R$ 175,00)", "Dinheiro - 1ª Parcela (R$ 87,50)", "Dinheiro - 2ª Parcela (R$ 87,50)",
             "✏️ Valor Livre / Parcial (Personalizado)"
         ];
 
-        // FORÇA A INSERÇÃO DA OPÇÃO PERSONALIZADA SE NÃO EXISTIR EM MEMÓRIA
-        if (!opcoesPagamento.some(op => op.includes('Personalizado') || op.includes('Valor Livre'))) {
-            opcoesPagamento.push("✏️ Valor Livre / Parcial (Personalizado)");
-            localStorage.setItem('opcoes_pagamento_v1', JSON.stringify(opcoesPagamento));
+        window.addEventListener('DOMContentLoaded', async () => {
+            gerarQRCodeLogin();
+            verificarSessao();
+        });
+
+        function gerarQRCodeLogin() {
+            const container = document.getElementById('qrcodeLogin');
+            if (container && container.innerHTML.trim() === '') {
+                new QRCode(container, { text: window.location.href, width: 120, height: 120 });
+            }
         }
 
-        function salvarOpcoesStorage() {
-            localStorage.setItem('opcoes_pagamento_v1', JSON.stringify(opcoesPagamento));
-            fazerBackupAutomaticoSilencioso(); atualizarSelectOpcoes();
+        function alternarVisibilidadeSenha(idInput, idIcone) {
+            const input = document.getElementById(idInput);
+            const icone = document.getElementById(idIcone);
+            if (input.type === 'password') { input.type = 'text'; icone.innerText = '🙈'; } 
+            else { input.type = 'password'; icone.innerText = '👁️'; }
         }
 
-        // ATUALIZA AS OPÇÕES DE PAGAMENTO FILTRANDO DINAMICAMENTE DE ACORDO COM O ALUNO SELECIONADO
-        function atualizarSelectOpcoes() {
-            const selectAluno = document.getElementById('nomeAluno');
-            const nomeAluno = selectAluno ? selectAluno.value.trim() : '';
-            const select = document.getElementById('tipoPagamento');
-            const refSelect = document.getElementById('refParcelaCustom');
-            
-            if (!select) return;
+        function mostrarAviso(t, txt, i) {
+            document.getElementById('avisoTitulo').innerText = t;
+            document.getElementById('avisoTexto').innerText = txt;
+            document.getElementById('avisoIcone').innerText = i;
+            document.getElementById('modalAviso').classList.remove('hidden');
+        }
 
-            let opcoesParaExibir = [...opcoesPagamento];
-            let pagoP1Quitado = false;
-
-            if (nomeAluno) {
-                const dadosArmazenados = obterDadosArmazenados().filter(i => i.id !== registroEmEdicaoId);
-                const info = calcularStatusAluno(nomeAluno, dadosArmazenados);
-
-                if (info.pagoP1 >= 87.50) {
-                    pagoP1Quitado = true;
-                    // Oculta opções de 1ª Parcela e À Vista (175)
-                    opcoesParaExibir = opcoesParaExibir.filter(op => {
-                        const opLower = op.toLowerCase();
-                        return !opLower.includes('1ª') && !opLower.includes('à vista') && !opLower.includes('a vista') && !opLower.includes('175');
-                    });
-                }
-            }
-
-            select.innerHTML = opcoesParaExibir.map(op => `<option value="${op}">${op}</option>`).join('');
-
-            if (refSelect) {
-                if (pagoP1Quitado) {
-                    refSelect.innerHTML = `
-                        <option value="auto_abater">✨ Abate Automático / Quitação Geral</option>
-                        <option value="2a_parcela">2ª Parcela (Meta R$ 87,50)</option>
-                    `;
-                } else {
-                    refSelect.innerHTML = `
-                        <option value="auto_abater">✨ Abate Automático / Quitação Geral</option>
-                        <option value="1a_parcela">1ª Parcela (Meta R$ 87,50)</option>
-                        <option value="2a_parcela">2ª Parcela (Meta R$ 87,50)</option>
-                    `;
-                }
-            }
-
-            const painel = document.getElementById('painelCustomizado');
-            if (select.value && (select.value.includes('Personalizado') || select.value.includes('Valor Livre') || select.value.includes('customizado'))) {
-                painel.classList.remove('hidden');
+        // ==========================================
+        // AUTENTICAÇÃO (LOGIN / CADASTRO)
+        // ==========================================
+        async function verificarSessao() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                document.getElementById('telaLogin').classList.add('hidden');
+                document.getElementById('appPrincipal').classList.remove('hidden');
+                await carregarDadosDoBanco();
             } else {
-                painel.classList.add('hidden');
+                document.getElementById('telaLogin').classList.remove('hidden');
+                document.getElementById('appPrincipal').classList.add('hidden');
+            }
+        }
+
+        function alternarModoCadastro() {
+            modoCadastro = !modoCadastro;
+            document.getElementById('subtituloLogin').innerText = modoCadastro ? "Cadastre seus dados" : "Acesse com seu CPF";
+            document.getElementById('linkModoCadastro').innerText = modoCadastro ? "Já tem conta? Entrar" : "Ainda não tem conta? Cadastrar";
+            document.getElementById('btnAcaoLogin').innerText = modoCadastro ? "Cadastrar e Entrar" : "Entrar";
+            document.getElementById('grupoCamposCadastro').classList.toggle('hidden', !modoCadastro);
+            document.getElementById('grupoConfirmaSenha').classList.toggle('hidden', !modoCadastro);
+        }
+
+        async function realizarLogin(event) {
+            event.preventDefault();
+            const inputLogin = document.getElementById('loginCpf').value.trim();
+            const senha = document.getElementById('loginSenha').value.trim();
+            let emailLogin = inputLogin.includes('@') ? inputLogin : `${inputLogin}@formatura.local`;
+
+            if (modoCadastro) {
+                const senhaConfirma = document.getElementById('loginSenhaConfirma').value.trim();
+                if (senha !== senhaConfirma) { mostrarAviso('Erro', 'As senhas não coincidem.', '❌'); return; }
+                
+                const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email: emailLogin, password: senha });
+                if (authError) { mostrarAviso('Erro', 'Erro ao criar conta.', '❌'); return; }
+
+                const nome = document.getElementById('cadastroNome').value.trim();
+                const turma = document.getElementById('cadastroTurma').value.trim();
+                const alunosFixos = ["Arthur Carneiro", "Davi de Goes", "Emanuelle Vitória", "Gustavo Henrique", "Heloisy Vitória", "João Lucas", "Maria Júlia", "Yuri Matheus"];
+                
+                await supabaseClient.from('perfis').insert([{ user_id: authData.user.id, nome_professora: nome, turma: turma, alunos: alunosFixos }]);
+                mostrarAviso('Sucesso', 'Conta criada!', '🎉');
+                await verificarSessao();
+            } else {
+                const { error } = await supabaseClient.auth.signInWithPassword({ email: emailLogin, password: senha });
+                if (error) { mostrarAviso('Erro', 'Usuário ou senha incorretos.', '❌'); return; }
+                await verificarSessao();
+            }
+        }
+
+        async function sairConta() {
+            await supabaseClient.auth.signOut();
+            window.location.reload();
+        }
+
+        // ==========================================
+        // BANCO DE DADOS E MIGRAÇÃO
+        // ==========================================
+        async function carregarDadosDoBanco() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) return;
+
+            const { data: perfil } = await supabaseClient.from('perfis').select('*').eq('user_id', user.id).single();
+            
+            if (perfil) {
+                dadosPerfil = { nome: perfil.nome_professora, turma: perfil.turma };
+                alunosDaTurma = perfil.alunos || [];
+            } else {
+                dadosPerfil = { nome: 'Everton (Teste)', turma: 'Turma de Teste' };
+                alunosDaTurma = ["Aluno 1", "Aluno 2", "Aluno 3"];
+                await supabaseClient.from('perfis').insert([{ user_id: user.id, nome_professora: dadosPerfil.nome, turma: dadosPerfil.turma, alunos: alunosDaTurma }]);
             }
 
+            document.getElementById('labelNomeProfessora').innerText = dadosPerfil.nome;
+            document.getElementById('labelTurmaTopo').innerText = dadosPerfil.turma;
+            document.getElementById('relatorioTurmaSub').innerText = `Controle de Pagamentos (${dadosPerfil.turma})`;
+            document.getElementById('assinaturaProfessora').innerText = `Professora: ${dadosPerfil.nome}`;
+
+            const { data: pagamentos } = await supabaseClient.from('pagamentos').select('*').order('created_at', { ascending: false });
+            todosPagamentos = pagamentos || [];
+
+            // Verifica se tem dados antigos no localStorage (Migração)
+            const cpfLogado = user.email.split('@')[0];
+            const dadosAntigos = JSON.parse(localStorage.getItem(`caixa_formatura_user_${cpfLogado}`) || localStorage.getItem('caixa_formatura') || '[]');
+            if (dadosAntigos.length > 0 && todosPagamentos.length === 0) {
+                document.getElementById('bannerSincronizar').classList.remove('hidden');
+            }
+
+            atualizarTudoNaTela();
+        }
+
+        async function sincronizarDadosAntigos() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            const cpfLogado = user.email.split('@')[0];
+            const dadosAntigos = JSON.parse(localStorage.getItem(`caixa_formatura_user_${cpfLogado}`) || localStorage.getItem('caixa_formatura') || '[]');
+            
+            const inserir = dadosAntigos.map(d => ({
+                user_id: user.id, aluno: d.aluno, tipo_pagamento: d.tipoPagamento,
+                valor: d.valor || 0, observacao: d.observacao, referencia_parcela: d.ref, data_registro: d.dataRegistro || new Date().toLocaleDateString('pt-BR')
+            }));
+
+            if (inserir.length > 0) {
+                await supabaseClient.from('pagamentos').insert(inserir);
+                localStorage.removeItem(`caixa_formatura_user_${cpfLogado}`);
+                localStorage.removeItem('caixa_formatura');
+                mostrarAviso('Sucesso', 'Dados antigos enviados para a nuvem!', '☁️');
+                document.getElementById('bannerSincronizar').classList.add('hidden');
+                carregarDadosDoBanco();
+            }
+        }
+
+        // ==========================================
+        // GESTÃO DE ALUNOS E PERFIL
+        // ==========================================
+        async function salvarAlunosTurma(lista) {
+            lista.sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            alunosDaTurma = lista;
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            await supabaseClient.from('perfis').update({ alunos: lista }).eq('user_id', user.id);
+            atualizarTudoNaTela();
+            renderizarListaAlunosGerenciar();
+        }
+
+        function abrirModalGerenciarAlunos() { renderizarListaAlunosGerenciar(); document.getElementById('modalAlunos').classList.remove('hidden'); }
+        function renderizarListaAlunosGerenciar() {
+            document.getElementById('listaAlunosGerenciar').innerHTML = alunosDaTurma.map((a, i) => `
+                <div class="flex justify-between items-center bg-white p-2 rounded border mb-1">
+                    <span class="truncate max-w-[200px]">${a}</span>
+                    <button onclick="removerAlunoTurma(${i})" class="text-red-500 hover:text-red-700 font-bold text-xs">Excluir</button>
+                </div>
+            `).join('');
+        }
+        function adicionarAlunoTurma() {
+            const nome = document.getElementById('novoAlunoInput').value.trim();
+            if (!nome) return;
+            let lista = [...alunosDaTurma, nome];
+            salvarAlunosTurma(lista);
+            document.getElementById('novoAlunoInput').value = '';
+        }
+        function removerAlunoTurma(index) {
+            let lista = [...alunosDaTurma]; lista.splice(index, 1);
+            salvarAlunosTurma(lista);
+        }
+        function processarListaColada() {
+            const texto = document.getElementById('textoListaAlunos').value;
+            let lista = [...alunosDaTurma];
+            texto.split('\n').forEach(linha => {
+                let nome = linha.replace(/^[•*\-\d\s.\)]+/, '').trim();
+                if (nome && !lista.some(a => a.toLowerCase() === nome.toLowerCase())) lista.push(nome);
+            });
+            salvarAlunosTurma(lista);
+            document.getElementById('modalImportarLista').classList.add('hidden');
+            mostrarAviso('Sucesso', 'Alunos importados!', '✅');
+        }
+
+        function abrirModalPerfil() {
+            document.getElementById('inputModalNomeProf').value = dadosPerfil.nome;
+            document.getElementById('inputModalTurmaProf').value = dadosPerfil.turma;
+            document.getElementById('modalPerfil').classList.remove('hidden');
+        }
+        async function salvarPerfilModal() {
+            const novoNome = document.getElementById('inputModalNomeProf').value.trim();
+            const novaTurma = document.getElementById('inputModalTurmaProf').value.trim();
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            await supabaseClient.from('perfis').update({ nome_professora: novoNome, turma: novaTurma }).eq('user_id', user.id);
+            dadosPerfil.nome = novoNome; dadosPerfil.turma = novaTurma;
+            document.getElementById('labelNomeProfessora').innerText = novoNome;
+            document.getElementById('labelTurmaTopo').innerText = novaTurma;
+            document.getElementById('modalPerfil').classList.add('hidden');
+            mostrarAviso('Sucesso', 'Perfil atualizado!', '✅');
+        }
+
+        // ==========================================
+        // LÓGICA DE PAGAMENTOS
+        // ==========================================
+        function atualizarTudoNaTela() {
+            const selectAluno = document.getElementById('nomeAluno');
+            const pendentes = alunosDaTurma.filter(a => calcularStatusAluno(a, todosPagamentos).grupo !== 1);
+            selectAluno.innerHTML = pendentes.length === 0 ? `<option value="">Todos quitaram! 🎉</option>` : `<option value="">Selecione...</option>` + pendentes.map(a => `<option value="${a}">${a}</option>`).join('');
+            
+            document.getElementById('tipoPagamento').innerHTML = opcoesPagamento.map(op => `<option value="${op}">${op}</option>`).join('');
+            atualizarLista();
+            atualizarPlanilhaGeral();
             atualizarTextoPadrao();
         }
 
-        document.getElementById('nomeAluno').addEventListener('change', atualizarSelectOpcoes);
-        document.getElementById('tipoPagamento').addEventListener('change', function() {
-            const painel = document.getElementById('painelCustomizado');
-            if (this.value.includes('Personalizado') || this.value.includes('Valor Livre') || this.value.includes('customizado')) {
-                painel.classList.remove('hidden');
-            } else {
-                painel.classList.add('hidden');
-            }
-            atualizarTextoPadrao();
-        });
+        function calcularStatusAluno(aluno, listaPagamentos) {
+            const META = 87.50;
+            const pagamentos = listaPagamentos.filter(p => p.aluno.toLowerCase() === aluno.toLowerCase());
+            let pagoP1 = 0, pagoP2 = 0;
 
-        ['valorCustomizado', 'formaCustomizada', 'refParcelaCustom'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('input', atualizarTextoPadrao);
-                el.addEventListener('change', atualizarTextoPadrao);
-            }
-        });
+            pagamentos.forEach(p => {
+                let val = parseFloat(p.valor) || extrairValorOpcao(p.tipo_pagamento);
+                const opc = (p.tipo_pagamento || '').toLowerCase();
+                const ref = (p.referencia_parcela || '').toLowerCase();
 
-        function atualizarTextoPadrao() {
-            const nome = document.getElementById('nomeAluno').value || '[Nome Aluno]';
-            const selectTipo = document.getElementById('tipoPagamento');
-            let tipo = selectTipo && selectTipo.value ? selectTipo.value : (opcoesPagamento[0] || 'Pagamento');
-            const dataHoje = new Date().toLocaleDateString('pt-BR');
-
-            if (tipo.includes('Personalizado') || tipo.includes('Valor Livre') || tipo.includes('customizado')) {
-                const valInput = obterValorCustomizadoDigitado();
-                const forma = document.getElementById('formaCustomizada').value;
-                const refSelect = document.getElementById('refParcelaCustom');
-                const refText = refSelect && refSelect.selectedIndex >= 0 ? refSelect.options[refSelect.selectedIndex].text : '';
-                document.getElementById('observacao').value = `Pago Parcial (${forma}) - R$ ${valInput.toFixed(2).replace('.', ',')} em ${dataHoje} - Ref: ${refText}`;
-            } else {
-                document.getElementById('observacao').value = `Pago ${tipo} em ${dataHoje} - Aluno: ${nome}`;
-            }
-        }
-
-        function obterDadosArmazenados() {
-            const sufixo = obterChaveUsuario();
-            const lançamentosNovos = JSON.parse(localStorage.getItem(`caixa_formatura${sufixo}`)) || [];
-            if (lançamentosNovos.length === 0) {
-                const lançamentosAntigos = JSON.parse(localStorage.getItem('caixa_formatura')) || [];
-                if (lançamentosAntigos.length > 0) { localStorage.setItem(`caixa_formatura${sufixo}`, JSON.stringify(lançamentosAntigos)); return lançamentosAntigos; }
-            }
-            return lançamentosNovos;
-        }
-
-        let funcaoCallbackConfirmacao = null;
-
-        function gerarNomePadronizado(nomeCompleto, tipoPagamento) {
-            if (!nomeCompleto) return 'comprovante';
-            const partes = nomeCompleto.trim().split(' ');
-            return `${tipoPagamento.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}_${partes[0].toLowerCase()}_${(partes.length > 1 ? partes[partes.length - 1] : '').toLowerCase()}.pdf`;
-        }
-
-        function editarRegistro(id) {
-            const dadosArmazenados = obterDadosArmazenados(); const item = dadosArmazenados.find(i => i.id === id); if (!item) return;
-            
-            const selectAluno = document.getElementById('nomeAluno');
-            if (![...selectAluno.options].some(opt => opt.value === item.aluno)) {
-                selectAluno.innerHTML += `<option value="${item.aluno}">${item.aluno}</option>`;
-            }
-
-            document.getElementById('nomeAluno').value = item.aluno; 
-            registroEmEdicaoId = id;
-            
-            atualizarSelectOpcoes();
-            document.getElementById('tipoPagamento').value = item.tipoPagamento;
-            document.getElementById('observacao').value = item.observacao; 
-            
-            if (item.valor !== undefined) {
-                document.getElementById('valorCustomizado').value = item.valor.toFixed(2).replace('.', ',');
-                if (document.getElementById('refParcelaCustom')) {
-                    document.getElementById('refParcelaCustom').value = item.ref || 'auto_abater';
+                if (opc.includes('à vista') || opc.includes('175')) { pagoP1 += META; pagoP2 += META; }
+                else if (ref === '1a_parcela' || opc.includes('1ª parcela')) { pagoP1 += val; }
+                else if (ref === '2a_parcela' || opc.includes('2ª parcela')) { pagoP2 += val; }
+                else {
+                    if (pagoP1 < META) {
+                        const falta = META - pagoP1;
+                        if (val <= falta) pagoP1 += val;
+                        else { pagoP1 = META; pagoP2 += (val - falta); }
+                    } else { pagoP2 += val; }
                 }
-            }
-
-            document.getElementById('tipoPagamento').dispatchEvent(new Event('change'));
-
-            const btnSalvar = document.querySelector('#formPagamento button[onclick="prepararSalvamento()"]');
-            btnSalvar.innerText = "Atualizar Lançamento"; 
-            btnSalvar.classList.replace('bg-indigo-600', 'bg-amber-500'); 
-            btnSalvar.classList.replace('hover:bg-indigo-700', 'hover:bg-amber-600');
-            document.getElementById('btnCancelarEdicao').classList.remove('hidden'); 
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+            const total = pagoP1 + pagoP2;
+            if (pagoP1 >= META && pagoP2 >= META) return { grupo: 1, totalPago: total, pagoP1, pagoP2 };
+            if (pagoP1 >= META && pagoP2 === 0) return { grupo: 2, totalPago: total, pagoP1, pagoP2 };
+            if (pagoP1 > 0 && pagoP1 < META) return { grupo: 4, totalPago: total, pagoP1, pagoP2 };
+            if (pagoP1 >= META && pagoP2 > 0 && pagoP2 < META) return { grupo: 4, totalPago: total, pagoP1, pagoP2 };
+            return { grupo: 3, totalPago: 0, pagoP1: 0, pagoP2: 0 };
         }
 
-        function resetarFormularioAposEdicao() {
-            registroEmEdicaoId = null; 
-            document.getElementById('formPagamento').reset(); 
-            document.getElementById('painelCustomizado').classList.add('hidden');
-            document.getElementById('blocoDetalhesMisto').classList.add('hidden');
-            document.getElementById('checkPagamentoMisto').checked = false;
-            atualizarListaAlunosDinamica();
-            atualizarSelectOpcoes();
-            
-            const btnSalvar = document.querySelector('#formPagamento button[onclick="prepararSalvamento()"]');
-            btnSalvar.innerText = "Salvar Lançamento"; 
-            btnSalvar.classList.replace('bg-amber-500', 'bg-indigo-600'); 
-            btnSalvar.classList.replace('hover:bg-amber-600', 'hover:bg-indigo-700');
-            document.getElementById('btnCancelarEdicao').classList.add('hidden');
-        }
-
-        function extrairValorOpcao(tipoPagamentoStr) {
-            if (typeof tipoPagamentoStr === 'object' && tipoPagamentoStr !== null) {
-                if (tipoPagamentoStr.valor !== undefined && !isNaN(parseFloat(tipoPagamentoStr.valor))) {
-                    return parseFloat(tipoPagamentoStr.valor);
-                }
-                tipoPagamentoStr = tipoPagamentoStr.tipoPagamento || '';
-            }
-            const str = String(tipoPagamentoStr || '');
-            if (str.includes('175')) return 175.00; 
-            if (str.includes('87,50')) return 87.50; 
-            const match = str.match(/R\$\s*([\d.,]+)/);
-            if (match) {
-                const val = parseFloat(match[1].replace('.', '').replace(',', '.'));
-                if (!isNaN(val)) return val;
-            }
-            return 0.00;
+        function extrairValorOpcao(tipo) {
+            if (tipo.includes('175')) return 175.00;
+            if (tipo.includes('87,50')) return 87.50;
+            const match = tipo.match(/R\$\s*([\d.,]+)/);
+            return match ? parseFloat(match[1].replace('.', '').replace(',', '.')) : 0;
         }
 
         function prepararSalvamento() {
-            const nome = document.getElementById('nomeAluno').value.trim();
-            if(!nome) { mostrarAviso('Atenção', 'Selecione o nome do aluno na lista.', '⚠️'); return; }
-            let tipo = document.getElementById('tipoPagamento').value; 
-            const obs = document.getElementById('observacao').value;
-            const arquivoInput = document.getElementById('arquivoComprovante'); 
-            const dadosArmazenados = obterDadosArmazenados();
-
-            const outrosLancamentos = dadosArmazenados.filter(item => item.aluno.toLowerCase() === nome.toLowerCase() && item.id !== registroEmEdicaoId);
-            const statusAtual = calcularStatusAluno(nome, outrosLancamentos);
-
-            const tipoLower = tipo.toLowerCase();
-            const refCustom = document.getElementById('refParcelaCustom') ? document.getElementById('refParcelaCustom').value : '';
-
-            // TRAVA DE SEGURANÇA: IMPEDE REGISTRO DUPLO DE 1ª PARCELA
-            if (statusAtual.pagoP1 >= 87.50) {
-                if (tipoLower.includes('1ª') || tipoLower.includes('à vista') || tipoLower.includes('a vista') || tipoLower.includes('175') || refCustom === '1a_parcela') {
-                    mostrarAviso('Pagamento Duplicado', 'Este aluno já possui a 1ª Parcela (R$ 87,50) quitada. Escolha a 2ª Parcela ou Valor Livre.', '❌');
-                    return;
-                }
-            }
-
-            let valorNovoLancamento = 0;
-            let refParcela = '';
-
-            if (tipo.includes('Personalizado') || tipo.includes('Valor Livre') || tipo.includes('customizado')) {
-                valorNovoLancamento = obterValorCustomizadoDigitado();
-                refParcela = document.getElementById('refParcelaCustom').value;
-                if (valorNovoLancamento <= 0) {
-                    mostrarAviso('Atenção', 'Digite o valor pago no lançamento personalizado.', '⚠️');
-                    return;
-                }
-            } else {
-                valorNovoLancamento = extrairValorOpcao(tipo);
-            }
-
-            // CHECAGEM DO VALOR MISTO
-            const isMisto = document.getElementById('checkPagamentoMisto').checked;
-            let valorMisto = 0;
-            if (isMisto) {
-                let v2Str = document.getElementById('valorSegundaForma').value.trim().replace(',', '.');
-                valorMisto = parseFloat(v2Str) || 0;
-            }
-
-            const totalJaPagoAluno = statusAtual.totalPago;
-            const saldoRestante = 175.00 - totalJaPagoAluno;
-
-            // TRAVA DE SEGURANÇA: TETO MÁXIMO DE R$ 175,00 POR ALUNO (SOMANDO MISTO SE HOUVER)
-            if ((totalJaPagoAluno + valorNovoLancamento + valorMisto) > 175.00 + 0.001) {
-                mostrarAviso('Limite Ultrapassado', `Este aluno já possui R$ ${totalJaPagoAluno.toFixed(2).replace('.', ',')} lançados. O saldo restante para quitar é R$ ${saldoRestante.toFixed(2).replace('.', ',')}.`, '❌'); 
-                return;
-            }
-
-            if (arquivoInput.files.length > 0) {
-                const arquivo = arquivoInput.files[0]; const leitor = new FileReader();
-                leitor.onload = function(e) { 
-                    salvarLancamentoFinal(nome, tipo, obs, gerarNomePadronizado(nome, tipo), e.target.result, valorNovoLancamento, refParcela); 
-                };
-                leitor.readAsDataURL(arquivo);
-            } else {
-                if (registroEmEdicaoId !== null) { 
-                    const itemAntigo = dadosArmazenados.find(i => i.id === registroEmEdicaoId); 
-                    salvarLancamentoFinal(nome, tipo, obs, itemAntigo.arquivo, itemAntigo.arquivoData, valorNovoLancamento, refParcela); 
-                } else { 
-                    salvarLancamentoFinal(nome, tipo, obs, 'Sem anexo (Dinheiro)', null, valorNovoLancamento, refParcela); 
-                }
-            }
-        }
-
-        // LÓGICA ATUALIZADA PARA INJETAR DOIS LANÇAMENTOS SE MISTO ESTIVER ATIVO
-        function salvarLancamentoFinal(nome, tipo, obs, nomeArquivoGerado, dadosArquivoBase64, valorNumerico, refParcela) {
-            document.getElementById('tituloModalConfirmacao').innerText = registroEmEdicaoId ? "Confirmar Edição" : "Confirmação de Lançamento";
+            const nome = document.getElementById('nomeAluno').value;
+            if(!nome) { mostrarAviso('Atenção', 'Selecione um aluno.', '⚠️'); return; }
             
-            const isMisto = document.getElementById('checkPagamentoMisto') && document.getElementById('checkPagamentoMisto').checked;
-            let valor2 = 0;
-            let forma2 = '';
-            if (isMisto) {
-                let v2Str = document.getElementById('valorSegundaForma').value.trim().replace(',', '.');
-                valor2 = parseFloat(v2Str) || 0;
+            const arquivoInput = document.getElementById('arquivoComprovante');
+            if (arquivoInput.files.length > 0 && arquivoInput.files[0].size > 900 * 1024) {
+                mostrarAviso('Arquivo grande', 'O comprovante deve ter menos de 900 KB.', '📦'); return;
+            }
+
+            const tipo = document.getElementById('tipoPagamento').value;
+            let valor1 = extrairValorOpcao(tipo);
+            let ref1 = '';
+            let isCustom = tipo.includes('Personalizado') || tipo.includes('Valor Livre');
+
+            if (isCustom) {
+                valor1 = parseFloat(document.getElementById('valorCustomizado').value.replace(',', '.')) || 0;
+                ref1 = document.getElementById('refParcelaCustom').value;
+                if (valor1 <= 0) { mostrarAviso('Erro', 'Digite um valor válido.', '❌'); return; }
+            }
+
+            let valor2 = 0, forma2 = '';
+            if (document.getElementById('checkPagamentoMisto').checked) {
+                valor2 = parseFloat(document.getElementById('valorSegundaForma').value.replace(',', '.')) || 0;
                 forma2 = document.getElementById('segundaForma').value;
+                if (valor2 >= valor1) { mostrarAviso('Erro', 'O valor da 2ª forma deve ser menor que o total.', '❌'); return; }
+                valor1 = valor1 - valor2; // Split real
             }
 
-            let textoResumo = `<p><strong>Aluno:</strong> ${nome}</p><p><strong>Forma (1):</strong> ${tipo}</p><p><strong>Valor:</strong> R$ ${valorNumerico.toFixed(2).replace('.', ',')}</p>`;
-            if (isMisto && valor2 > 0) {
-                textoResumo += `<p><strong>Forma (2):</strong> ${forma2} - R$ ${valor2.toFixed(2).replace('.', ',')}</p>`;
+            salvarLancamentoFinal(nome, tipo, document.getElementById('observacao').value, valor1, ref1, valor2, forma2);
+        }
+
+        async function salvarLancamentoFinal(nome, tipo, obs, valor1, ref1, valor2, forma2) {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            const hoje = new Date().toLocaleDateString('pt-BR');
+            let inserir = [{ user_id: user.id, aluno: nome, tipo_pagamento: tipo, valor: valor1, observacao: obs, referencia_parcela: ref1, data_registro: hoje, arquivo_nome: document.getElementById('arquivoComprovante').files[0]?.name || 'Sem anexo' }];
+
+            if (valor2 > 0) {
+                inserir.push({ user_id: user.id, aluno: nome, tipo_pagamento: `✏️ Valor Livre (${forma2})`, valor: valor2, observacao: `Parte mista (${forma2})`, referencia_parcela: 'auto_abater', data_registro: hoje, arquivo_nome: 'Sem anexo' });
             }
-            textoResumo += `<p><strong>Status:</strong> ${obs}</p>`;
+
+            const { error } = await supabaseClient.from('pagamentos').insert(inserir);
+            if (error) { mostrarAviso('Erro', 'Falha ao salvar na nuvem.', '❌'); return; }
             
-            document.getElementById('conteudoResumoModal').innerHTML = textoResumo;
-            document.getElementById('modalConfirmacao').classList.remove('hidden');
-
-            funcaoCallbackConfirmacao = (confirmado) => {
-                if(confirmado) {
-                    let dadosArmazenados = obterDadosArmazenados();
-                    
-                    const salvarObj = (n, t, o, a, d, v, r) => {
-                        if (registroEmEdicaoId !== null) {
-                            const index = dadosArmazenados.findIndex(i => i.id === registroEmEdicaoId);
-                            if (index !== -1) { 
-                                dadosArmazenados[index] = { 
-                                    ...dadosArmazenados[index], 
-                                    aluno: n, tipoPagamento: t, observacao: o, 
-                                    arquivo: a, arquivoData: d, 
-                                    valor: v, ref: r 
-                                }; 
-                            }
-                        } else {
-                            dadosArmazenados.push({ 
-                                id: Date.now() + Math.floor(Math.random()*1000), 
-                                aluno: n, tipoPagamento: t, observacao: o, 
-                                arquivo: a, arquivoData: d, 
-                                valor: v, ref: r,
-                                dataRegistro: new Date().toLocaleString('pt-BR') 
-                            });
-                        }
-                    };
-
-                    // Salva Lançamento Principal 1
-                    salvarObj(nome, tipo, obs, nomeArquivoGerado, dadosArquivoBase64, valorNumerico, refParcela);
-
-                    // Salva Lançamento Secundário 2 (Pagamento Misto)
-                    if (isMisto && valor2 > 0 && registroEmEdicaoId === null) {
-                        const obs2 = `Pago Parcial (${forma2}) - R$ ${valor2.toFixed(2).replace('.', ',')} em ${new Date().toLocaleDateString('pt-BR')} - Ref: Misto`;
-                        salvarObj(nome, `✏️ Valor Livre / Parcial (Personalizado)`, obs2, 'Sem anexo (Misto)', null, valor2, 'auto_abater');
-                    }
-
-                    localStorage.setItem(`caixa_formatura${obterChaveUsuario()}`, JSON.stringify(dadosArmazenados)); 
-                    fazerBackupAutomaticoSilencioso();
-                    
-                    atualizarLista(); 
-                    atualizarPlanilhaGeral(); 
-                    atualizarListaAlunosDinamica();
-                    resetarFormularioAposEdicao(); 
-                    mostrarAviso('Sucesso', 'Registro salvo com sucesso!', '✅');
-                }
-            };
+            mostrarAviso('Sucesso', 'Salvo com sucesso!', '✅');
+            resetarFormularioAposEdicao();
+            carregarDadosDoBanco();
         }
 
-        function visualizarArquivo(id) {
-            const item = obterDadosArmazenados().find(i => i.id === id);
-            if (!item || !item.arquivoData) { mostrarAviso('Atenção', 'Este registro não possui arquivo anexo.', 'ℹ️'); return; }
-            document.getElementById('tituloVisualizador').innerText = `Comprovante: ${item.aluno}`;
-            const container = document.getElementById('conteudoVisualizador');
-            if (item.arquivoData.startsWith('data:image')) { container.innerHTML = `<img src="${item.arquivoData}" class="max-h-72 rounded shadow object-contain">`; } 
-            else { container.innerHTML = `<iframe src="${item.arquivoData}" class="w-full h-72 rounded border"></iframe>`; }
-            document.getElementById('modalVisualizador').classList.remove('hidden');
+        function resetarFormularioAposEdicao() {
+            document.getElementById('formPagamento').reset();
+            document.getElementById('painelCustomizado').classList.add('hidden');
+            document.getElementById('blocoDetalhesMisto').classList.add('hidden');
+            document.getElementById('checkPagamentoMisto').checked = false;
+            atualizarTudoNaTela();
         }
 
-        function fecharVisualizador() { document.getElementById('modalVisualizador').classList.add('hidden'); }
-        function enviarWhatsApp(id) {
-            const item = obterDadosArmazenados().find(i => i.id === id); if (!item) return;
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`*Comprovante de Caixa*\nAluno: ${item.aluno}\nPagamento: ${item.tipoPagamento}\nStatus: ${item.observacao}`)}`, '_blank');
-        }
-
-        function excluirRegistro(id) {
-            let dadosArmazenados = obterDadosArmazenados(); const item = dadosArmazenados.find(i => i.id === id); if (!item) return;
-            document.getElementById('tituloModalConfirmacao').innerText = "Excluir Registro";
-            document.getElementById('conteudoResumoModal').innerHTML = `<p><strong>Aluno:</strong> ${item.aluno}</p><p class="text-red-600 font-bold pt-1">Deseja excluir este registro?</p>`;
-            document.getElementById('modalConfirmacao').classList.remove('hidden');
-            funcaoCallbackConfirmacao = (confirmado) => {
-                if(confirmado) {
-                    dadosArmazenados = dadosArmazenados.filter(i => i.id !== id);
-                    localStorage.setItem(`caixa_formatura${obterChaveUsuario()}`, JSON.stringify(dadosArmazenados)); 
-                    fazerBackupAutomaticoSilencioso();
-                    atualizarLista(); 
-                    atualizarPlanilhaGeral(); 
-                    atualizarListaAlunosDinamica();
-                    mostrarAviso('Excluído', 'Registro removido.', '🗑️');
-                }
-            };
-        }
-
-        function fecharModalConfirmacao(confirmado) {
-            const callbackTemp = funcaoCallbackConfirmacao; funcaoCallbackConfirmacao = null; document.getElementById('modalConfirmacao').classList.add('hidden');
-            if(callbackTemp) callbackTemp(confirmado);
-        }
-
-        function abrirModalGerenciarOpcoes() { renderizarListaOpcoesGerenciar(); document.getElementById('modalGerenciar').classList.remove('hidden'); }
-        function fecharModalGerenciar() { document.getElementById('modalGerenciar').classList.add('hidden'); }
-        function renderizarListaOpcoesGerenciar() {
-            document.getElementById('listaOpcoesGerenciar').innerHTML = opcoesPagamento.map((op, index) => `<div class="flex justify-between items-center bg-white p-2 rounded border"><span>${op}</span><button onclick="pedirExclusaoOpcao(${index})" class="text-red-500 hover:text-red-700 font-bold px-2 py-0.5 text-xs">Excluir</button></div>`).join('');
-        }
-        function adicionarOpcaoPagamento() {
-            const valor = document.getElementById('novaOpcaoInput').value.trim(); if(!valor || opcoesPagamento.includes(valor)) return;
-            opcoesPagamento.push(valor); document.getElementById('novaOpcaoInput').value = ''; salvarOpcoesStorage(); renderizarListaOpcoesGerenciar();
-        }
-        function pedirExclusaoOpcao(index) { if(opcoesPagamento.length <= 1) return; opcoesPagamento.splice(index, 1); salvarOpcoesStorage(); renderizarListaOpcoesGerenciar(); }
-        function mostrarAviso(titulo, texto, icone = '✨') { document.getElementById('avisoTitulo').innerText = titulo; document.getElementById('avisoTexto').innerText = texto; document.getElementById('avisoIcone').innerText = icone; document.getElementById('modalAviso').classList.remove('hidden'); }
-        function fecharModalAviso() { document.getElementById('modalAviso').classList.add('hidden'); }
-
-        // ALTERNAR SEÇÃO DE PENDENTES (EXPANDIR/MINIMIZAR)
-        function alternarSecaoPendentes() {
-            const container = document.getElementById('tabelaLancamentos');
-            const seta = document.getElementById('setaPendentes');
-            if (container.classList.contains('hidden')) {
-                container.classList.remove('hidden');
-                seta.innerText = "▲";
-            } else {
-                container.classList.add('hidden');
-                seta.innerText = "▼";
-            }
-        }
-
-        // ALTERNAR SEÇÃO DE QUITADOS (EXPANDIR/MINIMIZAR)
-        function alternarSecaoQuitados() {
-            const container = document.getElementById('containerAlunosQuitados');
-            const seta = document.getElementById('setaQuitados');
-            if (container.classList.contains('hidden')) {
-                container.classList.remove('hidden');
-                seta.innerText = "▲";
-            } else {
-                container.classList.add('hidden');
-                seta.innerText = "▼";
-            }
-        }
-
+        // ==========================================
+        // RENDERIZAÇÃO
+        // ==========================================
         function atualizarLista() {
-            const dadosArmazenados = obterDadosArmazenados(); 
-            const containerPendentes = document.getElementById('tabelaLancamentos');
-            const containerQuitados = document.getElementById('containerAlunosQuitados');
-            const alunos = obterAlunosTurma();
-
-            let totalLancamentosPendentes = 0;
-            let htmlPendentes = '';
-            let htmlQuitadosMap = {};
-
-            alunos.forEach(aluno => {
-                const pagamentosAluno = dadosArmazenados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
-                if (pagamentosAluno.length > 0) {
-                    const statusInfo = calcularStatusAluno(aluno, dadosArmazenados);
-                    const quitado = statusInfo.grupo === 1;
-                    
-                    const blocoHtml = pagamentosAluno.map(item => `
-                        <div class="border rounded-lg p-2.5 bg-slate-50 space-y-2 mb-2">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="font-bold text-slate-800">${item.aluno}</p>
-                                    <p class="text-indigo-600 font-medium">${item.tipoPagamento} — <span class="${quitado ? 'text-emerald-700 font-bold' : 'text-amber-600 font-bold'}">${quitado ? 'QUITADO (R$ 175)' : 'Em aberto'}</span></p>
-                                    <p class="text-slate-500 text-[10px]">${item.observacao}</p>
-                                </div>
-                                <div class="flex gap-3">
-                                    <button onclick="editarRegistro(${item.id})" class="text-indigo-500 hover:text-indigo-700 p-1 font-bold text-xs" title="Editar">✏️</button>
-                                    <button onclick="excluirRegistro(${item.id})" class="text-red-500 hover:text-red-700 p-1 font-bold text-xs" title="Excluir">✕</button>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-between pt-1 border-t text-[11px]">
-                                <button onclick="visualizarArquivo(${item.id})" class="text-indigo-600 hover:underline font-semibold flex items-center gap-1">📄 <span>${item.arquivo}</span></button>
-                                <div class="flex gap-1"><button onclick="enviarWhatsApp(${item.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded font-medium">💬 WhatsApp</button></div>
-                            </div>
-                        </div>
-                    `).join('');
-
-                    if (quitado) {
-                        htmlQuitadosMap[aluno] = blocoHtml;
-                    } else {
-                        htmlPendentes += blocoHtml;
-                        totalLancamentosPendentes += pagamentosAluno.length;
-                    }
+            let htmlPendentes = '', htmlQuitados = '', count = 0;
+            alunosDaTurma.forEach(aluno => {
+                const pagamentos = todosPagamentos.filter(p => p.aluno.toLowerCase() === aluno.toLowerCase());
+                if (pagamentos.length > 0) {
+                    const info = calcularStatusAluno(aluno, todosPagamentos);
+                    const html = pagamentos.map(p => `
+                        <div class="border rounded-lg p-2.5 bg-slate-50 mb-2">
+                            <p class="font-bold">${p.aluno}</p>
+                            <p class="text-indigo-600">${p.tipo_pagamento} - R$ ${parseFloat(p.valor).toFixed(2)}</p>
+                            <p class="text-slate-500 text-[10px]">${p.observacao || ''}</p>
+                            <button onclick="excluirRegistroNuvem(${p.id})" class="text-red-500 text-xs mt-1">Excluir</button>
+                        </div>`).join('');
+                    if (info.grupo === 1) htmlQuitados += html;
+                    else { htmlPendentes += html; count += pagamentos.length; }
                 }
             });
-
-            document.getElementById('contadorRegistros').innerText = `${totalLancamentosPendentes} lançamentos`;
-
-            containerPendentes.innerHTML = htmlPendentes || `<p class="text-slate-400 text-center py-4">Nenhum lançamento pendente no momento.</p>`;
-            
-            const chavesQuitadas = Object.keys(htmlQuitadosMap).sort((a, b) => a.localeCompare(b, 'pt-BR'));
-            if (chavesQuitadas.length > 0) {
-                containerQuitados.innerHTML = chavesQuitadas.map(a => htmlQuitadosMap[a]).join('');
-            } else {
-                containerQuitados.innerHTML = `<p class="text-slate-400 text-center py-2 text-[11px]">Nenhum aluno com quitação completa (R$ 175) ainda.</p>`;
-            }
-
-            atualizarListaAlunosDinamica();
+            document.getElementById('contadorRegistros').innerText = count;
+            document.getElementById('tabelaLancamentos').innerHTML = htmlPendentes || '<p class="text-slate-400 text-center py-4">Nenhum pendente.</p>';
+            document.getElementById('containerAlunosQuitados').innerHTML = htmlQuitados || '<p class="text-slate-400 text-center py-2">Nenhum quitado.</p>';
         }
 
         function atualizarPlanilhaGeral() {
-            const alunos = obterAlunosTurma(); 
-            const dadosArmazenados = obterDadosArmazenados();
-            let totalPrevisto = alunos.length * 175.00; 
-            let totalRecebido = 0;
-
-            document.getElementById('corpoTabelaPlanilha').innerHTML = alunos.map((aluno, index) => {
-                const info = calcularStatusAluno(aluno, dadosArmazenados);
-                totalRecebido += info.totalPago;
-
-                const pagou1 = info.pagoP1 >= 87.50;
-                const pagou2 = info.pagoP2 >= 87.50;
-                const pagamentosAluno = dadosArmazenados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
-
-                return `<tr class="border-b hover:bg-slate-50">
-                    <td class="p-2 border-r font-medium text-slate-500 text-center">${index + 1}</td>
-                    <td class="p-2 border-r font-semibold text-slate-800">${aluno}</td>
-                    <td class="p-2 text-center border-r">${pagou1 ? '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">PAGO</span>' : info.pagoP1 > 0 ? `<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px]">R$ ${info.pagoP1.toFixed(2)}</span>` : '<span class="text-slate-300">-</span>'}</td>
-                    <td class="p-2 text-center border-r">${pagou2 ? '<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">PAGO</span>' : info.pagoP2 > 0 ? `<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px]">R$ ${info.pagoP2.toFixed(2)}</span>` : '<span class="text-slate-300">-</span>'}</td>
-                    <td class="p-2 text-[11px] text-slate-600">${pagamentosAluno.map(i => i.tipoPagamento).join(' | ') || "-"}</td>
+            let total = 0;
+            document.getElementById('corpoTabelaPlanilha').innerHTML = alunosDaTurma.map((aluno, i) => {
+                const info = calcularStatusAluno(aluno, todosPagamentos);
+                total += info.totalPago;
+                return `<tr class="border-b">
+                    <td class="p-2 border-r text-center">${i+1}</td>
+                    <td class="p-2 border-r font-semibold">${aluno}</td>
+                    <td class="p-2 text-center border-r">${info.pagoP1 >= 87.5 ? 'PAGO' : info.pagoP1 > 0 ? `R$ ${info.pagoP1.toFixed(2)}` : '-'}</td>
+                    <td class="p-2 text-center border-r">${info.pagoP2 >= 87.5 ? 'PAGO' : info.pagoP2 > 0 ? `R$ ${info.pagoP2.toFixed(2)}` : '-'}</td>
+                    <td class="p-2 text-[11px]">${todosPagamentos.filter(p=>p.aluno.toLowerCase()===aluno.toLowerCase()).map(p=>p.tipo_pagamento).join(', ')}</td>
                 </tr>`;
             }).join('');
-
-            document.getElementById('labelTotalPrevisto').innerText = `Total Previsto: R$ ${totalPrevisto.toFixed(2).replace('.', ',')}`; 
-            document.getElementById('labelTotalRecebido').innerText = `Total Recebido: R$ ${totalRecebido.toFixed(2).replace('.', ',')}`;
+            document.getElementById('labelTotalPrevisto').innerText = `Total: R$ ${(alunosDaTurma.length * 175).toFixed(2)}`;
+            document.getElementById('labelTotalRecebido').innerText = `Recebido: R$ ${total.toFixed(2)}`;
         }
 
-        // ENVIAR RELATÓRIO DO WHATSAPP COM NUMERAÇÃO CONTÍNUA DE 1 A 21
-        function enviarRelatorioDiretora() {
-            const alunos = obterAlunosTurma(); 
-            const dadosArmazenados = obterDadosArmazenados();
-            const sufixo = obterChaveUsuario();
-            const turma = localStorage.getItem(`turma_professora${sufixo}`) || '5º C - 2026';
-            const prof = localStorage.getItem(`nome_professora${sufixo}`) || 'ANGELA';
-
-            const alunosProcessados = alunos.map(nome => {
-                const info = calcularStatusAluno(nome, dadosArmazenados);
-                return { nome, ...info };
-            });
-
-            // Separa em 4 grupos e aplica a ordem alfabética A-Z em cada um
-            const quitados = alunosProcessados.filter(a => a.grupo === 1).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-            const p1Quitada = alunosProcessados.filter(a => a.grupo === 2).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-            const pendentes = alunosProcessados.filter(a => a.grupo === 3).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-            const parciais  = alunosProcessados.filter(a => a.grupo === 4).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-
-            let contador = 1; // MANTÉM A NUMERAÇÃO CONTÍNUA DO INÍCIO AO FIM DO RELATÓRIO
-            let corpoRelatorio = "";
-
-            if (quitados.length > 0) {
-                corpoRelatorio += "--- 🟢 QUITADOS ---\n";
-                quitados.forEach(a => { corpoRelatorio += `${contador++}. ${a.nome} -> ${a.texto}\n`; });
-                corpoRelatorio += "\n";
-            }
-
-            if (p1Quitada.length > 0) {
-                corpoRelatorio += "--- 🟡 1ª PARCELA QUITADA ---\n";
-                p1Quitada.forEach(a => { corpoRelatorio += `${contador++}. ${a.nome} -> ${a.texto}\n`; });
-                corpoRelatorio += "\n";
-            }
-
-            if (pendentes.length > 0) {
-                corpoRelatorio += "--- 🔴 PENDENTES ---\n";
-                pendentes.forEach(a => { corpoRelatorio += `${contador++}. ${a.nome} -> ${a.texto}\n`; });
-                corpoRelatorio += "\n";
-            }
-
-            if (parciais.length > 0) {
-                corpoRelatorio += "--- 🟡 PAGAMENTOS PARCIAIS ---\n";
-                parciais.forEach(a => { corpoRelatorio += `${contador++}. ${a.nome} -> ${a.texto}\n`; });
-                corpoRelatorio += "\n";
-            }
-
-            const totalPrevisto = alunos.length * 175.00;
-            const totalRecebido = alunosProcessados.reduce((acc, cur) => acc + cur.totalPago, 0);
-            const valorPendente = totalPrevisto - totalRecebido;
-
-            let relatorio = `       ESCOLA MUNICIPAL 31 DE MARÇO - E.I.E.F.
-       CONTROLE DE PAGAMENTOS - FORMATURA
-
-----------------------------------------
-TURMA: ${turma}
-Professora: ${prof}
-Total de Formandos: ${alunos.length}
-Valor por Estudante: R$ 175,00
-----------------------------------------
-
-STATUS DOS ALUNOS:
-
-${corpoRelatorio.trim()}
-
-----------------------------------------
-RESUMO FINANCEIRO:
-• Total Previsto: R$ ${totalPrevisto.toFixed(2).replace('.', ',')}
-• Total Recebido: R$ ${totalRecebido.toFixed(2).replace('.', ',')}
-• Valor Pendente: R$ ${valorPendente.toFixed(2).replace('.', ',')}
-----------------------------------------
-
-Relatório gerado digitalmente pela Secretária Virtual`;
-
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(relatorio)}`, '_blank');
+        async function excluirRegistroNuvem(id) {
+            if (!confirm("Apagar este lançamento definitivamente?")) return;
+            await supabaseClient.from('pagamentos').delete().eq('id', id);
+            carregarDadosDoBanco();
         }
 
-        function gerarPDF() {
-            document.getElementById('secaoFormulario').classList.add('hidden'); document.getElementById('secaoPlanilha').classList.remove('hidden');
-            atualizarPlanilhaGeral(); setTimeout(() => window.print(), 300);
+        // ==========================================
+        // INTERFACE E EXTRAS
+        // ==========================================
+        function atualizarTextoPadrao() {
+            const nome = document.getElementById('nomeAluno').value || '[Aluno]';
+            const tipo = document.getElementById('tipoPagamento').value;
+            document.getElementById('observacao').value = `Pago ${tipo} em ${new Date().toLocaleDateString('pt-BR')} - Aluno: ${nome}`;
         }
+        document.getElementById('tipoPagamento')?.addEventListener('change', function() {
+            document.getElementById('painelCustomizado').classList.toggle('hidden', !this.value.includes('Personalizado'));
+            atualizarTextoPadrao();
+        });
+        document.getElementById('nomeAluno')?.addEventListener('change', atualizarTextoPadrao);
+        function togglePagamentoMisto() { document.getElementById('blocoDetalhesMisto').classList.toggle('hidden', !document.getElementById('checkPagamentoMisto').checked); }
 
         function alternarTela() {
-            const formSec = document.getElementById('secaoFormulario'); const planilhaSec = document.getElementById('secaoPlanilha'); const btn = document.getElementById('btnAlternar');
-            if(formSec.classList.contains('hidden')) { formSec.classList.remove('hidden'); planilhaSec.classList.add('hidden'); btn.innerText = "📊 Tabela"; } 
-            else { formSec.classList.add('hidden'); planilhaSec.classList.remove('hidden'); btn.innerText = "📝 Novo Registro"; atualizarPlanilhaGeral(); }
+            document.getElementById('secaoFormulario').classList.toggle('hidden');
+            document.getElementById('secaoPlanilha').classList.toggle('hidden');
+            document.getElementById('btnAlternar').innerText = document.getElementById('secaoFormulario').classList.contains('hidden') ? "📝 Novo Registro" : "📊 Tabela";
+        }
+        function alternarSecaoPendentes() {
+            document.getElementById('tabelaLancamentos').classList.toggle('hidden');
+            document.getElementById('setaPendentes').innerText = document.getElementById('tabelaLancamentos').classList.contains('hidden') ? "▼" : "▲";
+        }
+        function alternarSecaoQuitados() {
+            document.getElementById('containerAlunosQuitados').classList.toggle('hidden');
+            document.getElementById('setaQuitados').innerText = document.getElementById('containerAlunosQuitados').classList.contains('hidden') ? "▼" : "▲";
         }
 
-        function exportarWord() {
-            const alunos = obterAlunosTurma(); const dados = obterDadosArmazenados(); let total = 0; const turma = localStorage.getItem(`turma_professora${obterChaveUsuario()}`) || '5º C';
-            let linhas = '';
-            alunos.forEach((aluno, index) => {
-                const info = calcularStatusAluno(aluno, dados);
-                total += info.totalPago;
-                const p1 = info.pagoP1 >= 87.50;
-                const p2 = info.pagoP2 >= 87.50;
-                const pag = dados.filter(item => item.aluno.toLowerCase() === aluno.toLowerCase());
-                linhas += `<tr style="height: 14pt;"><td style="border: 1px solid #000; text-align: center; font-size: 9.5pt;">${index + 1}</td><td style="border: 1px solid #000; font-size: 9.5pt;">${aluno}</td><td style="border: 1px solid #000; text-align: center; font-weight: bold; font-size: 9.5pt;">${p1 ? "PAGO" : info.pagoP1 > 0 ? "PARCIAL" : ""}</td><td style="border: 1px solid #000; text-align: center; font-weight: bold; font-size: 9.5pt;">${p2 ? "PAGO" : info.pagoP2 > 0 ? "PARCIAL" : ""}</td><td style="border: 1px solid #000; font-size: 9pt;">${pag.map(i => i.tipoPagamento).join(' | ') || "-"}</td></tr>`;
-            });
-            const blob = new Blob(['\ufeff' + `<html xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><style>@page Section1{size:841.7pt 595.3pt;mso-page-orientation:landscape;margin:1cm;}div.Section1{page:Section1;}body{font-family:Arial;font-size:9.5pt;line-height:1;}table{width:100%;border-collapse:collapse;}th{background-color:#f2f2f2;border:1px solid #000;font-size:9pt;font-weight:bold;}td{padding:1px 3px;}</style></head><body><div class="Section1"><h3 align="center">ESCOLA MUNICIPAL 31 DE MARÇO</h3><h4 align="center">CONTROLE DE PAGAMENTOS</h4><p align="center"><b>TURMA: ${turma} | FORMANDOS: ${alunos.length}</b></p><table><thead><tr><th style="width:5%;">Nº</th><th style="width:40%;">NOME</th><th style="width:12%;">1ª PARC</th><th style="width:12%;">2ª PARC</th><th style="width:31%;">FORMA / OBS</th></tr></thead><tbody>${linhas}</tbody></table><p><b>Total recebido:</b> R$ ${total.toFixed(2).replace('.', ',')}</p></div></body></html>`], { type: 'application/msword' });
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Controle_${turma.replace(/[^a-zA-Z0-9]/g, '_')}.doc`; document.body.appendChild(a); a.click(); a.remove();
-        }
-
+        function gerarPDF() { window.print(); }
+        function exportarWord() { alert("Função Word será reativada em breve. Use o PDF ou Backup!"); }
         function fazerBackup() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(obterDadosArmazenados()));
-            const a = document.createElement('a'); a.href = dataStr; a.download = `backup_${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(a); a.click(); a.remove();
+            const pacote = { perfil: dadosPerfil, alunos: alunosDaTurma, pagamentos: todosPagamentos };
+            const blob = new Blob([JSON.stringify(pacote)], { type: 'application/json' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `backup_nuvem.json`; a.click();
         }
-    </script>
-
-    <!-- Script essencial para registrar o Service Worker exigido pelo PWA -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(() => console.log('Service Worker registrado com sucesso!'))
-                    .catch((err) => console.log('Falha ao registrar o Service Worker:', err));
-            });
+        
+        function enviarRelatorioDiretora() {
+            const total = todosPagamentos.reduce((acc, p) => acc + (parseFloat(p.valor) || 0), 0);
+            const texto = `*ESCOLA 31 DE MARÇO*%0A*Turma:* ${dadosPerfil.turma}%0A*Professora:* ${dadosPerfil.nome}%0A%0A*RESUMO:*%0ATotal Previsto: R$ ${(alunosDaTurma.length * 175).toFixed(2)}%0ATotal Recebido: R$ ${total.toFixed(2)}%0A%0A_Gerado pelo App Secretária Virtual_`;
+            window.open(`https://api.whatsapp.com/send?text=${texto}`, '_blank');
         }
     </script>
 </body>
