@@ -89,7 +89,7 @@
                     Entrar
                 </button>
             </form>
-            <div class="pt-2 border-t text-[11px] text-slate-400">Desenvolvido por Everton Taborda</div>
+            <div class="pt-2 border-t text-[11px] text-slate-400">Desenvolvido por Everton Taborda · v1.0.2</div>
         </div>
     </div>
 
@@ -320,7 +320,7 @@
         </div>
     </div>
 
-    <div id="modalAviso" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div id="modalAviso" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl text-center my-auto relative">
             <button onclick="document.getElementById('modalAviso').classList.add('hidden')" class="absolute top-3 right-4 text-slate-400 font-bold text-xs">✕</button>
             <div id="avisoIcone" class="text-3xl pt-2">✨</div>
@@ -334,7 +334,7 @@
         // ==========================================
         // CONEXÃO COM O SUPABASE
         // ==========================================
-        const supabaseUrl = 'https://fokhbroglkvvttmtaift.supabase.co';
+        const supabaseUrl = 'https://fokhbrolgklvwtnnaift.supabase.co';
         const supabaseKey = 'sb_publishable_bnPuGJsSMscXcpYyhMw5Lw_Wehz2wwS';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
@@ -352,10 +352,10 @@
         window.addEventListener('DOMContentLoaded', async () => {
             gerarQRCodeLogin();
             
+            // A senha NÃO é mais guardada no aparelho (o Supabase já mantém a sessão logada).
+            localStorage.removeItem('senha_memorizada');
             const cpfSalvo = localStorage.getItem('login_memorizado');
-            const senhaSalva = localStorage.getItem('senha_memorizada');
             if (cpfSalvo) document.getElementById('loginCpf').value = cpfSalvo;
-            if (senhaSalva) document.getElementById('loginSenha').value = senhaSalva;
             
             verificarSessao();
         });
@@ -381,16 +381,42 @@
             document.getElementById('modalAviso').classList.remove('hidden');
         }
 
+        // Traduz os erros mais comuns do Supabase para algo que dê para entender
+        function traduzirErroAuth(msg) {
+            const m = (msg || '').toLowerCase();
+            if (m.includes('invalid login credentials'))
+                return 'CPF/E-mail ou senha incorretos. Se a conta foi criada antes da migração para o Supabase, clique em "Ainda não tem conta? Cadastrar" para criar de novo.';
+            if (m.includes('email not confirmed'))
+                return 'Esta conta ainda não foi confirmada no Supabase. Desative "Confirm email" em Authentication > Sign In / Providers > Email, ou confirme o usuário manualmente.';
+            if (m.includes('already registered') || m.includes('already been registered'))
+                return 'Já existe uma conta com esse CPF/E-mail. Clique em "Já tem conta? Entrar".';
+            if (m.includes('at least 6') || m.includes('password should be'))
+                return 'A senha precisa ter pelo menos 6 caracteres.';
+            if (m.includes('invalid api key') || m.includes('apikey'))
+                return 'Chave do Supabase inválida. Confira a supabaseKey no código.';
+            if (m.includes('failed to fetch') || m.includes('network'))
+                return 'Sem conexão com o Supabase. Verifique a internet e a supabaseUrl no código.';
+            if (m.includes('rate limit') || m.includes('too many'))
+                return 'Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo.';
+            return msg;
+        }
+
         // ==========================================
         // AUTENTICAÇÃO (LOGIN / CADASTRO)
         // ==========================================
         async function verificarSessao() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) {
-                document.getElementById('telaLogin').classList.add('hidden');
-                document.getElementById('appPrincipal').classList.remove('hidden');
-                await carregarDadosDoBanco();
-            } else {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session) {
+                    document.getElementById('telaLogin').classList.add('hidden');
+                    document.getElementById('appPrincipal').classList.remove('hidden');
+                    await carregarDadosDoBanco();
+                } else {
+                    document.getElementById('telaLogin').classList.remove('hidden');
+                    document.getElementById('appPrincipal').classList.add('hidden');
+                }
+            } catch (e) {
+                console.error('Erro ao verificar sessão:', e);
                 document.getElementById('telaLogin').classList.remove('hidden');
                 document.getElementById('appPrincipal').classList.add('hidden');
             }
@@ -407,44 +433,69 @@
 
         async function realizarLogin(event) {
             event.preventDefault();
+            const btn = document.getElementById('btnAcaoLogin');
             let inputLogin = document.getElementById('loginCpf').value.trim();
             
             // Se NÃO for e-mail, limpa tudo que não for número (tira pontos e traços do CPF)
             if (!inputLogin.includes('@')) {
                 inputLogin = inputLogin.replace(/\D/g, ''); 
             }
+            if (!inputLogin) { mostrarAviso('Atenção', 'Digite o CPF ou o E-mail.', '⚠️'); return; }
             
             const senha = document.getElementById('loginSenha').value.trim();
+            if (senha.length < 6) { mostrarAviso('Atenção', 'A senha precisa ter pelo menos 6 caracteres.', '⚠️'); return; }
             
-            // Mudamos de @formatura.local para @formatura.com (mais seguro no Supabase)
-            let emailLogin = inputLogin.includes('@') ? inputLogin : `${inputLogin}@formatura.com`;
+            // CPF vira um e-mail interno (CPF@formatura.com)
+            const emailLogin = inputLogin.includes('@') ? inputLogin : `${inputLogin}@formatura.com`;
 
-            if (modoCadastro) {
-                const senhaConfirma = document.getElementById('loginSenhaConfirma').value.trim();
-                if (senha !== senhaConfirma) { mostrarAviso('Erro', 'As senhas não coincidem.', '❌'); return; }
-                
-                const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email: emailLogin, password: senha });
-                
-                // MOSTRA O ERRO REAL DO SUPABASE
-                if (authError) { mostrarAviso('Erro no Cadastro', authError.message, '❌'); return; }
+            btn.disabled = true;
+            btn.innerText = 'Aguarde...';
 
-                const nome = document.getElementById('cadastroNome').value.trim();
-                const turma = document.getElementById('cadastroTurma').value.trim();
-                const alunosFixos = ["Arthur Carneiro", "Davi de Goes", "Emanuelle Vitória", "Gustavo Henrique", "Heloisy Vitória", "João Lucas", "Maria Júlia", "Yuri Matheus"];
-                
-                await supabaseClient.from('perfis').insert([{ user_id: authData.user.id, nome_professora: nome, turma: turma, alunos: alunosFixos }]);
-                mostrarAviso('Sucesso', 'Conta criada!', '🎉');
-                await verificarSessao();
-            } else {
-                const { error } = await supabaseClient.auth.signInWithPassword({ email: emailLogin, password: senha });
-                
-                // MOSTRA O ERRO REAL DO SUPABASE
-                if (error) { mostrarAviso('Erro no Login', error.message, '❌'); return; }
-                
-                localStorage.setItem('login_memorizado', inputLogin);
-                localStorage.setItem('senha_memorizada', senha);
-                
-                await verificarSessao();
+            try {
+                if (modoCadastro) {
+                    const senhaConfirma = document.getElementById('loginSenhaConfirma').value.trim();
+                    if (senha !== senhaConfirma) { mostrarAviso('Erro', 'As senhas não coincidem.', '❌'); return; }
+
+                    const nome = document.getElementById('cadastroNome').value.trim();
+                    const turma = document.getElementById('cadastroTurma').value.trim();
+                    if (!nome || !turma) { mostrarAviso('Atenção', 'Preencha o nome da professora e a turma.', '⚠️'); return; }
+                    
+                    const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email: emailLogin, password: senha });
+                    if (authError) { mostrarAviso('Erro no Cadastro', traduzirErroAuth(authError.message), '❌'); return; }
+
+                    // Sem sessão = o Supabase está exigindo confirmação de e-mail (ou a conta já existia)
+                    if (!authData.session) {
+                        mostrarAviso(
+                            'Não foi possível entrar',
+                            'A conta não ficou ativa. Se ela já existe, clique em "Já tem conta? Entrar". Se não, desative "Confirm email" no Supabase (Authentication > Sign In / Providers > Email) e tente cadastrar de novo.',
+                            '📧'
+                        );
+                        return;
+                    }
+
+                    const alunosFixos = ["Arthur Carneiro", "Davi de Goes", "Emanuelle Vitória", "Gustavo Henrique", "Heloisy Vitória", "João Lucas", "Maria Júlia", "Yuri Matheus"];
+                    const { error: erroPerfil } = await supabaseClient.from('perfis').insert([{ user_id: authData.user.id, nome_professora: nome, turma: turma, alunos: alunosFixos }]);
+                    if (erroPerfil) {
+                        mostrarAviso('Conta criada, mas o perfil não foi salvo', erroPerfil.message + ' — verifique as políticas RLS da tabela "perfis".', '⚠️');
+                    } else {
+                        mostrarAviso('Sucesso', 'Conta criada!', '🎉');
+                    }
+
+                    localStorage.setItem('login_memorizado', inputLogin);
+                    await verificarSessao();
+                } else {
+                    const { error } = await supabaseClient.auth.signInWithPassword({ email: emailLogin, password: senha });
+                    if (error) { mostrarAviso('Erro no Login', traduzirErroAuth(error.message), '❌'); return; }
+                    
+                    localStorage.setItem('login_memorizado', inputLogin);
+                    await verificarSessao();
+                }
+            } catch (e) {
+                console.error('Erro inesperado no login:', e);
+                mostrarAviso('Erro inesperado', traduzirErroAuth(e && e.message ? e.message : String(e)), '❌');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = modoCadastro ? 'Cadastrar e Entrar' : 'Entrar';
             }
         }
 
@@ -461,7 +512,13 @@
             const { data: { user } } = await supabaseClient.auth.getUser();
             if (!user) return;
 
-            const { data: perfil } = await supabaseClient.from('perfis').select('*').eq('user_id', user.id).single();
+            let perfil = null;
+            const { data: perfilData, error: erroPerfil } = await supabaseClient.from('perfis').select('*').eq('user_id', user.id).maybeSingle();
+            if (erroPerfil) {
+                mostrarAviso('Erro ao carregar perfil', erroPerfil.message + ' — verifique se a tabela "perfis" existe e se as políticas RLS permitem leitura.', '⚠️');
+            } else {
+                perfil = perfilData;
+            }
             
             if (perfil) {
                 dadosPerfil = { nome: perfil.nome_professora, turma: perfil.turma };
@@ -469,7 +526,10 @@
             } else {
                 dadosPerfil = { nome: 'Everton (Teste)', turma: 'Turma de Teste' };
                 alunosDaTurma = ["Aluno 1", "Aluno 2", "Aluno 3"];
-                await supabaseClient.from('perfis').insert([{ user_id: user.id, nome_professora: dadosPerfil.nome, turma: dadosPerfil.turma, alunos: alunosDaTurma }]);
+                if (!erroPerfil) {
+                    const { error: erroInsert } = await supabaseClient.from('perfis').insert([{ user_id: user.id, nome_professora: dadosPerfil.nome, turma: dadosPerfil.turma, alunos: alunosDaTurma }]);
+                    if (erroInsert) mostrarAviso('Erro ao criar perfil', erroInsert.message + ' — verifique as políticas RLS da tabela "perfis".', '⚠️');
+                }
             }
 
             document.getElementById('labelNomeProfessora').innerText = dadosPerfil.nome;
@@ -477,7 +537,10 @@
             document.getElementById('relatorioTurmaSub').innerText = `Controle de Pagamentos (${dadosPerfil.turma})`;
             document.getElementById('assinaturaProfessora').innerText = `Professora: ${dadosPerfil.nome}`;
 
-            const { data: pagamentos } = await supabaseClient.from('pagamentos').select('*').order('created_at', { ascending: false });
+            const { data: pagamentos, error: erroPag } = await supabaseClient.from('pagamentos').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+            if (erroPag) {
+                mostrarAviso('Erro ao carregar pagamentos', erroPag.message + ' — verifique a tabela "pagamentos" e as políticas RLS.', '⚠️');
+            }
             todosPagamentos = pagamentos || [];
 
             const cpfLogado = user.email.split('@')[0];
@@ -500,7 +563,8 @@
             }));
 
             if (inserir.length > 0) {
-                await supabaseClient.from('pagamentos').insert(inserir);
+                const { error } = await supabaseClient.from('pagamentos').insert(inserir);
+                if (error) { mostrarAviso('Erro', 'Falha ao enviar: ' + error.message, '❌'); return; }
                 localStorage.removeItem(`caixa_formatura_user_${cpfLogado}`);
                 localStorage.removeItem('caixa_formatura');
                 mostrarAviso('Sucesso', 'Dados antigos enviados para a nuvem!', '☁️');
@@ -666,7 +730,7 @@
             }
 
             const { error } = await supabaseClient.from('pagamentos').insert(inserir);
-            if (error) { mostrarAviso('Erro', 'Falha ao salvar na nuvem.', '❌'); return; }
+            if (error) { mostrarAviso('Erro', 'Falha ao salvar na nuvem: ' + error.message, '❌'); return; }
             
             mostrarAviso('Sucesso', 'Salvo com sucesso!', '✅');
             resetarFormularioAposEdicao();
