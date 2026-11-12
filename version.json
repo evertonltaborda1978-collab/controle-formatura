@@ -1,14 +1,15 @@
 {
-  "version": "1.0.6",
+  "version": "1.0.8",
   "date": "2026-11-12",
   "changelog": [
+    "Novo botão Cancelar no formulário de lançamento: limpa o aluno, o valor e a observação e volta ao início da tela",
+    "Tabela: na coluna Forma/Obs os pagamentos aparecem sempre em ordem (À Vista, 1ª parcela, 2ª parcela)",
     "Observação padrão não repete mais o nome do aluno (o nome já aparece no cartão do lançamento)",
     "Botão Baixar Word voltou a funcionar: gera um arquivo .doc com a tabela, totais e assinaturas",
     "Opções de pagamento agora mudam conforme o que o aluno já pagou (some À Vista e 1ª parcela quando já paga)",
     "Mostra quanto falta de cada parcela ao selecionar o aluno; opções 'restante' para pagamento parcial",
     "Lançamento personalizado: prévia da divisão e excesso abatido automaticamente na parcela seguinte",
     "Valor zerado não soma mais o valor do texto da opção; totais nunca passam do devido por aluno",
-    "Tabela: coluna Forma/Obs volta ao resumo por parcela, sem repetições",
     "Relatório da diretora usa o total recebido correto"
   ]
 }
