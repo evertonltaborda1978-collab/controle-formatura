@@ -87,7 +87,7 @@
                     Entrar
                 </button>
             </form>
-            <div class="pt-2 border-t text-[11px] text-slate-400">Desenvolvido por Everton Taborda · v1.0.3</div>
+            <div class="pt-2 border-t text-[11px] text-slate-400">Desenvolvido por Everton Taborda · v1.0.5</div>
         </div>
     </div>
 
@@ -130,6 +130,7 @@
                         <select id="nomeAluno" required class="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500 bg-white shadow-sm text-sm">
                             <option value="">Selecione o aluno...</option>
                         </select>
+                        <p id="resumoAluno" class="hidden text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-lg p-2 mt-2"></p>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-600 mb-1">Comprovante (Imagem/PDF)</label>
@@ -168,7 +169,7 @@
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label class="block text-[11px] font-medium text-slate-600">Referência</label>
-                                <select id="refParcelaCustom" class="w-full border rounded-lg p-2 text-xs bg-white outline-none">
+                                <select id="refParcelaCustom" onchange="previaCustom()" class="w-full border rounded-lg p-2 text-xs bg-white outline-none">
                                     <option value="auto_abater">✨ Abate Automático</option>
                                     <option value="1a_parcela">1ª Parcela</option>
                                     <option value="2a_parcela">2ª Parcela</option>
@@ -184,7 +185,8 @@
                         </div>
                         <div>
                             <label class="block text-[11px] font-medium text-slate-600 mb-1">Valor Pago Agora (R$)</label>
-                            <input type="text" inputmode="decimal" id="valorCustomizado" placeholder="Ex: 35,21" class="w-full border rounded-lg p-2.5 text-sm font-bold text-slate-800 bg-white outline-none">
+                            <input type="text" inputmode="decimal" id="valorCustomizado" oninput="previaCustom()" placeholder="Ex: 35,21" class="w-full border rounded-lg p-2.5 text-sm font-bold text-slate-800 bg-white outline-none">
+                            <p id="previaCustom" class="text-[11px] text-slate-600 mt-1"></p>
                         </div>
                     </div>
 
@@ -334,6 +336,12 @@
         const supabaseKey = 'sb_publishable_bnPuGJsSMscXcpYyhMw5Lw_Wehz2wwS';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
+        const META = 87.50;
+        const OPCAO_LIVRE = "✏️ Valor Livre / Parcial (Personalizado)";
+        const arred = n => Math.round((n + Number.EPSILON) * 100) / 100;
+        const brl = n => arred(n).toFixed(2).replace('.', ',');
+        const lerNumero = id => parseFloat((document.getElementById(id).value || '').replace(',', '.')) || 0;
+
         let modoCadastro = false;
         let todosPagamentos = []; 
         let dadosPerfil = { nome: 'Professora', turma: 'Turma' };
@@ -341,7 +349,7 @@
         let opcoesPagamento = [
             "À Vista (Pix/Transf) - R$ 175,00", "1ª Parcela (Pix/Transf) - R$ 87,50", "2ª Parcela (Pix/Transf) - R$ 87,50",
             "Dinheiro - À Vista (R$ 175,00)", "Dinheiro - 1ª Parcela (R$ 87,50)", "Dinheiro - 2ª Parcela (R$ 87,50)",
-            "✏️ Valor Livre / Parcial (Personalizado)"
+            OPCAO_LIVRE
         ];
 
         window.addEventListener('DOMContentLoaded', async () => {
@@ -580,82 +588,205 @@
             const pendentes = alunosDaTurma.filter(a => calcularStatusAluno(a, todosPagamentos).grupo !== 1);
             selectAluno.innerHTML = pendentes.length === 0 ? `<option value="">Todos quitaram! 🎉</option>` : `<option value="">Selecione...</option>` + pendentes.map(a => `<option value="${a}">${a}</option>`).join('');
             
-            document.getElementById('tipoPagamento').innerHTML = opcoesPagamento.map(op => `<option value="${op}">${op}</option>`).join('');
+            atualizarOpcoesPagamento();
             atualizarLista();
             atualizarPlanilhaGeral();
             atualizarTextoPadrao();
         }
 
-        function calcularStatusAluno(aluno, listaPagamentos) {
-            const META = 87.50;
-            const pagamentos = listaPagamentos.filter(p => p.aluno.toLowerCase() === aluno.toLowerCase());
-            let pagoP1 = 0, pagoP2 = 0;
-
-            pagamentos.forEach(p => {
-                let val = parseFloat(p.valor) || extrairValorOpcao(p.tipo_pagamento);
-                const opc = (p.tipo_pagamento || '').toLowerCase();
-                const ref = (p.referencia_parcela || '').toLowerCase();
-
-                if (opc.includes('à vista') || opc.includes('175')) { pagoP1 += META; pagoP2 += META; }
-                else if (ref === '1a_parcela' || opc.includes('1ª parcela')) { pagoP1 += val; }
-                else if (ref === '2a_parcela' || opc.includes('2ª parcela')) { pagoP2 += val; }
-                else {
-                    if (pagoP1 < META) {
-                        const falta = META - pagoP1;
-                        if (val <= falta) pagoP1 += val;
-                        else { pagoP1 = META; pagoP2 += (val - falta); }
-                    } else { pagoP2 += val; }
+        // ===== LÓGICA DE PARCELAS =====
+        // Distribui um valor entre a 1ª e a 2ª parcela. est = { r1, r2 } (quanto falta em cada).
+        // ref '2a_parcela' começa pela 2ª; qualquer outra começa pela 1ª. O excesso passa para a outra parcela.
+        function alocar(valor, ref, est) {
+            const partes = [];
+            let resto = arred(valor);
+            const ordem = ref === '2a_parcela' ? ['2a_parcela', '1a_parcela'] : ['1a_parcela', '2a_parcela'];
+            ordem.forEach(r => {
+                const k = r === '1a_parcela' ? 'r1' : 'r2';
+                const v = Math.min(resto, est[k]);
+                if (v > 0.004) {
+                    partes.push({ ref: r, valor: arred(v) });
+                    est[k] = arred(est[k] - v);
+                    resto = arred(resto - v);
                 }
             });
-            const total = pagoP1 + pagoP2;
-            if (pagoP1 >= META && pagoP2 >= META) return { grupo: 1, totalPago: total, pagoP1, pagoP2 };
-            if (pagoP1 >= META && pagoP2 === 0) return { grupo: 2, totalPago: total, pagoP1, pagoP2 };
-            if (pagoP1 > 0 && pagoP1 < META) return { grupo: 4, totalPago: total, pagoP1, pagoP2 };
-            if (pagoP1 >= META && pagoP2 > 0 && pagoP2 < META) return { grupo: 4, totalPago: total, pagoP1, pagoP2 };
-            return { grupo: 3, totalPago: 0, pagoP1: 0, pagoP2: 0 };
+            return { partes, sobra: resto };
+        }
+
+        function refDoRegistro(p) {
+            const ref = (p.referencia_parcela || '').toLowerCase();
+            if (ref === '1a_parcela' || ref === '2a_parcela') return ref;
+            const opc = (p.tipo_pagamento || '').toLowerCase();
+            if (opc.includes('à vista')) return 'auto';
+            if (opc.includes('1ª parcela')) return '1a_parcela';
+            if (opc.includes('2ª parcela')) return '2a_parcela';
+            return 'auto';
+        }
+
+        function calcularStatusAluno(aluno, listaPagamentos) {
+            const est = { r1: META, r2: META };
+            listaPagamentos
+                .filter(p => p.aluno.toLowerCase() === aluno.toLowerCase())
+                .sort((a, b) => (a.id || 0) - (b.id || 0))
+                .forEach(p => {
+                    const v = parseFloat(p.valor);
+                    const val = isNaN(v) ? extrairValorOpcao(p.tipo_pagamento || '') : v;
+                    alocar(val, refDoRegistro(p), est);
+                });
+            const pagoP1 = arred(META - est.r1), pagoP2 = arred(META - est.r2);
+            const total = arred(pagoP1 + pagoP2);
+            let grupo = 3;
+            if (pagoP1 >= META && pagoP2 >= META) grupo = 1;
+            else if (pagoP1 >= META && pagoP2 <= 0) grupo = 2;
+            else if (total > 0) grupo = 4;
+            return { grupo, totalPago: total, pagoP1, pagoP2, faltaP1: est.r1, faltaP2: est.r2 };
         }
 
         function extrairValorOpcao(tipo) {
-            if (tipo.includes('175')) return 175.00;
-            if (tipo.includes('87,50')) return 87.50;
-            const match = tipo.match(/R\$\s*([\d.,]+)/);
-            return match ? parseFloat(match[1].replace('.', '').replace(',', '.')) : 0;
+            const match = (tipo || '').match(/R\$\s*([\d.,]+)/);
+            return match ? parseFloat(match[1].replace('.', '').replace(',', '.')) || 0 : 0;
+        }
+
+        function rotuloRegistro(p) {
+            const t = p.tipo_pagamento || '';
+            return t.includes('R$') ? t : `${t} - R$ ${brl(parseFloat(p.valor) || 0)}`;
+        }
+
+        // Monta as opções de pagamento conforme o que o aluno já pagou
+        function atualizarOpcoesPagamento() {
+            const nome = document.getElementById('nomeAluno').value;
+            const sel = document.getElementById('tipoPagamento');
+            const resumo = document.getElementById('resumoAluno');
+            const selRef = document.getElementById('refParcelaCustom');
+            let ops = [...opcoesPagamento];
+
+            if (nome) {
+                const i = calcularStatusAluno(nome, todosPagamentos);
+                if (i.totalPago > 0) {
+                    ops = [];
+                    const sufixo = n => (n > 0 ? ' restante' : '');
+                    if (i.faltaP1 > 0) {
+                        ops.push(`1ª Parcela${sufixo(i.pagoP1)} (Pix/Transf) - R$ ${brl(i.faltaP1)}`);
+                        ops.push(`Dinheiro - 1ª Parcela${sufixo(i.pagoP1)} (R$ ${brl(i.faltaP1)})`);
+                    }
+                    if (i.faltaP2 > 0 && (i.faltaP1 <= 0 || i.pagoP2 > 0)) {
+                        ops.push(`2ª Parcela${sufixo(i.pagoP2)} (Pix/Transf) - R$ ${brl(i.faltaP2)}`);
+                        ops.push(`Dinheiro - 2ª Parcela${sufixo(i.pagoP2)} (R$ ${brl(i.faltaP2)})`);
+                    }
+                    ops.push(OPCAO_LIVRE);
+                }
+                const txt = (n, falta, pago) => falta <= 0 ? '✅ paga' : (pago > 0 ? `pago R$ ${brl(pago)} · falta R$ ${brl(falta)}` : `falta R$ ${brl(falta)}`);
+                resumo.innerText = `1ª parcela: ${txt(1, i.faltaP1, i.pagoP1)}  |  2ª parcela: ${txt(2, i.faltaP2, i.pagoP2)}`;
+                resumo.classList.remove('hidden');
+
+                const refAtual = selRef.value;
+                selRef.innerHTML = `<option value="auto_abater">✨ Abate Automático</option>`
+                    + (i.faltaP1 > 0 ? `<option value="1a_parcela">1ª Parcela</option>` : '')
+                    + (i.faltaP2 > 0 ? `<option value="2a_parcela">2ª Parcela</option>` : '');
+                if ([...selRef.options].some(o => o.value === refAtual)) selRef.value = refAtual;
+            } else {
+                resumo.classList.add('hidden');
+                selRef.innerHTML = `<option value="auto_abater">✨ Abate Automático</option><option value="1a_parcela">1ª Parcela</option><option value="2a_parcela">2ª Parcela</option>`;
+            }
+
+            sel.innerHTML = ops.map(op => `<option value="${op}">${op}</option>`).join('');
+            mostrarPainelCustom();
+        }
+
+        function mostrarPainelCustom() {
+            const livre = document.getElementById('tipoPagamento').value.includes('Personalizado');
+            document.getElementById('painelCustomizado').classList.toggle('hidden', !livre);
+            previaCustom();
+        }
+
+        function estadoAluno(nome) {
+            const i = calcularStatusAluno(nome, todosPagamentos);
+            return { r1: i.faltaP1, r2: i.faltaP2 };
+        }
+
+        function previaCustom() {
+            const el = document.getElementById('previaCustom');
+            const nome = document.getElementById('nomeAluno').value;
+            const valor = lerNumero('valorCustomizado');
+            if (!nome || valor <= 0) { el.innerText = nome ? `Falta: 1ª R$ ${brl(estadoAluno(nome).r1)} | 2ª R$ ${brl(estadoAluno(nome).r2)}` : ''; return; }
+            const est = estadoAluno(nome);
+            const r = alocar(valor, document.getElementById('refParcelaCustom').value, est);
+            const nomes = { '1a_parcela': '1ª', '2a_parcela': '2ª' };
+            let t = r.partes.map(p => `R$ ${brl(p.valor)} na ${nomes[p.ref]}`).join(' e ');
+            if (r.sobra > 0.004) t += ` ⚠️ passa R$ ${brl(r.sobra)} do que falta`;
+            el.innerText = t;
         }
 
         function prepararSalvamento() {
             const nome = document.getElementById('nomeAluno').value;
-            if(!nome) { mostrarAviso('Atenção', 'Selecione um aluno.', '⚠️'); return; }
-            
-            const tipo = document.getElementById('tipoPagamento').value;
-            let valor1 = extrairValorOpcao(tipo);
-            let ref1 = '';
-            let isCustom = tipo.includes('Personalizado') || tipo.includes('Valor Livre');
+            if (!nome) { mostrarAviso('Atenção', 'Selecione um aluno.', '⚠️'); return; }
 
-            if (isCustom) {
-                valor1 = parseFloat(document.getElementById('valorCustomizado').value.replace(',', '.')) || 0;
-                ref1 = document.getElementById('refParcelaCustom').value;
+            const tipo = document.getElementById('tipoPagamento').value;
+            const custom = tipo.includes('Personalizado');
+            let valor1, refSel = 'auto_abater', forma1 = '';
+
+            if (custom) {
+                valor1 = lerNumero('valorCustomizado');
+                refSel = document.getElementById('refParcelaCustom').value;
+                forma1 = document.getElementById('formaCustomizada').value;
                 if (valor1 <= 0) { mostrarAviso('Erro', 'Digite um valor válido.', '❌'); return; }
+            } else {
+                valor1 = extrairValorOpcao(tipo);
             }
 
             let valor2 = 0, forma2 = '';
             if (document.getElementById('checkPagamentoMisto').checked) {
-                valor2 = parseFloat(document.getElementById('valorSegundaForma').value.replace(',', '.')) || 0;
+                valor2 = lerNumero('valorSegundaForma');
                 forma2 = document.getElementById('segundaForma').value;
+                if (valor2 <= 0) { mostrarAviso('Erro', 'Digite o valor da 2ª forma.', '❌'); return; }
                 if (valor2 >= valor1) { mostrarAviso('Erro', 'O valor da 2ª forma deve ser menor que o total.', '❌'); return; }
-                valor1 = valor1 - valor2;
+                valor1 = arred(valor1 - valor2);
             }
 
-            salvarLancamentoFinal(nome, tipo, document.getElementById('observacao').value, valor1, ref1, valor2, forma2);
+            let refFixa = 'auto_abater';
+            if (!custom) {
+                if (tipo.includes('1ª Parcela')) refFixa = '1a_parcela';
+                else if (tipo.includes('2ª Parcela')) refFixa = '2a_parcela';
+                else if (tipo.includes('À Vista')) refFixa = 'a_vista';
+            }
+
+            const est = estadoAluno(nome);
+            const registros = [];
+            let sobraTotal = 0, dividiu = false;
+            const nomeRef = { '1a_parcela': '1ª parcela', '2a_parcela': '2ª parcela' };
+
+            const lancamentos = [];
+            if (custom) lancamentos.push({ tipo: `✏️ Valor Livre (${forma1})`, valor: valor1, ref: refSel, livre: true });
+            else lancamentos.push({ tipo, valor: valor1, ref: refFixa, livre: false });
+            if (valor2 > 0) lancamentos.push({ tipo: `✏️ Valor Livre (${forma2})`, valor: valor2, ref: custom ? refSel : (refFixa === 'a_vista' ? 'auto_abater' : refFixa), livre: true });
+
+            lancamentos.forEach(l => {
+                const r = alocar(l.valor, l.ref === 'a_vista' ? 'auto_abater' : l.ref, est);
+                sobraTotal += r.sobra;
+                if (l.livre) {
+                    if (r.partes.length > 1) dividiu = true;
+                    r.partes.forEach(p => registros.push({ tipo: `${l.tipo} - ${nomeRef[p.ref]}`, valor: p.valor, ref: p.ref }));
+                } else {
+                    registros.push({ tipo: l.tipo, valor: l.valor, ref: l.ref });
+                }
+            });
+
+            if (sobraTotal > 0.004) {
+                mostrarAviso('Valor acima do devido', `Este valor passa R$ ${brl(sobraTotal)} do que falta nas parcelas deste aluno.`, '⚠️');
+                return;
+            }
+            if (dividiu && !confirm('Este valor será dividido entre as parcelas:\n' + registros.filter(r => r.tipo.includes('Valor Livre')).map(r => `• R$ ${brl(r.valor)} na ${nomeRef[r.ref]}`).join('\n') + '\n\nConfirmar?')) return;
+
+            salvarLancamentoFinal(nome, document.getElementById('observacao').value, registros);
         }
 
-        async function salvarLancamentoFinal(nome, tipo, obs, valor1, ref1, valor2, forma2) {
+        async function salvarLancamentoFinal(nome, obs, registros) {
             const { data: { user } } = await supabaseClient.auth.getUser();
             const hoje = new Date().toLocaleDateString('pt-BR');
-            let inserir = [{ user_id: user.id, aluno: nome, tipo_pagamento: tipo, valor: valor1, observacao: obs, referencia_parcela: ref1, data_registro: hoje, arquivo_nome: 'Sem anexo' }];
-
-            if (valor2 > 0) {
-                inserir.push({ user_id: user.id, aluno: nome, tipo_pagamento: `✏️ Valor Livre (${forma2})`, valor: valor2, observacao: `Parte mista (${forma2})`, referencia_parcela: 'auto_abater', data_registro: hoje, arquivo_nome: 'Sem anexo' });
-            }
+            const inserir = registros.map(r => ({
+                user_id: user.id, aluno: nome, tipo_pagamento: r.tipo, valor: r.valor, observacao: obs,
+                referencia_parcela: r.ref, data_registro: hoje, arquivo_nome: 'Sem anexo'
+            }));
 
             const { error } = await supabaseClient.from('pagamentos').insert(inserir);
             if (error) { mostrarAviso('Erro', 'Falha ao salvar na nuvem: ' + error.message, '❌'); return; }
@@ -682,7 +813,7 @@
                     const html = pagamentos.map(p => `
                         <div class="border rounded-lg p-2.5 bg-slate-50 mb-2">
                             <p class="font-bold">${p.aluno}</p>
-                            <p class="text-indigo-600">${p.tipo_pagamento} - R$ ${parseFloat(p.valor).toFixed(2)}</p>
+                            <p class="text-indigo-600">${rotuloRegistro(p)}</p>
                             <p class="text-slate-500 text-[10px]">${p.observacao || ''}</p>
                             <button onclick="excluirRegistroNuvem(${p.id})" class="text-red-500 text-xs mt-1">Excluir</button>
                         </div>`).join('');
@@ -695,21 +826,28 @@
             document.getElementById('containerAlunosQuitados').innerHTML = htmlQuitados || '<p class="text-slate-400 text-center py-2">Nenhum quitado.</p>';
         }
 
+        function totalRecebidoGeral() {
+            return alunosDaTurma.reduce((acc, a) => acc + calcularStatusAluno(a, todosPagamentos).totalPago, 0);
+        }
+
         function atualizarPlanilhaGeral() {
-            let total = 0;
+            const celula = (pago) => pago >= META ? 'PAGO' : pago > 0 ? `R$ ${brl(pago)}` : '-';
             document.getElementById('corpoTabelaPlanilha').innerHTML = alunosDaTurma.map((aluno, i) => {
                 const info = calcularStatusAluno(aluno, todosPagamentos);
-                total += info.totalPago;
+                const regs = todosPagamentos.filter(p => p.aluno.toLowerCase() === aluno.toLowerCase()).sort((a, b) => (a.id || 0) - (b.id || 0));
+                let obs = regs.map(rotuloRegistro).join(', ');
+                if (regs.length > 1) obs += ` - R$ ${brl(info.totalPago)}`;
+                if (info.totalPago > 0 && info.grupo !== 1) obs += ` · falta R$ ${brl(info.faltaP1 + info.faltaP2)}`;
                 return `<tr class="border-b">
-                    <td class="p-2 border-r text-center">${i+1}</td>
+                    <td class="p-2 border-r text-center">${i + 1}</td>
                     <td class="p-2 border-r font-semibold">${aluno}</td>
-                    <td class="p-2 text-center border-r">${info.pagoP1 >= 87.5 ? 'PAGO' : info.pagoP1 > 0 ? `R$ ${info.pagoP1.toFixed(2)}` : '-'}</td>
-                    <td class="p-2 text-center border-r">${info.pagoP2 >= 87.5 ? 'PAGO' : info.pagoP2 > 0 ? `R$ ${info.pagoP2.toFixed(2)}` : '-'}</td>
-                    <td class="p-2 text-[11px]">${todosPagamentos.filter(p=>p.aluno.toLowerCase()===aluno.toLowerCase()).map(p=>p.tipo_pagamento).join(', ')}</td>
+                    <td class="p-2 text-center border-r">${celula(info.pagoP1)}</td>
+                    <td class="p-2 text-center border-r">${celula(info.pagoP2)}</td>
+                    <td class="p-2 text-[11px]">${obs}</td>
                 </tr>`;
             }).join('');
-            document.getElementById('labelTotalPrevisto').innerText = `Total: R$ ${(alunosDaTurma.length * 175).toFixed(2)}`;
-            document.getElementById('labelTotalRecebido').innerText = `Recebido: R$ ${total.toFixed(2)}`;
+            document.getElementById('labelTotalPrevisto').innerText = `Total Previsto: R$ ${brl(alunosDaTurma.length * 175)}`;
+            document.getElementById('labelTotalRecebido').innerText = `Total Recebido: R$ ${brl(totalRecebidoGeral())}`;
         }
 
         async function excluirRegistroNuvem(id) {
@@ -725,10 +863,13 @@
         }
         
         document.getElementById('tipoPagamento')?.addEventListener('change', function() {
-            document.getElementById('painelCustomizado').classList.toggle('hidden', !this.value.includes('Personalizado'));
+            mostrarPainelCustom();
             atualizarTextoPadrao();
         });
-        document.getElementById('nomeAluno')?.addEventListener('change', atualizarTextoPadrao);
+        document.getElementById('nomeAluno')?.addEventListener('change', function() {
+            atualizarOpcoesPagamento();
+            atualizarTextoPadrao();
+        });
         
         function togglePagamentoMisto() { document.getElementById('blocoDetalhesMisto').classList.toggle('hidden', !document.getElementById('checkPagamentoMisto').checked); }
 
@@ -751,7 +892,48 @@
         function gerarPDF() { window.print(); }
         
         function exportarWord() {
-            alert("Função Word temporariamente desativada. Utilize o PDF ou o Backup.");
+            const celula = p => p >= META ? 'PAGO' : p > 0 ? `R$ ${brl(p)}` : '-';
+            const linhas = alunosDaTurma.map((aluno, i) => {
+                const info = calcularStatusAluno(aluno, todosPagamentos);
+                const regs = todosPagamentos.filter(p => p.aluno.toLowerCase() === aluno.toLowerCase()).sort((a, b) => (a.id || 0) - (b.id || 0));
+                let obs = regs.map(rotuloRegistro).join(', ');
+                if (regs.length > 1) obs += ` - R$ ${brl(info.totalPago)}`;
+                if (info.totalPago > 0 && info.grupo !== 1) obs += ` · falta R$ ${brl(info.faltaP1 + info.faltaP2)}`;
+                return `<tr><td align="center">${i + 1}</td><td>${aluno}</td><td align="center">${celula(info.pagoP1)}</td><td align="center">${celula(info.pagoP2)}</td><td>${obs}</td></tr>`;
+            }).join('');
+
+            const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="utf-8"><title>Controle de Pagamentos</title>
+<style>
+body { font-family: Arial, sans-serif; font-size: 11pt; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #333; padding: 4px 6px; font-size: 10pt; }
+th { background: #1e293b; color: #ffffff; }
+</style></head>
+<body>
+<h2 style="text-align:center;margin-bottom:0">ESCOLA MUNICIPAL 31 DE MARÇO</h2>
+<p style="text-align:center;margin-top:2px">Controle de Pagamentos (${dadosPerfil.turma})</p>
+<table>
+<tr><th width="5%">Nº</th><th width="30%">Nome do Formando</th><th width="10%">1ª Parc</th><th width="10%">2ª Parc</th><th>Forma / Obs</th></tr>
+${linhas}
+</table>
+<p><b>Total Previsto: R$ ${brl(alunosDaTurma.length * 175)}</b> &nbsp;&nbsp;&nbsp; <b>Total Recebido: R$ ${brl(totalRecebidoGeral())}</b></p>
+<br><br>
+<table style="border:none">
+<tr>
+<td style="border:none;text-align:center">_______________________________<br>Professora: ${dadosPerfil.nome}</td>
+<td style="border:none;text-align:center">_______________________________<br>Direção / Secretaria</td>
+</tr>
+</table>
+</body></html>`;
+
+            const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `Controle_Pagamentos_${(dadosPerfil.turma || 'Turma').replace(/[^\w\-]+/g, '_')}.doc`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
         
         function fazerBackup() {
@@ -813,8 +995,8 @@
         }
         
         function enviarRelatorioDiretora() {
-            const total = todosPagamentos.reduce((acc, p) => acc + (parseFloat(p.valor) || 0), 0);
-            const texto = `*ESCOLA 31 DE MARÇO*%0A*Turma:* ${dadosPerfil.turma}%0A*Professora:* ${dadosPerfil.nome}%0A%0A*RESUMO:*%0ATotal Previsto: R$ ${(alunosDaTurma.length * 175).toFixed(2)}%0ATotal Recebido: R$ ${total.toFixed(2)}%0A%0A_Gerado pelo App Secretária Virtual_`;
+            const total = totalRecebidoGeral();
+            const texto = `*ESCOLA 31 DE MARÇO*%0A*Turma:* ${dadosPerfil.turma}%0A*Professora:* ${dadosPerfil.nome}%0A%0A*RESUMO:*%0ATotal Previsto: R$ ${brl(alunosDaTurma.length * 175)}%0ATotal Recebido: R$ ${brl(total)}%0A%0A_Gerado pelo App Secretária Virtual_`;
             window.open(`https://api.whatsapp.com/send?text=${texto}`, '_blank');
         }
     </script>
