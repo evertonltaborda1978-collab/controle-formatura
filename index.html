@@ -87,7 +87,7 @@
                     Entrar
                 </button>
             </form>
-            <div class="pt-2 border-t text-[11px] text-slate-400">Desenvolvido por Everton Taborda · v1.0.5</div>
+            <div class="pt-2 border-t text-[11px] text-slate-400">Desenvolvido por Everton Taborda · v1.0.6</div>
         </div>
     </div>
 
@@ -857,9 +857,8 @@
         }
 
         function atualizarTextoPadrao() {
-            const nome = document.getElementById('nomeAluno').value || '[Aluno]';
             const tipo = document.getElementById('tipoPagamento').value;
-            document.getElementById('observacao').value = `Pago ${tipo} em ${new Date().toLocaleDateString('pt-BR')} - Aluno: ${nome}`;
+            document.getElementById('observacao').value = `Pago ${tipo} em ${new Date().toLocaleDateString('pt-BR')}`;
         }
         
         document.getElementById('tipoPagamento')?.addEventListener('change', function() {
