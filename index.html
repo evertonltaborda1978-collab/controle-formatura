@@ -87,7 +87,7 @@
                     Entrar
                 </button>
             </form>
-            <div class="pt-2 border-t text-[11px] text-slate-400">Desenvolvido por Everton Taborda · v1.0.6</div>
+            <div class="pt-2 border-t text-[11px] text-slate-400">Desenvolvido por Everton Taborda · v1.0.8</div>
         </div>
     </div>
 
@@ -195,9 +195,14 @@
                         <textarea id="observacao" rows="2" class="w-full border rounded-lg p-3 outline-none bg-amber-50/50 shadow-sm text-sm"></textarea>
                     </div>
                     
-                    <button type="button" onclick="prepararSalvamento()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition shadow mt-2">
-                        Salvar Lançamento na Nuvem
-                    </button>
+                    <div class="grid grid-cols-3 gap-2 mt-2">
+                        <button type="button" onclick="cancelarLancamento()" class="col-span-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium p-3 rounded-xl transition text-sm">
+                            Cancelar
+                        </button>
+                        <button type="button" onclick="prepararSalvamento()" class="col-span-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium p-3 rounded-xl transition shadow">
+                            Salvar Lançamento na Nuvem
+                        </button>
+                    </div>
                 </form>
 
                 <div class="bg-white p-4 rounded-xl shadow-sm space-y-2">
@@ -652,6 +657,12 @@
             return t.includes('R$') ? t : `${t} - R$ ${brl(parseFloat(p.valor) || 0)}`;
         }
 
+        // Ordem de exibição: À Vista / abate automático, depois 1ª parcela, depois 2ª parcela
+        function ordenarRegistros(lista) {
+            const peso = p => { const r = refDoRegistro(p); return r === '1a_parcela' ? 1 : r === '2a_parcela' ? 2 : 0; };
+            return [...lista].sort((a, b) => (peso(a) - peso(b)) || ((a.id || 0) - (b.id || 0)));
+        }
+
         // Monta as opções de pagamento conforme o que o aluno já pagou
         function atualizarOpcoesPagamento() {
             const nome = document.getElementById('nomeAluno').value;
@@ -796,6 +807,11 @@
             carregarDadosDoBanco();
         }
 
+        function cancelarLancamento() {
+            resetarFormularioAposEdicao();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         function resetarFormularioAposEdicao() {
             document.getElementById('formPagamento').reset();
             document.getElementById('painelCustomizado').classList.add('hidden');
@@ -834,7 +850,7 @@
             const celula = (pago) => pago >= META ? 'PAGO' : pago > 0 ? `R$ ${brl(pago)}` : '-';
             document.getElementById('corpoTabelaPlanilha').innerHTML = alunosDaTurma.map((aluno, i) => {
                 const info = calcularStatusAluno(aluno, todosPagamentos);
-                const regs = todosPagamentos.filter(p => p.aluno.toLowerCase() === aluno.toLowerCase()).sort((a, b) => (a.id || 0) - (b.id || 0));
+                const regs = ordenarRegistros(todosPagamentos.filter(p => p.aluno.toLowerCase() === aluno.toLowerCase()));
                 let obs = regs.map(rotuloRegistro).join(', ');
                 if (regs.length > 1) obs += ` - R$ ${brl(info.totalPago)}`;
                 if (info.totalPago > 0 && info.grupo !== 1) obs += ` · falta R$ ${brl(info.faltaP1 + info.faltaP2)}`;
@@ -894,7 +910,7 @@
             const celula = p => p >= META ? 'PAGO' : p > 0 ? `R$ ${brl(p)}` : '-';
             const linhas = alunosDaTurma.map((aluno, i) => {
                 const info = calcularStatusAluno(aluno, todosPagamentos);
-                const regs = todosPagamentos.filter(p => p.aluno.toLowerCase() === aluno.toLowerCase()).sort((a, b) => (a.id || 0) - (b.id || 0));
+                const regs = ordenarRegistros(todosPagamentos.filter(p => p.aluno.toLowerCase() === aluno.toLowerCase()));
                 let obs = regs.map(rotuloRegistro).join(', ');
                 if (regs.length > 1) obs += ` - R$ ${brl(info.totalPago)}`;
                 if (info.totalPago > 0 && info.grupo !== 1) obs += ` · falta R$ ${brl(info.faltaP1 + info.faltaP2)}`;
