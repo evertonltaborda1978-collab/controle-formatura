@@ -1,26 +1,13 @@
 {
-  "version": "1.0.2",
-  "date": "2026-11-11",
+  "version": "1.0.5",
+  "date": "2026-11-12",
   "changelog": [
-    {
-      "version": "1.0.2",
-      "date": "2026-11-11",
-      "changes": [
-        "Corrigida a URL do Supabase (supabaseUrl) que estava com letras trocadas e impedia o login"
-      ]
-    },
-    {
-      "version": "1.0.1",
-      "date": "2026-11-10",
-      "changes": [
-        "Login/cadastro: mensagens de erro do Supabase traduzidas e mais claras",
-        "Cadastro: avisa quando o Supabase exige confirmação de e-mail em vez de fingir que deu certo",
-        "Cadastro: valida nome, turma e senha (mínimo 6 caracteres) e confere o erro ao criar o perfil",
-        "Segurança: a senha não é mais salva em texto no aparelho",
-        "Carregamento de dados: mostra o erro real quando as tabelas perfis/pagamentos falham (RLS, coluna faltando)",
-        "Pagamentos: busca filtrada pelo usuário logado",
-        "Versão exibida na tela de login para conferir se a atualização chegou"
-      ]
-    }
+    "Botão Baixar Word voltou a funcionar: gera um arquivo .doc com a tabela, totais e assinaturas",
+    "Opções de pagamento agora mudam conforme o que o aluno já pagou (some À Vista e 1ª parcela quando já paga)",
+    "Mostra quanto falta de cada parcela ao selecionar o aluno; opções 'restante' para pagamento parcial",
+    "Lançamento personalizado: prévia da divisão e excesso abatido automaticamente na parcela seguinte",
+    "Valor zerado não soma mais o valor do texto da opção; totais nunca passam do devido por aluno",
+    "Tabela: coluna Forma/Obs volta ao resumo por parcela, sem repetições",
+    "Relatório da diretora usa o total recebido correto"
   ]
 }
